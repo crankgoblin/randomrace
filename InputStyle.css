@@ -1,0 +1,21 @@
+.input-text{
+	padding: 16px 20px;
+	border-radius: 8px;
+	outline: none;
+	text-align: center;
+	font-size: 40px;
+	font-family: RifficFree-Bold;
+	color: #090F1D;
+	border: none;
+}
+
+.backup{
+	background-color: #D9D9D9;
+	padding: 16px 20px;
+	border-radius: 8px;
+	outline: none;
+	font-size: 40px;
+	font-family: RifficFree-Bold;
+	color: #090F1D;
+	border: none;
+}
