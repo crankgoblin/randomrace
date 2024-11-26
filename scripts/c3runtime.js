@@ -1400,6 +1400,7 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
     this._bestScoresLeaderboard = [];
     this._currentScore = 0;
     this._totalScore = 0;
+    this._dynamicRewards = 0;
     this._referralLeaderboard = [];
     this._numberOfRuns = 0;
 
@@ -1448,6 +1449,7 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
   }
 
   HandleError(errorMsg) {
+    console.log(errorMsg, "errorMsg");
     this._errorMsg = errorMsg;
     this._triggerError = true;
     this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnError);
@@ -1517,6 +1519,28 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
       });
 
     return requestParams;
+  }
+
+  GetDynamicRewards(dynamic_rewards) {
+    let props = {};
+
+    if (!!dynamic_rewards) {
+      // Parse the JSON string
+      props = JSON.parse(
+        dynamic_rewards.replace(/&quot;/g, '"').replace(/'/g, '"')
+      );
+
+      // Validate that each value in the object is a number
+      const isValid = Object.values(props).every(
+        (value) => typeof value === "number"
+      );
+
+      if (!isValid) {
+        throw new Error("All values in dynamic rewards must be numbers.");
+      }
+    }
+
+    return props;
   }
 
   // Actions
@@ -1680,7 +1704,6 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
         const personalData = await personalResponse.json();
 
         if (typeof personalData === "object") {
-          console.log(personalData);
           personal = {
             userId: this._userId,
             position: personalData.mainScore.position,
@@ -1777,8 +1800,10 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
     }
   }
 
-  async _UpdateScore(score) {
+  async _UpdateScore(score, dynamic_rewards) {
     try {
+      const dynamicRewards = this.GetDynamicRewards(dynamic_rewards);
+
       const updateScoreResponse = await fetch(
         `${this._leaderboardApiUrl}/score-total/${this._userId}`,
         {
@@ -1792,6 +1817,7 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
             projectId: this._projectId,
             roundData: {
               score,
+              ...dynamicRewards,
             },
           }),
         }
@@ -1817,7 +1843,7 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
     }
   }
 
-  async _AddScore(score, map_id) {
+  async _AddScore(score, map_id, asset_id, addons, dynamic_rewards) {
     try {
       // Create match ID
       const createMatchResponse = await fetch(
@@ -1844,6 +1870,14 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
       }
       const matchId = await createMatchResponse.text();
 
+      let parsedAddons = [];
+
+      if (!!addons) {
+        parsedAddons = JSON.parse(addons);
+      }
+
+      const dynamicRewards = this.GetDynamicRewards(dynamic_rewards);
+
       // Create score per map
       const scoreResponse = await fetch(
         `${this._leaderboardApiUrl}/score-map/create`,
@@ -1863,7 +1897,10 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
             projectId: this._projectId,
             roundData: {
               score,
+              ...dynamicRewards,
             },
+            ...(!!asset_id && { assetId: asset_id }),
+            ...(parsedAddons.length > 0 && { addons: parsedAddons }),
           }),
         }
       );
@@ -2302,8 +2339,40 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
     }
   }
 
-  async _RequestUserScore() {
+  async _RequestUserScore(dynamic_rewards_names) {
     try {
+      let dynamicRewardsNames;
+
+      if (!!dynamic_rewards_names) {
+        try {
+          dynamicRewardsNames = JSON.parse(
+            dynamic_rewards_names.replace(/&quot;/g, '"').replace(/'/g, '"')
+          );
+        } catch (parseError) {
+          throw new Error("Invalid JSON format for dynamic rewards names.");
+        }
+
+        // Validate the parsed data
+        if (
+          typeof dynamicRewardsNames !== "string" &&
+          !Array.isArray(dynamicRewardsNames)
+        ) {
+          throw new Error(
+            "Dynamic rewards names must be a string or an array of strings."
+          );
+        }
+
+        // Ensure all elements in the array (if it's an array) are strings
+        if (
+          Array.isArray(dynamicRewardsNames) &&
+          !dynamicRewardsNames.every((item) => typeof item === "string")
+        ) {
+          throw new Error(
+            "All elements in Dynamic rewards names array must be strings."
+          );
+        }
+      }
+
       const scoreResponse = await fetch(
         `${this._leaderboardApiUrl}/score-total/get?userId=${this._userId}&leaderboardId=${this._leaderboardId}`,
         {
@@ -2323,9 +2392,23 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
       }
 
       const score = await scoreResponse.json();
+      const currentRoundData = score?.currentRoundData;
 
-      this._currentScore = score?.currentRoundData?.score;
+      this._currentScore = currentRoundData?.score;
       this._totalScore = score?.totalRoundData?.score;
+
+      if (typeof dynamicRewardsNames === "string") {
+        // Single dynamic reward - return type: number
+        this._dynamicRewards = currentRoundData?.[dynamicRewardsNames] || 0;
+      } else if (Array.isArray(dynamicRewardsNames)) {
+        // Multiple dynamic rewards - return type: object
+        this._dynamicRewards = dynamicRewardsNames.reduce((acc, rewardName) => {
+          acc[rewardName] = currentRoundData?.[rewardName] || 0; // Default to 0 if not found
+          return acc;
+        }, {});
+      } else {
+        this._dynamicRewards = 0;
+      }
 
       this.OnUserScoreReceived();
     } catch (error) {
@@ -2458,7 +2541,7 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
 
       this._referralStructure = response.map((refLevel) => ({
         ...refLevel,
-        percentage: refLevel.percentage * 10,
+        percentage: refLevel.percentage * 100,
       }));
 
       this.OnReferralStructureReceived();
@@ -2549,9 +2632,20 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
 
       this.OnTransactionSent();
     } catch (error) {
-      console.log(error);
+      console.log(error, "error");
+
       this._transactionStatus = "error";
-      this.HandleError(error.data?.message || error.message);
+
+      let errorMsg = "Something went wrong.";
+      if (typeof error === "string") {
+        errorMsg = error;
+      } else if (!!error.data?.message) {
+        errorMsg = error.data?.message;
+      } else if (!!error.message) {
+        errorMsg = error.message;
+      }
+
+      this.HandleError(errorMsg);
     }
   }
 
@@ -2594,8 +2688,20 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
 
       this.OnReadContractDataReceived();
     } catch (error) {
-      console.log(error);
-      this.HandleError(error.data?.message || error.message);
+      console.log(error, "error");
+
+      this._transactionStatus = "error";
+
+      let errorMsg = "Something went wrong.";
+      if (typeof error === "string") {
+        errorMsg = error;
+      } else if (!!error.data?.message) {
+        errorMsg = error.data?.message;
+      } else if (!!error.message) {
+        errorMsg = error.message;
+      }
+
+      this.HandleError(errorMsg);
     }
   }
 
@@ -2642,8 +2748,20 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
 
       this.OnMultipleReadContractDataReceived();
     } catch (error) {
-      console.log(error);
-      this.HandleError(error.data?.message || error.message);
+      console.log(error, "error");
+
+      this._transactionStatus = "error";
+
+      let errorMsg = "Something went wrong.";
+      if (typeof error === "string") {
+        errorMsg = error;
+      } else if (!!error.data?.message) {
+        errorMsg = error.data?.message;
+      } else if (!!error.message) {
+        errorMsg = error.message;
+      }
+
+      this.HandleError(errorMsg);
     }
   }
 
@@ -2831,9 +2949,20 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
 
       this.OnTransactionSent();
     } catch (error) {
-      console.log(error);
+      console.log(error, "error");
+
       this._transactionStatus = "error";
-      this.HandleError(error.data?.message || error.message);
+
+      let errorMsg = "Something went wrong.";
+      if (typeof error === "string") {
+        errorMsg = error;
+      } else if (!!error.data?.message) {
+        errorMsg = error.data?.message;
+      } else if (!!error.message) {
+        errorMsg = error.message;
+      }
+
+      this.HandleError(errorMsg);
     }
   }
 
@@ -2976,6 +3105,10 @@ C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
 
   _GetTotalScore() {
     return this._totalScore;
+  }
+
+  _GetDynamicReward() {
+    return this._dynamicRewards;
   }
 
   _GetReferralCode() {
@@ -3295,8 +3428,8 @@ self.C3.Plugins.MetaproPlugin.Acts = {
   async RequestLeaderboard(limit, min_balance, max_balance) {
     await this._RequestLeaderboard(limit, min_balance, max_balance);
   },
-  async UpdateScore(score) {
-    await this._UpdateScore(score);
+  async UpdateScore(score, dynamic_rewards) {
+    await this._UpdateScore(score, dynamic_rewards);
   },
   async UpdateUsername(username) {
     await this._UpdateUsername(username);
@@ -3307,8 +3440,8 @@ self.C3.Plugins.MetaproPlugin.Acts = {
   async CheckIfRegistered() {
     await this._CheckIfRegistered();
   },
-  async RequestUserScore() {
-    await this._RequestUserScore();
+  async RequestUserScore(dynamic_rewards_names) {
+    await this._RequestUserScore(dynamic_rewards_names);
   },
   async FetchReferralCode() {
     await this._FetchReferralCode();
@@ -3319,8 +3452,8 @@ self.C3.Plugins.MetaproPlugin.Acts = {
   async RequestReferralStructure() {
     await this._RequestReferralStructure();
   },
-  async AddScore(score, map_id) {
-    await this._AddScore(score, map_id);
+  async AddScore(score, map_id, asset_id, addons, dynamic_rewards) {
+    await this._AddScore(score, map_id, asset_id, addons, dynamic_rewards);
   },
   async RequestBestScore(map_id) {
     await this._RequestBestScore(map_id);
@@ -3448,6 +3581,17 @@ self.C3.Plugins.MetaproPlugin.Exps = {
   },
   GetBestScore() {
     return this._GetBestScore();
+  },
+  GetDynamicReward() {
+    const result = this._GetDynamicReward();
+
+    if (typeof result === "object") {
+      // If the result is an object, return its JSON string representation
+      return JSON.stringify(result);
+    } else {
+      // If the result is a number, return it directly
+      return result;
+    }
   },
   GetBestScoresLeaderboard() {
     const leaderboard = this._GetBestScoresLeaderboard();
@@ -3843,6 +3987,11 @@ self.C3_ExpressionFuncs = [
 		},
 		() => "players.results",
 		() => "Main",
+		p => {
+			const n0 = p._GetNode(0);
+			const v1 = p._GetNode(1).GetVar();
+			return () => (n0.ExpObject() + v1.GetValue());
+		},
 		p => {
 			const n0 = p._GetNode(0);
 			const n1 = p._GetNode(1);

@@ -365,6 +365,7 @@ self.C3_JsPropNameTable = [
 	{userAvatarImg: 0},
 	{userReferralCode: 0},
 	{referralCode: 0},
+	{lineDelta: 0},
 	{lineY: 0},
 	{leaderboardLimit: 0},
 	{MoveSpeedMain: 0},

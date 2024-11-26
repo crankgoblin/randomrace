@@ -163,13 +163,19 @@ self["${t}"]();`,document.head.appendChild(r)}):new Promise((e,t)=>{r.onload=e,r
     }
 
     async _SwitchChain(chainId) {
-      if (!window?.metapro?.isMetapro) {
-        const provider = window.ethereum;
+      const provider = window.ethereum;
 
+      if (!window?.metapro?.isMetapro) {
         await provider.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: `0x${chainId.toString(16)}` }],
         });
+      } else {
+        const currentChainId = parseInt(provider?.chainId, 16);
+
+        if (currentChainId !== chainId) {
+          throw new Error("Incorrect chain selected.");
+        }
       }
     }
 
