@@ -1236,6 +1236,16 @@ self["C3_Shaders"] = {};
 {const a=self.C3;a.Plugins.Json=class extends a.SDKPluginBase{constructor(t){super(t)}Release(){super.Release()}}}{const d=self.C3;d.Plugins.Json.Type=class extends d.SDKTypeBase{constructor(t){super(t)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3,h=self.C3X,i=self.IInstance,j=(g.Plugins.Json.Instance=class extends g.SDKInstanceBase{constructor(t,e){super(t),this._valueCache=[null,null],this._locationCache=[null,null],this._data={},this._path=[],this._currentKey="",this._currentValue=0}Release(){super.Release()}_InvalidateValueCache(){this._valueCache[0]=null,this._valueCache[1]=null}_HasValueCache(a,t){const s=this._valueCache[0];if(null!==a&&null!==s){if(s===a||g.arraysEqual(s,a))return!0;if(t&&0<s.length){for(let t=0,e=Math.min(a.length,s.length);t<e;++t)if(a[t]!==s[t])return!1;return!0}}return!1}_GetValueCache(){return this._valueCache[1]}_UpdateValueCache(t,e){this._valueCache[0]=t,this._valueCache[1]=e}_InvalidateLocationCache(){this._locationCache[0]=null,this._locationCache[1]=null}_HasLocationCache(t){return this._locationCache[0]===t}_GetLocationCache(){return this._locationCache[1]}_UpdateLocationCache(t,e){this._locationCache[0]=t,this._locationCache[1]=e}_SetData(t){this._data=t,this._InvalidateValueCache(),this._SetPath("")}_GetData(){return this._data}_SetPath(t){this._path=this._ParsePathUnsafe(t),this._InvalidateLocationCache()}_ParsePath(t){return g.cloneArray(this._ParsePathUnsafe(t))}_ParsePathUnsafe(t){const e=[];let a=!1,s;if(this._HasLocationCache(t))return this._GetLocationCache();"."===t[0]?(s=g.cloneArray(this._path),t=t.slice(1)):s=[];for(const r of t)a?(e.push(r),a=!1):"\\"===r?a=!0:"."===r?(s.push(e.join("")),g.clearArray(e)):e.push(r);return 0!==e.length&&s.push(e.join("")),this._UpdateLocationCache(t,s),s}_GetValueAtFullPath(t,e){if(this._HasValueCache(t,!1))return this._GetValueCache();let a=this._data;for(const s of t)if(Array.isArray(a)){const r=parseInt(s,10);if(r<0||r>=a.length||!isFinite(r)){a=null;break}a=a[r]}else{if("object"!=typeof a||null===a){a=null;break}if(a.hasOwnProperty(s))a=a[s];else{if(!e){a=null;break}{const n={};a[s]=n,a=n}}}return this._UpdateValueCache(t,a),a}_GetValue(t){const e=this._ParsePath(t);if(!e.length)return this._data;const a=e.pop(),s=this._GetValueAtFullPath(e,!1);if(Array.isArray(s)){const r=parseInt(a,10);return 0<=r&&r<s.length?s[r]:null}return"object"==typeof s&&null!==s&&s.hasOwnProperty(a)?s[a]:null}_JSONTypeOf(t){return null===t?"null":Array.isArray(t)?"array":typeof t}_GetTypeOf(t){const e=this._GetValue(t);return this._JSONTypeOf(e)}_ToSafeValue(t){const e=typeof t;return"number"==e||"string"==e?t:"boolean"==e&&t?1:0}_GetSafeValue(t){return this._ToSafeValue(this._GetValue(t))}_HasKey(t){const e=this._ParsePath(t);if(!e.length)return!1;const a=e.pop(),s=this._GetValueAtFullPath(e,!1);if(Array.isArray(s)){const r=parseInt(a,10);return 0<=r&&r<s.length}return"object"==typeof s&&null!==s&&s.hasOwnProperty(a)}_SetValue(t,e){const a=this._ParsePath(t);if(!a.length)return!1;this._HasValueCache(a,!0)&&this._InvalidateValueCache();const s=a.pop(),r=this._GetValueAtFullPath(a,!0);if(Array.isArray(r)){const n=parseInt(s,10);return!isFinite(n)||n<0||n>=r.length?!1:(r[n]=e,!0)}return"object"==typeof r&&null!==r&&(r[s]=e,!0)}_DeleteKey(t){const e=this._ParsePath(t);if(!e.length)return!1;this._HasValueCache(e,!0)&&this._InvalidateValueCache();const a=e.pop(),s=this._GetValueAtFullPath(e,!1);return!Array.isArray(s)&&"object"==typeof s&&null!==s&&(delete s[a],!0)}SaveToJson(){return{"path":this._path,"data":this._data}}LoadFromJson(t){this._InvalidateValueCache(),this._InvalidateLocationCache(),this._path=t["path"],this._data=t["data"]}_SanitizeValue(t){const e=typeof t;return"number"==e?isFinite(t)?t:0:"object"==typeof t?JSON.stringify(t):t+""}GetDebuggerProperties(){const t="plugins.json.debugger";let e;try{e=this._SanitizeValue(this._data)}catch(t){e='"invalid"'}return[{title:t+".title",properties:[{name:t+".data",value:e,onedit:t=>{try{const e=JSON.parse(t);this._SetData(e)}catch(t){}}},{name:t+".path",value:this._path.map(t=>t.replace(/\./g,"\\.")).join(".")}]}]}GetScriptInterfaceClass(){return self.IJSONInstance}},new WeakMap);self.IJSONInstance=class extends i{constructor(){super(),j.set(this,i._GetInitInst().GetSdkInstance())}getJsonDataCopy(){const t=j.get(this)._GetData();return JSON.parse(JSON.stringify(t))}setJsonDataCopy(t){try{const e=JSON.parse(JSON.stringify(t));j.get(this)._SetData(e)}catch(t){throw console.error("[JSON plugin] setJsonData: object is not valid JSON: ",t),t}}setJsonString(t){h.RequireString(t);try{const e=JSON.parse(t);j.get(this)._SetData(e)}catch(t){throw console.error("[JSON plugin] setJsonString: string is not valid JSON: ",t),t}}toCompactString(){return JSON.stringify(j.get(this)._GetData())}toBeautifiedString(){return JSON.stringify(j.get(this)._GetData(),null,4)}}}{const Ba=self.C3,Ca=["null","boolean","number","string","object","array"];Ba.Plugins.Json.Cnds={HasKey(t){return this._HasKey(t)},CompareType(t,e){return this._GetTypeOf(t)===Ca[e]},CompareValue(t,e,a){return Ba.compare(this._GetSafeValue(t),e,a)},IsBooleanSet(t){return!0===this._GetValue(t)},ForEach(t){const e=this._GetValue(t);if("object"==typeof e&&null!==e){const a=this._runtime,s=a.GetEventSheetManager(),r=a.GetCurrentEvent(),n=r.GetSolModifiers(),i=a.GetEventStack(),l=i.GetCurrentStackFrame(),h=i.Push(r),u=this._path,o=this._currentKey,c=this._currentValue,_=this._ParsePathUnsafe(t);a.SetDebuggingEnabled(!1);for(const[p,y]of Object.entries(e)){this._path=Ba.cloneArray(_),this._path.push(p),this._currentKey=p,this._currentValue=y,s.PushCopySol(n);const S=this.GetObjectClass().GetCurrentSol();S.PickOne(this.GetInstance()),r.Retrigger(l,h),s.PopSol(n)}a.SetDebuggingEnabled(!0),this._path=u,this._InvalidateLocationCache(),this._currentKey=o,this._currentValue=c,i.Pop()}return!1},OnParseError(){return!0}}}{const $a=self.C3;$a.Plugins.Json.Acts={Parse(t){try{this._SetData(JSON.parse(t))}catch(t){console.warn("[JSON plugin] Failed to parse JSON data: ",t),this._SetData({}),this.Trigger($a.Plugins.Json.Cnds.OnParseError)}},SetPath(t){this._SetPath(t)},SetValue(t,e){this._SetValue(t,e)},SetArray(t,e){let a=this._GetValue(t);Array.isArray(a)?$a.resizeArray(a,e,0):(a=[],$a.extendArray(a,e,0),this._SetValue(t,a))},SetObject(t){this._SetValue(t,{})},SetJSON(t,e){let a=null;try{a=JSON.parse(e)}catch(t){console.warn("[JSON plugin] Failed to parse JSON data: ",t),this.Trigger($a.Plugins.Json.Cnds.OnParseError)}this._SetValue(t,a)},SetNull(t){this._SetValue(t,null)},SetBoolean(t,e){this._SetValue(t,0!==e)},ToggleBoolean(t){const e=this._GetValue(t);"boolean"==typeof e&&this._SetValue(t,!e)},AddTo(t,e){const a=this._GetValue(t);"number"==typeof a&&this._SetValue(t,a+e)},SubtractFrom(t,e){const a=this._GetValue(t);"number"==typeof a&&this._SetValue(t,a-e)},DeleteKey(t){this._DeleteKey(t)},PushValue(t,e,a){const s=this._GetValue(e);Array.isArray(s)&&(0===t?s.push(a):s.unshift(a),this._InvalidateValueCache())},PopValue(t,e){const a=this._GetValue(e);Array.isArray(a)&&(0===t?a.pop():a.shift(),this._InvalidateValueCache())},InsertValue(t,e,a){const s=this._GetValue(e);Array.isArray(s)&&(s.splice(a,0,t),this._InvalidateValueCache())},RemoveValues(t,e,a){const s=this._GetValue(e);Array.isArray(s)&&0<t&&(s.splice(a,t),this._InvalidateValueCache())}}}{const N0=self.C3;N0.Plugins.Json.Exps={ToCompactString(){try{return JSON.stringify(this._data)}catch(t){return""}},ToBeautifiedString(){try{return JSON.stringify(this._data,null,4)}catch(t){return""}},Get(t){return this._GetSafeValue(t)},GetAsCompactString(t){const e=this._GetValue(t);return JSON.stringify(e)},GetAsBeautifiedString(t){const e=this._GetValue(t);return JSON.stringify(e,null,4)},Front(t){const e=this._GetValue(t);if(Array.isArray(e)){const a=e[0];return this._ToSafeValue(a)}return-1},Back(t){const e=this._GetValue(t);if(Array.isArray(e)){const a=e.at(-1);return this._ToSafeValue(a)}return-1},Type(t){return this._GetTypeOf(t)},ArraySize(t){const e=this._GetValue(t);return Array.isArray(e)?e.length:-1},Path(){return this._path.map(t=>t.replace(/\./g,"\\.")).join(".")},CurrentKey(){return this._currentKey},CurrentValue(){return this._ToSafeValue(this._currentValue)},CurrentType(){return this._JSONTypeOf(this._currentValue)}}}
 }
 
+// scripts/plugins/Share/c3runtime/runtime.js
+{
+{const a=self.C3;a.Plugins.Share=class extends a.SDKPluginBase{constructor(e){super(e)}Release(){super.Release()}}}{const d=self.C3;d.Plugins.Share.Type=class extends d.SDKTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3,h="share";g.Plugins.Share.Instance=class extends g.SDKInstanceBase{constructor(e,s){super(e,h),this._isSupported=!1,this._isFilesSupported=!1,this._files=[],this.AddDOMMessageHandlers([["share-completed",()=>this._OnShareCompleted()],["share-failed",()=>this._OnShareFailed()]]),this._runtime.AddLoadPromise(this.PostToDOMAsync("init").then(e=>{this._isFilesSupported=e["isFilesSupported"],this._isSupported=e["isSupported"]}))}_OnShareCompleted(){this.Trigger(g.Plugins.Share.Cnds.OnShareCompleted)}_OnShareFailed(){this.Trigger(g.Plugins.Share.Cnds.OnShareFailed)}}}{const m=self.C3;m.Plugins.Share.Cnds={IsSupported(){return this._isSupported},IsSharingFilesSupported(){return this._isFilesSupported},OnShareCompleted(){return!0},OnShareFailed(){return!0}}}{const n=self.C3;n.Plugins.Share.Acts={Share(e,s,t){this._isSupported&&(this._PostToDOMMaybeSync("share",{"text":e,"title":s,"url":t,"files":this._files}),n.clearArray(this._files))},AddFile(e,s,t){if(this._isFilesSupported&&t){const i=t.GetFirstPicked(this._inst);if(i){const r=i.GetSdkInstance().GetArrayBufferReadOnly();if(0!==r.byteLength){const n=s.indexOf(";"),a=(0<=n&&(s=s.substr(0,n)),self["RealFile"]||self["File"]),l=new a([r],e,{"type":s});this._files.push(l)}}}},RequestRate(e,s,t,i){this._PostToDOMMaybeSync("request-rate",{"body":e,"confirm":s,"cancel":t,"appID":i||this._runtime.GetAppId()})},RequestStore(e){this._PostToDOMMaybeSync("request-store",{"appID":e||this._runtime.GetAppId()})}}}{const E=self.C3;E.Plugins.Share.Exps={}}
+}
+
+// scripts/plugins/Browser/c3runtime/runtime.js
+{
+{const C3=self.C3;C3.Plugins.Browser=class BrowserPlugin extends C3.SDKPluginBase{constructor(e){super(e)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.Browser.Type=class BrowserType extends C3.SDKTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const C3=self.C3,DOM_COMPONENT_ID="browser";C3.Plugins.Browser.Instance=class BrowserInstance extends C3.SDKInstanceBase{constructor(e,t){super(e,DOM_COMPONENT_ID),this._initLocationStr="",this._isOnline=!1,this._referrer="",this._docTitle="",this._isCookieEnabled=!1,this._screenWidth=0,this._screenHeight=0,this._windowOuterWidth=0,this._windowOuterHeight=0,this._isConstructArcade=!1,this._cssStyleMap=new Map,this._isInstallAvailable=!1,this._installResult="",this._isWarnOnCloseEnabled=!1,this.AddDOMMessageHandlers([["online-state",e=>this._OnOnlineStateChanged(e)],["backbutton",()=>this._OnBackButton()],["sw-message",e=>this._OnSWMessage(e)],["hashchange",e=>this._OnHashChange(e)],["install-available",()=>this._OnInstallAvailable()],["app-installed",e=>this._OnAppInstalled(e)]]);const n=this.GetRuntime().Dispatcher();this._disposables=new C3.CompositeDisposable(C3.Disposable.From(n,"afterfirstlayoutstart",()=>this._OnAfterFirstLayoutStart()),C3.Disposable.From(n,"window-resize",()=>this._OnWindowResize()),C3.Disposable.From(n,"suspend",()=>this._OnSuspend()),C3.Disposable.From(n,"resume",()=>this._OnResume())),this._runtime.AddLoadPromise(this.PostToDOMAsync("get-initial-state",{"exportType":this._runtime.GetExportType()}).then(e=>{this._initLocationStr=e["location"],this._isOnline=e["isOnline"],this._referrer=e["referrer"],this._docTitle=e["title"],this._isCookieEnabled=e["isCookieEnabled"],this._screenWidth=e["screenWidth"],this._screenHeight=e["screenHeight"],this._windowOuterWidth=e["windowOuterWidth"],this._windowOuterHeight=e["windowOuterHeight"],this._isConstructArcade=e["isConstructArcade"]}))}Release(){super.Release()}_OnAfterFirstLayoutStart(){this.PostToDOM("ready-for-sw-messages")}async _OnOnlineStateChanged(e){const t=!!e["isOnline"];this._isOnline!==t&&(this._isOnline=t,this._isOnline?await this.TriggerAsync(C3.Plugins.Browser.Cnds.OnOnline):await this.TriggerAsync(C3.Plugins.Browser.Cnds.OnOffline))}async _OnWindowResize(){await this.TriggerAsync(C3.Plugins.Browser.Cnds.OnResize)}_OnSuspend(){this.Trigger(C3.Plugins.Browser.Cnds.OnPageHidden)}_OnResume(){this.Trigger(C3.Plugins.Browser.Cnds.OnPageVisible)}async _OnBackButton(){await this.TriggerAsync(C3.Plugins.Browser.Cnds.OnBackButton)}_OnSWMessage(e){const t=e["type"];"downloading-update"===t?this.Trigger(C3.Plugins.Browser.Cnds.OnUpdateFound):"update-ready"===t||"update-pending"===t?this.Trigger(C3.Plugins.Browser.Cnds.OnUpdateReady):"offline-ready"===t&&this.Trigger(C3.Plugins.Browser.Cnds.OnOfflineReady)}_OnHashChange(e){this._initLocationStr=e["location"],this.Trigger(C3.Plugins.Browser.Cnds.OnHashChange)}_OnInstallAvailable(){this._isInstallAvailable=!0,this.Trigger(C3.Plugins.Browser.Cnds.OnInstallAvailable)}_OnAppInstalled(e){this._isInstallAvailable=!1,this.Trigger(C3.Plugins.Browser.Cnds.OnAppInstalled)}_IsWarnOnCloseEnabled(){return this._isWarnOnCloseEnabled}_SetWarnOnCloseEnabled(e){this._isWarnOnCloseEnabled!==(e=!!e)&&(this._isWarnOnCloseEnabled=e,this.PostToDOM("set-warn-on-close",{"enabled":e}))}GetDebuggerProperties(){const e="plugins.browser.debugger";return[{title:"plugins.browser.name",properties:[{name:e+".user-agent",value:navigator.userAgent},{name:e+".is-online",value:this._isOnline},{name:e+".is-fullscreen",value:this._runtime.GetCanvasManager().IsDocumentFullscreen()}]}]}}}{const C3=self.C3;C3.Plugins.Browser.Cnds={IsOnline(){return this._isOnline},OnOnline(){return!0},OnOffline(){return!0},OnResize(){return!0},CookiesEnabled(){return this._isCookieEnabled},IsFullscreen(){return this._runtime.GetCanvasManager().IsDocumentFullscreen()},OnBackButton(){return!0},IsPortraitLandscape(e){const t=this._runtime.GetCanvasManager().GetLastWidth(),n=this._runtime.GetCanvasManager().GetLastHeight(),s=t<=n?0:1;return s===e},OnUpdateFound(){return!0},OnUpdateReady(){return!0},OnOfflineReady(){return!0},OnHashChange(){return!0},OnInstallAvailable(){return!0},IsInstallAvailable(){return this._isInstallAvailable},OnInstallResult(e){switch(e){case 0:return"accepted"===this._installResult;case 1:return"dismissed"===this._installResult;case 2:return"error"===this._installResult;case 3:return!0;default:return!1}},OnAppInstalled(){return!0},CompareDisplayMode(e){const t=this._runtime.GetCanvasManager().GetCssDisplayMode();switch(e){case 0:return"browser"===t;case 1:return"minimal-ui"===t;case 2:return"standalone"===t;case 3:return"fullscreen"===t;default:return!1}},IsWarnOnCloseEnabled(){return this._IsWarnOnCloseEnabled()},PageVisible(){return!this._runtime.IsSuspended()},OnPageHidden(){return!0},OnPageVisible(){return!0},HasJava(){return!1},IsDownloadingUpdate(){return!1},OnMenuButton(){return!1},OnSearchButton(){return!1},IsMetered(){return!1},IsCharging(){return!0},SupportsFullscreen(){return!0}}}{const C3=self.C3,ORIENTATIONS=["portrait","landscape","portrait-primary","portrait-secondary","landscape-primary","landscape-secondary"];C3.Plugins.Browser.Acts={Alert(e){this.PostToDOM("alert",{"message":e.toString()})},Close(){this._isConstructArcade||(this._runtime.IsDebug()?self.C3Debugger.CloseWindow():this.PostToDOM("close"))},Focus(){this.PostToDOM("set-focus",{"isFocus":!0})},Blur(){this.PostToDOM("set-focus",{"isFocus":!1})},GoBack(){this._isConstructArcade||this.PostToDOM("navigate",{"type":"back"})},GoForward(){this._isConstructArcade||this.PostToDOM("navigate",{"type":"forward"})},GoHome(){},Reload(){this._isConstructArcade||(this._runtime.IsDebug()?this._runtime.PostToDebugger({"type":"reload"}):this.PostToDOM("navigate",{"type":"reload"}))},GoToURL(e,t){this._PostToDOMMaybeSync("navigate",{"type":"url","url":e,"target":t,"exportType":this._runtime.GetExportType()})},GoToURLWindow(e,t){this._PostToDOMMaybeSync("navigate",{"type":"new-window","url":e,"tag":t,"exportType":this._runtime.GetExportType()})},RequestFullScreen(e,t){2<=e&&(e+=1),1===(e=6===e?2:e)&&(e=0);const n=C3.CanvasManager._FullscreenModeNumberToString(e);this._runtime.GetCanvasManager().SetDocumentFullscreenMode(n),this._PostToDOMMaybeSync("request-fullscreen",{"navUI":t})},CancelFullScreen(){this._PostToDOMMaybeSync("exit-fullscreen")},Vibrate(e){const n=e.split(",");for(let e=0,t=n.length;e<t;++e)n[e]=parseInt(n[e],10);this._PostToDOMMaybeSync("vibrate",{"pattern":n})},async InvokeDownload(e,t){if(e&&t){const n=await this._runtime.GetAssetManager().GetProjectFileUrl(e);this._runtime.InvokeDownload(n,t)}},InvokeDownloadString(e,t,n){if(n){const s=`data:${t},`+encodeURIComponent(e);this._runtime.InvokeDownload(s,n)}},ConsoleLog(e,t){t=t.toString(),0===e?console.log(t):1===e?console.warn(t):2===e&&console.error(t)},ConsoleGroup(e){console.group(e)},ConsoleGroupEnd(){console.groupEnd()},ExecJs(jsStr){try{eval(jsStr)}catch(err){console.error("Error executing JavaScript: ",err)}},LockOrientation(e){if(!((e=Math.floor(e))<0||e>=ORIENTATIONS.length)){const t=ORIENTATIONS[e];this._PostToDOMMaybeSync("lock-orientation",{"orientation":t})}},UnlockOrientation(){this._PostToDOMMaybeSync("unlock-orientation")},LoadStyleSheet(e){this._runtime.GetAssetManager().LoadStyleSheet(e)},async SetDocumentCSSStyle(e,t,n,s){await this.PostToDOMAsync("set-document-css-style",{"prop":C3.CSSToCamelCase(e),"value":t,"selector":n,"is-all":0!==s})},async GetDocumentCSSStyle(e,t,n){const s=await this.PostToDOMAsync("get-document-css-style",{"prop":e,"selector":t});s["isOk"]&&this._cssStyleMap.set(n.toLowerCase(),s["result"].trim())},SetHash(e){this.PostToDOM("set-hash",{"hash":e})},SetWindowSize(e,t){this.PostToDOM("set-window-size",{"windowWidth":e,"windowHeight":t})},SetWindowPosition(e,t){this.PostToDOM("set-window-position",{"windowX":e,"windowY":t})},async RequestInstall(){const e=await this.PostToDOMAsync("request-install");this._installResult=e["result"],this.Trigger(C3.Plugins.Browser.Cnds.OnInstallResult)},SetWarnOnClose(e){this._SetWarnOnCloseEnabled(e)}}}{const C3=self.C3;C3.Plugins.Browser.Exps={URL(){return this._runtime.IsInWorker()?this._initLocationStr:location.toString()},Protocol(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).protocol},Domain(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).hostname},Port(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).port},PathName(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).pathname},Hash(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).hash},QueryString(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).search},QueryParam(e){const t=(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).search,n=RegExp("[?&]"+e+"=([^&]*)").exec(t);return n?decodeURIComponent(n[1].replace(/\+/g," ")):""},Referrer(){return this._referrer},Title(){return this._docTitle},Language(){return navigator.language},Platform(){return navigator.platform},UserAgent(){return navigator.userAgent},ExecJS(jsStr){let result=0;try{result=eval(jsStr)}catch(err){console.error("Error executing JavaScript: ",err)}return"number"==typeof result||"string"==typeof result?result:"boolean"==typeof result&&result?1:0},CSSStyleValue(e){return this._cssStyleMap.get(e)||""},Name(){return navigator.appName},Version(){return navigator.appVersion},Product(){return navigator.product},Vendor(){return navigator.vendor},BatteryLevel(){return 1},BatteryTimeLeft(){return 1/0},Bandwidth(){const e=navigator["connection"];return e&&(e["downlink"]||e["downlinkMax"]||e["bandwidth"])||1/0},ConnectionType(){const e=navigator["connection"];return e&&e["type"]||"unknown"},DevicePixelRatio(){return self.devicePixelRatio},ScreenWidth(){return this._screenWidth},ScreenHeight(){return this._screenHeight},WindowInnerWidth(){return this._runtime.GetCanvasManager().GetLastWidth()},WindowInnerHeight(){return this._runtime.GetCanvasManager().GetLastHeight()},WindowOuterWidth(){return this._windowOuterWidth},WindowOuterHeight(){return this._windowOuterWidth},DisplayMode(){return this._runtime.GetCanvasManager().GetCssDisplayMode()},InstallResult(){return this._installResult}}}
+}
+
 // scripts/plugins/Text/c3runtime/runtime.js
 {
 {const a=self.C3;a.Plugins.Text=class extends a.SDKPluginBase{constructor(e){super(e)}Release(){super.Release()}}}{const d=self.C3;d.Plugins.Text.Type=class extends d.SDKTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}LoadTextures(e){}ReleaseTextures(){}}}{const h=self.C3,i=self.C3X,j=[0,0,0],k=0,l=1,m=2,n=3,o=4,p=5,q=6,r=7,s=8,t=9,u=10,v=11,w=12,x=13,y=14,z=15,A=["left","center","right"],B=["top","center","bottom"],C=["ltr","rtl"],D=["word","cjk","character"],E=new h.Rect,F=new h.Quad,G=new h.Color,H=h.New(h.Vector2),I=new Map([["b","strong"],["i","em"],["s","s"],["u","u"],["iconoffsety",null]]),J=(h.Plugins.Text.Instance=class extends h.SDKWorldInstanceBase{constructor(e,i){if(super(e),this._text="",this._enableBBcode=!0,this._faceName="Arial",this._ptSize=12,this._lineHeightOffset=0,this._isBold=!1,this._isItalic=!1,this._color=h.New(h.Color),this._horizontalAlign=0,this._verticalAlign=0,this._wrapMode="word",this._textDirection=0,this._resolutionMode="auto",this._fixedScaleFactor=1,this._iconObjectClass=null,this._htmlString="",this._isHtmlStringUpToDate=!1,this._readAloud=!1,this._screenReaderText=null,this._typewriterStartTime=-1,this._typewriterEndTime=-1,this._typewriterLength=0,this._rendererText=h.New(h.Gfx.RendererText,this._runtime.GetRenderer(),{timeout:5}),this._rendererText.ontextureupdate=()=>this._runtime.UpdateRender(),this._animationframeimagechange_handler=()=>this._OnIconObjectClassImageChanged(),this._pendingUpdateIconSet=!1,i){this._text=i[k],this._enableBBcode=!!i[l],this._faceName=i[m],this._ptSize=i[n],this._lineHeightOffset=i[o],this._isBold=!!i[p],this._isItalic=!!i[q],this._horizontalAlign=i[s],this._verticalAlign=i[t],this._wrapMode=D[i[u]],this._textDirection=i[v],this._SetIconObjectClass(this._runtime.GetObjectClassBySID(i[w]));const a=i[r];this._color.setRgb(a[0],a[1],a[2]),this.GetWorldInfo().SetVisible(i[x]),this._readAloud=!!i[z]}this._UpdateTextSettings(),this._UpdateScreenReaderText()}Release(){this._SetIconObjectClass(null),this._CancelTypewriter(),this._screenReaderText&&(this._screenReaderText.Release(),this._screenReaderText=null),this._rendererText.Release(),this._rendererText=null,super.Release()}_UpdateTextSettings(){const e=this._rendererText;e.SetText(this._text),e.SetBBCodeEnabled(this._enableBBcode),this._rendererText.IsBBCodeEnabled()&&this._iconObjectClass?this._rendererText.SetIconSet(this.GetRuntime().GetTextIconSet(this._iconObjectClass)):this._rendererText.SetIconSet(null),e.SetIconSmoothing("nearest"!==this._runtime.GetSampling()),e.SetFontName(this._faceName),e.SetLineHeight(this._lineHeightOffset),e.SetBold(this._isBold),e.SetItalic(this._isItalic),e.SetColor(this._color),e.SetHorizontalAlignment(A[this._horizontalAlign]),e.SetVerticalAlignment(B[this._verticalAlign]),e.SetWordWrapMode(this._wrapMode),e.SetTextDirection(C[this._textDirection])}_UpdateTextSize(){const e=this.GetWorldInfo(),t=(this._rendererText.SetFontSize(this._ptSize),this._rendererText.SetFontSizeScale(e.GetSceneGraphScale()),e.GetLayer());let i;"auto"===this._resolutionMode?i=t.GetResolutionScaleFactorToZ(e.GetTotalZElevation()):"fixed"===this._resolutionMode&&(i=this._fixedScaleFactor),e.HasMesh()&&i!==this._rendererText.GetZoom()&&e.SetMeshChanged(!0),this._rendererText.SetSize(e.GetWidth(),e.GetHeight(),i)}_SetIconObjectClass(e){e&&(e.IsFamily()||e.GetPlugin().constructor!==h.Plugins.Sprite)||e!==this._iconObjectClass&&(this._iconObjectClass&&this._iconObjectClass.Dispatcher().removeEventListener("animationframeimagechange",this._animationframeimagechange_handler),this._iconObjectClass=e,this._iconObjectClass&&this._iconObjectClass.Dispatcher().addEventListener("animationframeimagechange",this._animationframeimagechange_handler),this._UpdateTextSettings(),this._isHtmlStringUpToDate=!1,this._runtime.UpdateRender())}_OnIconObjectClassImageChanged(){this._runtime.DeleteTextIconSet(this._iconObjectClass),this._runtime.UpdateRender(),this._pendingUpdateIconSet=!0}_UpdateScreenReaderText(){if(this._readAloud){let e=this._text;this._enableBBcode&&(e=h.BBString.StripAnyTags(e)),this._screenReaderText?this._screenReaderText.SetText(e):this._screenReaderText=h.New(h.ScreenReaderText,this._runtime,e)}else this._screenReaderText&&(this._screenReaderText.Release(),this._screenReaderText=null)}Draw(e){const t=this.GetWorldInfo(),i=(this._UpdateTextSize(),this._pendingUpdateIconSet&&(this._pendingUpdateIconSet=!1,this._rendererText.IsBBCodeEnabled())&&this._iconObjectClass&&this._rendererText.SetIconSet(this.GetRuntime().GetTextIconSet(this._iconObjectClass)),this._rendererText.GetTexture());if(i){const s=t.GetLayer();if(0===t.GetAngle()&&0===s.GetAngle()&&0===t.GetTotalZElevation()&&!t.HasMesh()&&s.RendersIn2DMode()){const r=t.GetBoundingQuad(),[n,a]=s.LayerToDrawSurface(r.getTlx(),r.getTly()),[o,h]=s.LayerToDrawSurface(r.getBrx(),r.getBry()),_=n-Math.round(n),l=a-Math.round(a),[c,d]=(E.set(n,a,o,h),E.offset(-_,-l),F.setFromRect(E),e.GetRenderTargetSize(e.GetRenderTarget()));this._runtime.GetCanvasManager().SetDeviceTransform(e,c,d),e.SetTexture(i),e.Quad3(F,this._rendererText.GetTexRect()),s._SetTransform(e)}else e.SetTexture(i),t.HasMesh()?this._DrawMesh(t,e):this._DrawStandard(t,e)}}_DrawStandard(e,t){let i=e.GetBoundingQuad();this._runtime.IsPixelRoundingEnabled()&&(i=this._PixelRoundQuad(i)),t.Quad3(i,this._rendererText.GetTexRect())}_DrawMesh(t,e){const i=t.GetTransformedMesh();if(t.IsMeshChanged()){t.CalculateBbox(E,F,!1);let e=F;this._runtime.IsPixelRoundingEnabled()&&(e=this._PixelRoundQuad(e)),i.CalculateTransformedMesh(t.GetSourceMesh(),e,this._rendererText.GetTexRect()),t.SetMeshChanged(!1)}i.Draw(e)}_PixelRoundQuad(e){const t=e.getTlx()-Math.round(e.getTlx()),i=e.getTly()-Math.round(e.getTly());return 0==t&&0==i?e:(F.copy(e),F.offset(-t,-i),F)}GetCurrentSurfaceSize(){const e=this._rendererText.GetTexture();return e?[e.GetWidth(),e.GetHeight()]:[100,100]}GetCurrentTexRect(){return this._rendererText.GetTexRect()}IsCurrentTexRotated(){return!1}SaveToJson(){const e={"t":this._text,"c":this._color.toJSON(),"fn":this._faceName,"ps":this._ptSize};return this._enableBBcode&&(e["bbc"]=this._enableBBcode),0!==this._horizontalAlign&&(e["ha"]=this._horizontalAlign),0!==this._verticalAlign&&(e["va"]=this._verticalAlign),"word"!==this._wrapMode&&(e["wr"]=this._wrapMode),0!==this._lineHeightOffset&&(e["lho"]=this._lineHeightOffset),this._isBold&&(e["b"]=this._isBold),this._isItalic&&(e["i"]=this._isItalic),-1!==this._typewriterEndTime&&(e["tw"]={"st":this._typewriterStartTime,"en":this._typewriterEndTime,"l":this._typewriterLength}),this._iconObjectClass&&(e["ioc"]=this._iconObjectClass.GetSID()),"fixed"===this._resolutionMode&&(e["fs"]=this._fixedScaleFactor),e}LoadFromJson(e){if(this._CancelTypewriter(),this._text=e["t"],this._color.setFromJSON(e["c"]),this._faceName=e["fn"],this._ptSize=e["ps"],this._enableBBcode=!!e.hasOwnProperty("bbc")&&e["bbc"],this._horizontalAlign=e.hasOwnProperty("ha")?e["ha"]:0,this._verticalAlign=e.hasOwnProperty("va")?e["va"]:0,e.hasOwnProperty("wr")){const t=e["wr"];this._wrapMode="boolean"==typeof t?t?"word":"character":t}else this._wrapMode="word";if(this._lineHeightOffset=e.hasOwnProperty("lho")?e["lho"]:0,this._isBold=!!e.hasOwnProperty("b")&&e["b"],this._isItalic=!!e.hasOwnProperty("i")&&e["i"],e.hasOwnProperty("tw")){const i=e["tw"];this._typewriterStartTime=i["st"],this._typewriterEndTime=i["en"],this._typewriterLength=i["l"]}if(e.hasOwnProperty("ioc")){const s=this.GetRuntime().GetObjectClassBySID(e["ioc"]);s&&this._SetIconObjectClass(s)}else this._SetIconObjectClass(null);e.hasOwnProperty("fs")?(this._resolutionMode="fixed",this._fixedScaleFactor=e["fs"]):this._resolutionMode="auto",this._UpdateTextSettings(),this._UpdateScreenReaderText(),this._isHtmlStringUpToDate=!1,-1!==this._typewriterEndTime&&this._StartTicking()}GetPropertyValueByIndex(e){switch(e){case k:return this.GetText();case l:return this._enableBBcode;case m:return this._GetFontFace();case n:return this._GetFontSize();case o:return this._GetLineHeight();case p:return this._IsBold();case q:return this._IsItalic();case r:return j[0]=this._color.getR(),j[1]=this._color.getG(),j[2]=this._color.getB(),j;case s:return this._GetHAlign();case t:return this._GetVAlign();case u:return this._GetWrapMode();case z:return this._IsReadAloud()}}SetPropertyValueByIndex(e,i){switch(e){case k:this._SetText(i);break;case l:this._enableBBcode!==!!i&&(this._enableBBcode=!!i,this._UpdateTextSettings());break;case m:this._SetFontFace(i);break;case n:this._SetFontSize(i);break;case o:this._SetLineHeight(i);break;case p:this._SetBold(i);break;case q:this._SetItalic(i);break;case r:const a=this._color,h=i;a.getR()===h[0]&&a.getG()===h[1]&&a.getB()===h[2]||(this._color.setRgb(h[0],h[1],h[2]),this._UpdateTextSettings());break;case s:this._SetHAlign(i);break;case t:this._SetVAlign(i);break;case u:this._SetWrapMode(i)}}SetPropertyColorOffsetValueByIndex(e,t,i,s){0===t&&0===i&&0===s||e===r&&(this._color.addRgb(t,i,s),this._UpdateTextSettings())}_SetText(e){this._text!==e&&(this._text=e,this._rendererText.SetText(e),this._UpdateScreenReaderText(),this._isHtmlStringUpToDate=!1,this._runtime.UpdateRender())}GetText(){return this._text}_StartTypewriter(e,t){this._UpdateTextSize(),this._SetText(e),this._typewriterStartTime=this._runtime.GetWallTime(),this._typewriterEndTime=this._typewriterStartTime+t/this.GetInstance().GetActiveTimeScale(),this._typewriterLength=this._rendererText.GetLengthInGraphemes(),this._rendererText.SetDrawMaxCharacterCount(0),this._StartTicking()}_CancelTypewriter(){this._typewriterStartTime=-1,this._typewriterEndTime=-1,this._typewriterLength=0,this._rendererText.SetDrawMaxCharacterCount(-1),this._StopTicking()}_FinishTypewriter(){-1!==this._typewriterEndTime&&(this._CancelTypewriter(),this.Trigger(h.Plugins.Text.Cnds.OnTypewriterTextFinished),this._runtime.UpdateRender())}_SetFontFace(e){this._faceName!==e&&(this._faceName=e,this._rendererText.SetFontName(e),this._runtime.UpdateRender())}_GetFontFace(){return this._faceName}_SetBold(e){this._isBold!==(e=!!e)&&(this._isBold=e,this._rendererText.SetBold(e),this._runtime.UpdateRender())}_IsBold(){return this._isBold}_SetItalic(e){this._isItalic!==(e=!!e)&&(this._isItalic=e,this._rendererText.SetItalic(e),this._runtime.UpdateRender())}_IsItalic(){return this._isItalic}_SetFontSize(e){this._ptSize!==e&&(this._ptSize=e,this._runtime.UpdateRender())}_GetFontSize(){return this._ptSize}_SetFontColor(e){this._color.equalsIgnoringAlpha(e)||(this._color.copyRgb(e),this._rendererText.SetColor(this._color),this._runtime.UpdateRender())}_GetFontColor(){return this._color}_SetLineHeight(e){this._lineHeightOffset!==e&&(this._lineHeightOffset=e,this._UpdateTextSettings(),this._runtime.UpdateRender())}_GetLineHeight(){return this._lineHeightOffset}_SetHAlign(e){this._horizontalAlign!==e&&(this._horizontalAlign=e,this._UpdateTextSettings(),this._runtime.UpdateRender())}_GetHAlign(){return this._horizontalAlign}_SetVAlign(e){this._verticalAlign!==e&&(this._verticalAlign=e,this._UpdateTextSettings(),this._runtime.UpdateRender())}_GetVAlign(){return this._verticalAlign}_SetWrapModeByIndex(e){this._SetWrapMode(D[e])}_SetWrapMode(e){this._wrapMode!==e&&(this._wrapMode=e,this._UpdateTextSettings(),this._runtime.UpdateRender())}_GetWrapMode(){return this._wrapMode}_SetTextDirection(e){this._textDirection!==e&&(this._textDirection=e,this._UpdateTextSettings(),this._runtime.UpdateRender())}_GetTextDirection(){return this._textDirection}_SetReadAloud(e){this._readAloud=!!e,this._UpdateScreenReaderText()}_IsReadAloud(){return this._readAloud}_SetResolutionMode(e){this._resolutionMode!==e&&(this._resolutionMode=e,this._runtime.UpdateRender())}_GetResolutionMode(){return this._resolutionMode}_SetFixedScaleFactor(e){this._fixedScaleFactor!==e&&(this._fixedScaleFactor=e,"fixed"===this._resolutionMode)&&this._runtime.UpdateRender()}_GetFixedScaleFactor(){return this._fixedScaleFactor}_GetTextWidth(){return this._UpdateTextSize(),this._rendererText.GetTextWidth()}_GetTextHeight(){return this._UpdateTextSize(),this._rendererText.GetTextHeight()}_GetTagAtPosition(e,t){this._UpdateTextSize();const i=this.GetWorldInfo(),s=(H.set(e-i.GetX(),t-i.GetY()),H.rotate(-i.GetAngle()),H.offset(i.GetWidth()*i.GetOriginX(),i.GetHeight()*i.GetOriginY()),H.divide(i.GetWidth(),i.GetHeight()),H.scale(this._rendererText.GetWidth(),this._rendererText.GetHeight()),this._rendererText.HitTestFragment(H.getX(),H.getY()));if(s){const r=s.GetStyleTag("tag");if(r)return r.param}return""}_HasTagAtPosition(e,t,i){const s=this._GetTagAtPosition(t,i);return s&&h.equalsNoCase(e,s)}_GetTagPosition(e,t){this._UpdateTextSize(),t=Math.floor(t);const i=this._rendererText.FindFragmentWithTag(e,t);if(!i)return null;const s=this.GetWorldInfo(),r=this._rendererText.GetDrawScale(),n=i.GetPosX(),a=i.GetPosY()-(i.GetHeight()-i.GetFontBoundingBoxDescent())*r,o=i.GetWidth()*r/this._rendererText.GetWidth()*s.GetWidth(),h=i.GetHeight()*r/this._rendererText.GetHeight()*s.GetHeight();return H.set(n,a),H.divide(this._rendererText.GetWidth(),this._rendererText.GetHeight()),H.scale(s.GetWidth(),s.GetHeight()),H.offset(-s.GetWidth()*s.GetOriginX(),-s.GetHeight()*s.GetOriginY()),H.rotate(s.GetAngle()),H.offset(s.GetX(),s.GetY()),{x:H.getX(),y:H.getY(),width:o,height:h}}_GetTagCount(e){return this._UpdateTextSize(),this._rendererText.CountFragmentsWithTag(e)}_GetHTMLCloseTag(e){let t=I.get(e);return null===t?"":`</${(t=t||"span")||"span"}>`}_GetHTMLOpenTag(e,t){let i=I.get(e);if(null===i)return"";switch(i=i||"span",e){case"color":return`<${i} style="color: ${t}">`;case"font":return`<${i} style="font-family: '${t}'">`;case"opacity":return`<${i} style="opacity: ${t}%">`;case"size":return`<${i} style="font-size: ${t}pt">`;case"background":return`<${i} style="background-color: ${t}">`;case"hide":return`<${i} style="visibility: hidden">`;case"class":return`<${i} class="${t}">`;case"tag":return`<${i} data-tag="${t}">`;default:return`<${i}>`}}async _UpdateHTMLString(){if(!this._isHtmlStringUpToDate){const e=new h.BBString(this._text,{noEscape:!0}).toFragmentList(),t=new Map;let i='<span class="c3-text"';const s=[],r=(s.push(`font-family: '${this._GetFontFace()}';`),this._IsBold()&&s.push("font-weight: bold;"),this._IsItalic()&&s.push("font-style: italic;"),"character"===this._GetWrapMode()&&s.push("word-break: break-all;"),i+=` style="${s.join(" ")}">`,this._iconObjectClass?this.GetRuntime().GetTextIconSet(this._iconObjectClass):null);if(this._iconObjectClass){const o=h.New(h.PromiseThrottle),_=[],l=new Map;for(const d of e)if(d.IsIcon()){const g=d.GetTextIcon(r);if(g){const u=g.GetSource(),T=u.GetImageInfo().GetImageAsset();l.has(T)||(l.set(T,null),_.push(o.Add(async()=>{const e=await T.LoadToDrawable();l.set(T,e)})))}}await Promise.all(_);const c=[];for(const S of e)if(S.IsIcon()){const p=S.GetTextIcon(r);if(p){const x=p.GetSource(),G=x.GetImageInfo().GetImageAsset();c.push(o.Add(async()=>{const e=await x.GetImageInfo().ExtractImageToBlobURL(l.get(G));t.set(p,e)}))}}await Promise.all(c);for(const m of l.values())m instanceof ImageBitmap&&m["close"]&&m["close"]()}const n=new Map;for(const f of e){const w=f.GetStyleMap();let e=[...n.keys()];e.reverse();for(const I of e)w.has(I)&&w.get(I)===n.get(I)||(n.delete(I),i+=this._GetHTMLCloseTag(I));for(const[R,y]of w)n.has(R)||(n.set(R,y),i+=this._GetHTMLOpenTag(R,y));if(f.IsText()&&(i+=h.ReplaceAll(h.EscapeHTML(f.GetCharacterArray().join("")),"\n","<br>")),f.IsIcon()&&r){const b=f.GetTextIcon(r);if(b){const C=t.get(b);if(C){const s=[];let t="0.2em";const F=w.get("iconoffsety");if(F){let e=F.trim();t=e.endsWith("%")?parseFloat(e)/100+"em":e+"px"}s.push("top: "+t),"nearest"===this._runtime.GetSampling()&&s.push("image-rendering: pixelated"),i+=`<img class="c3-text-icon" data-icon="${f.GetIconParameter()}" width="${b.GetWidth()}" height="${b.GetHeight()}" style="${s.join(";")}" src="${C}">`}}}}const a=[...n.keys()];a.reverse();for(const A of a)i+=this._GetHTMLCloseTag(A);i+="</span>",this._htmlString=i,this._isHtmlStringUpToDate=!0}return this._htmlString}Tick(){const t=this._runtime.GetWallTime();if(t>=this._typewriterEndTime)this._CancelTypewriter(),this.Trigger(h.Plugins.Text.Cnds.OnTypewriterTextFinished),this._runtime.UpdateRender();else{let e=h.relerp(this._typewriterStartTime,this._typewriterEndTime,t,0,this._typewriterLength);(e=Math.floor(e))!==this._rendererText.GetDrawMaxCharacterCount()&&(this._rendererText.SetDrawMaxCharacterCount(e),this._runtime.UpdateRender())}}GetDebuggerProperties(){const e="plugins.text";return[{title:e+".name",properties:[{name:e+".properties.text.name",value:this.GetText(),onedit:e=>this._SetText(e)},{name:e+".properties.font.name",value:this._GetFontFace(),onedit:e=>this._SetFontFace(e)},{name:e+".properties.size.name",value:this._GetFontSize(),onedit:e=>this._SetFontSize(e)},{name:e+".properties.line-height.name",value:this._GetLineHeight(),onedit:e=>this._SetLineHeight(e)},{name:e+".properties.bold.name",value:this._IsBold(),onedit:e=>this._SetBold(e)},{name:e+".properties.italic.name",value:this._IsItalic(),onedit:e=>this._SetItalic(e)}]}]}GetScriptInterfaceClass(){return self.ITextInstance}},new WeakMap),K=new Map([["left",0],["center",1],["right",2]]),L=new Map([["top",0],["center",1],["bottom",2]]),M=["ltr","rtl"],N=new Set(["auto","fixed"]);self.ITextInstance=class extends self.IWorldInstance{constructor(){super(),J.set(this,self.IInstance._GetInitInst().GetSdkInstance())}get text(){return J.get(this).GetText()}set text(e){i.RequireString(e);const t=J.get(this);t._CancelTypewriter(),t._SetText(e)}typewriterText(e,t){i.RequireString(e),i.RequireFiniteNumber(t);const s=J.get(this);s._CancelTypewriter(),s._StartTypewriter(e,t)}typewriterFinish(){J.get(this)._FinishTypewriter()}set fontFace(e){i.RequireString(e),J.get(this)._SetFontFace(e)}get fontFace(){return J.get(this)._GetFontFace()}set isBold(e){J.get(this)._SetBold(e)}get isBold(){return J.get(this)._IsBold()}set isItalic(e){J.get(this)._SetItalic(e)}get isItalic(){return J.get(this)._IsItalic()}set sizePt(e){i.RequireFiniteNumber(e),J.get(this)._SetFontSize(e)}get sizePt(){return J.get(this)._GetFontSize()}set fontColor(e){if(i.RequireArray(e),e.length<3)throw new Error("expected 3 elements");G.setRgb(e[0],e[1],e[2]),J.get(this)._SetFontColor(G)}get fontColor(){const e=J.get(this)._GetFontColor();return[e.getR(),e.getG(),e.getB()]}set lineHeight(e){i.RequireFiniteNumber(e),J.get(this)._SetLineHeight(e)}get lineHeight(){return J.get(this)._GetLineHeight()}set horizontalAlign(e){i.RequireString(e);const t=K.get(e);if(void 0===t)throw new Error("invalid mode");J.get(this)._SetHAlign(t)}get horizontalAlign(){return A[J.get(this)._GetHAlign()]}set verticalAlign(e){i.RequireString(e);const t=L.get(e);if(void 0===t)throw new Error("invalid mode");J.get(this)._SetVAlign(t)}get verticalAlign(){return B[J.get(this)._GetVAlign()]}set wordWrapMode(e){if(!D.includes(e))throw new Error("invalid mode");J.get(this)._SetWrapMode(e)}get wordWrapMode(){return J.get(this)._GetWrapMode()}set textDirection(e){i.RequireString(e);const t=M.indexOf(e);if(-1===t)throw new Error("invalid text direction");J.get(this)._SetTextDirection(t)}get textDirection(){return M[J.get(this)._GetTextDirection()]}set readAloud(e){J.get(this)._SetReadAloud(!!e)}get readAloud(){return J.get(this)._IsReadAloud()}setFixedResolutionMode(e){i.RequireFiniteNumber(e);const t=J.get(this);t._SetResolutionMode("fixed"),t._SetFixedScaleFactor(e)}setAutoResolutionMode(){J.get(this)._SetResolutionMode("auto")}get textWidth(){return J.get(this)._GetTextWidth()}get textHeight(){return J.get(this)._GetTextHeight()}getTextSize(){const e=J.get(this);return[e._GetTextWidth(),e._GetTextHeight()]}hasTagAtPosition(e,t,s){return i.RequireString(e),i.RequireFiniteNumber(t),i.RequireFiniteNumber(s),J.get(this)._HasTagAtPosition(e,t,s)}getTagAtPosition(e,t){return i.RequireFiniteNumber(e),i.RequireFiniteNumber(t),J.get(this)._GetTagAtPosition(e,t)}getTagPositionAndSize(e,t=0){return i.RequireString(e),i.RequireFiniteNumber(t),J.get(this)._GetTagPosition(e,t)}getTagCount(e){return i.RequireString(e),J.get(this)._GetTagCount(e)}changeIconSet(e){const t=J.get(this),i=t.GetRuntime()._UnwrapIObjectClass(e);t._SetIconObjectClass(i)}getAsHtmlString(){return J.get(this)._UpdateHTMLString()}}}{const Tb=self.C3;Tb.Plugins.Text.Cnds={CompareText(e,t){return t?this._text===e:Tb.equalsNoCase(this._text,e)},IsRunningTypewriterText(){return-1!==this._typewriterEndTime},OnTypewriterTextFinished(){return!0},HasTagAtPosition(e,t,i){return this._HasTagAtPosition(e,t,i)}}}{const Zb=self.C3,$b=Zb.New(Zb.Color);Zb.Plugins.Text.Acts={SetText(e){this._CancelTypewriter(),"number"==typeof e&&e<1e9&&(e=Math.round(1e10*e)/1e10),this._SetText(e.toString())},AppendText(e){this._CancelTypewriter(),(e=(e="number"==typeof e&&e<1e9?Math.round(1e10*e)/1e10:e).toString())&&this._SetText(this._text+e)},TypewriterText(e,t){this._CancelTypewriter(),"number"==typeof e&&e<1e9&&(e=Math.round(1e10*e)/1e10),this._StartTypewriter(e.toString(),t)},SetFontFace(e,t){let i=!1,s=!1;switch(t){case 1:i=!0;break;case 2:s=!0;break;case 3:i=!0,s=!0}e===this._faceName&&i===this._isBold&&s===this._isItalic||(this._SetFontFace(e),this._SetBold(i),this._SetItalic(s))},SetFontSize(e){this._SetFontSize(e)},SetFontColor(e){$b.setFromRgbValue(e),$b.clamp(),this._SetFontColor($b)},SetWebFont(e,t){console.warn("[Text] 'Set web font' action is deprecated and no longer has any effect")},SetEffect(e){this.GetWorldInfo().SetBlendMode(e),this._runtime.UpdateRender()},TypewriterFinish(){this._FinishTypewriter()},SetLineHeight(e){this._SetLineHeight(e)},SetHAlign(e){this._SetHAlign(e)},SetVAlign(e){this._SetVAlign(e)},SetWrapping(e){this._SetWrapModeByIndex(e)},SetTextDirection(e){this._SetTextDirection(e)},ChangeIconSet(e){this._SetIconObjectClass(e)},UpdateHTML(){return this._UpdateHTMLString()},SetReadAloud(e){this._SetReadAloud(e)},SetResolutionMode(e,t){this._SetResolutionMode(["auto","fixed"][e]),this._SetFixedScaleFactor(t)}}}{const v1=self.C3;v1.Plugins.Text.Exps={Text(){return this._text},PlainText(){return this._enableBBcode?v1.BBString.StripAnyTags(this._text):this._text},FaceName(){return this._faceName},FaceSize(){return this._ptSize},TextWidth(){return this._GetTextWidth()},TextHeight(){return this._GetTextHeight()},LineHeight(){return this._lineHeightOffset},TagAtPosition(e,t){return this._GetTagAtPosition(e,t)},TagCount(e){return this._GetTagCount(e)},TagX(e,t){const i=this._GetTagPosition(e,t);return i?i.x:0},TagY(e,t){const i=this._GetTagPosition(e,t);return i?i.y:0},TagWidth(e,t){const i=this._GetTagPosition(e,t);return i?i.width:0},TagHeight(e,t){const i=this._GetTagPosition(e,t);return i?i.height:0},AsHTML(){return this._htmlString}}}
@@ -1276,6 +1286,11 @@ const C3=self.C3;function CloneDrawable(e){const t=C3.CreateCanvas(e.width,e.hei
 {const a=self.C3,b="text-input";a.Plugins.TextBox=class extends a.SDKDOMPluginBase{constructor(t){super(t,b),this.AddElementMessageHandler("click",(t,e)=>t._OnClick(e)),this.AddElementMessageHandler("dblclick",(t,e)=>t._OnDoubleClick(e)),this.AddElementMessageHandler("change",(t,e)=>t._OnChange(e))}Release(){super.Release()}}}{const k=self.C3;k.Plugins.TextBox.Type=class extends k.SDKTypeBase{constructor(t){super(t)}Release(){super.Release()}OnCreate(){}}}{const n=self.C3,o=self.C3X,p=0,q=1,r=2,s=3,t=4,u=5,v=6,w=7,x=8,y=9,z=10,A="text-input",B=["text","password","email","number","tel","url","textarea","search"],C=(n.Plugins.TextBox.Instance=class extends n.SDKDOMInstanceBase{constructor(e,i){super(e,A),this._text="",this._placeholder="",this._title="",this._isEnabled=!0,this._isReadOnly=!1,this._spellCheck=!1,this._type="text",this._autoFontSize=!0,this._maxLength=-1,this._id="",this._className="",i&&(this._text=i[p],this._placeholder=i[q],this._title=i[r],this.GetWorldInfo().SetVisible(i[s]),this._isEnabled=i[t],this._isReadOnly=i[u],this._spellCheck=i[v],this._type=B[i[w]],this._autoFontSize=i[x],this._id=i[y],this._className=i[z]),this.CreateElement({"type":this._type,"id":this._id,"className":this._className})}Release(){super.Release()}GetElementState(){return{"text":this._text,"placeholder":this._placeholder,"title":this._title,"isEnabled":this._isEnabled,"isReadOnly":this._isReadOnly,"spellCheck":this._spellCheck,"maxLength":this._maxLength}}async _OnClick(t){this.DispatchScriptEvent("click",!0),await this.TriggerAsync(n.Plugins.TextBox.Cnds.OnClicked)}async _OnDoubleClick(t){this.DispatchScriptEvent("dblclick",!0),await this.TriggerAsync(n.Plugins.TextBox.Cnds.OnDoubleClicked)}async _OnChange(t){this._text=t["text"],this.DispatchScriptEvent("change",!0),await this.TriggerAsync(n.Plugins.TextBox.Cnds.OnTextChanged)}_SetText(t){this._text!==t&&(this._text=t,this.UpdateElementState())}_GetText(){return this._text}_SetPlaceholder(t){this._placeholder!==t&&(this._placeholder=t,this.UpdateElementState())}_GetPlaceholder(){return this._placeholder}_SetTooltip(t){this._title!==t&&(this._title=t,this.UpdateElementState())}_GetTooltip(){return this._title}_SetEnabled(t){this._isEnabled!==(t=!!t)&&(this._isEnabled=t,this.UpdateElementState())}_IsEnabled(){return this._isEnabled}_SetReadOnly(t){this._isReadOnly!==(t=!!t)&&(this._isReadOnly=t,this.UpdateElementState())}_IsReadOnly(){return this._isReadOnly}_SetMaxLength(t){t=Math.max(+t,-1),this._maxLength!==t&&(this._maxLength=t,this.UpdateElementState())}_GetMaxLength(){return this._maxLength}_ScrollToBottom(){Promise.resolve().then(()=>this.PostToDOMElement("scroll-to-bottom"))}Draw(t){}SaveToJson(){return{"t":this._text,"p":this._placeholder,"ti":this._title,"e":this._isEnabled,"r":this._isReadOnly,"sp":this._spellCheck,"ml":this._maxLength,"type":this._type,"id":this._id}}LoadFromJson(t){this._text=t["t"],this._placeholder=t["p"],this._title=t["ti"],this._isEnabled=t["e"],this._isReadOnly=t["r"],this._spellCheck=t["sp"],this._maxLength=t.hasOwnProperty("ml")?t["ml"]:-1,this._type=t["type"],this._id=t["id"],this.UpdateElementState()}GetPropertyValueByIndex(e){switch(e){case p:return this._text;case q:return this._placeholder;case r:return this._title;case t:return this._isEnabled;case u:return this._isReadOnly;case v:return this._spellCheck;case x:return this._autoFontSize}}SetPropertyValueByIndex(e,s){switch(e){case p:this._text!==s&&(this._text=s,this.UpdateElementState());break;case q:this._placeholder!==s&&(this._placeholder=s,this.UpdateElementState());break;case r:this._title!==s&&(this._title=s,this.UpdateElementState());break;case t:this._isEnabled!==!!s&&(this._isEnabled=!!s,this.UpdateElementState());break;case u:this._isReadOnly!==!!s&&(this._isReadOnly=!!s,this.UpdateElementState());break;case v:this._spellCheck!==!!s&&(this._spellCheck=!!s,this.UpdateElementState());break;case x:this._autoFontSize=!!s}}GetDebuggerProperties(){const e=n.Plugins.TextBox.Acts,t="plugins.textbox";return[{title:t+".name",properties:[{name:t+".properties.text.name",value:this._text,onedit:t=>this.CallAction(e.SetText,t)},{name:t+".properties.enabled.name",value:this._isEnabled,onedit:t=>this.CallAction(e.SetEnabled,t)},{name:t+".properties.read-only.name",value:this._isReadOnly,onedit:t=>this.CallAction(e.SetReadOnly,t)}]}]}GetScriptInterfaceClass(){return self.ITextInputInstance}},new WeakMap);self.ITextInputInstance=class extends self.IDOMInstance{constructor(){super(),C.set(this,self.IInstance._GetInitInst().GetSdkInstance())}set text(t){o.RequireString(t),C.get(this)._SetText(t)}get text(){return C.get(this)._GetText()}set placeholder(t){o.RequireString(t),C.get(this)._SetPlaceholder(t)}get placeholder(){return C.get(this)._GetPlaceholder()}set tooltip(t){o.RequireString(t),C.get(this)._SetTooltip(t)}get tooltip(){return C.get(this)._GetTooltip()}set isEnabled(t){C.get(this)._SetEnabled(t)}get isEnabled(){return C.get(this)._IsEnabled()}set isReadOnly(t){C.get(this)._SetReadOnly(t)}get isReadOnly(){return C.get(this)._IsReadOnly()}set maxLength(t){o.RequireFiniteNumber(t),C.get(this)._SetMaxLength(t)}get maxLength(){return C.get(this)._GetMaxLength()}scrollToBottom(){C.get(this)._ScrollToBottom()}}}{const ea=self.C3;ea.Plugins.TextBox.Cnds={CompareText(t,e){return 0===e?ea.equalsNoCase(this._text,t):this._text===t},OnTextChanged(){return!0},OnClicked(){return!0},OnDoubleClicked(){return!0}}}{const ha=self.C3;ha.Plugins.TextBox.Acts={SetText(t){this._SetText(t.toString())},AppendText(t){""!==t&&this._SetText(this._GetText()+t)},SetPlaceholder(t){this._SetPlaceholder(t)},SetTooltip(t){this._SetTooltip(t)},SetReadOnly(t){this._SetReadOnly(0===t)},ScrollToBottom(){this._ScrollToBottom()},SetMaxLength(t){this._SetMaxLength(t)}}}{const oa=self.C3;oa.Plugins.TextBox.Exps={Text(){return this._GetText()},MaxLength(){return this._GetMaxLength()}}}
 }
 
+// scripts/plugins/Button/c3runtime/runtime.js
+{
+{const a=self.C3,b="button";a.Plugins.Button=class extends a.SDKDOMPluginBase{constructor(e){super(e,b),this.AddElementMessageHandler("click",(e,t)=>e._OnClick(t))}Release(){super.Release()}}}{const g=self.C3;g.Plugins.Button.Type=class extends g.SDKTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const j=self.C3,k=self.C3X,l=0,m=1,n=2,o=3,p=4,q=5,r=6,s=7,t=8,u="button",v=(j.Plugins.Button.Instance=class extends j.SDKDOMInstanceBase{constructor(e,i){super(e,u),this._text="OK",this._isCheckbox=!1,this._isChecked=!1,this._title="",this._id="",this._className="",this._isEnabled=!0,this._autoFontSize=!0,i&&(this._isCheckbox=1===i[l],this._text=i[m],this._title=i[n],this.GetWorldInfo().SetVisible(i[o]),this._isEnabled=i[p],this._autoFontSize=i[q],this._isChecked=i[r],this._id=i[s],this._className=i[t]),this.CreateElement({"id":this._id,"className":this._className})}Release(){super.Release()}GetElementState(){return{"text":this._text,"isCheckbox":this._isCheckbox,"isChecked":this._isChecked,"title":this._title,"isVisible":this.GetWorldInfo().IsVisible(),"isEnabled":this._isEnabled}}async _OnClick(e){this._isChecked=e["isChecked"],this.DispatchScriptEvent("click",!0),await this.TriggerAsync(j.Plugins.Button.Cnds.OnClicked)}_SetText(e){this._text!==e&&(this._text=e,this.UpdateElementState())}_GetText(){return this._text}_SetTooltip(e){this._title!==e&&(this._title=e,this.UpdateElementState())}_GetTooltip(){return this._title}_SetEnabled(e){this._isEnabled!==(e=!!e)&&(this._isEnabled=e,this.UpdateElementState())}_IsEnabled(){return this._isEnabled}_SetChecked(e){this._isCheckbox&&this._isChecked!==(e=!!e)&&(this._isChecked=e,this.UpdateElementState())}_IsChecked(){return this._isChecked}Draw(e){}SaveToJson(){return{"text":this._text,"checked":this._isChecked,"title":this._title,"enabled":this._isEnabled}}LoadFromJson(e){this._text=e["text"],this._isChecked=e["checked"],this._title=e["title"],this._isEnabled=e["enabled"],this.UpdateElementState()}GetPropertyValueByIndex(e){switch(e){case m:return this._GetText();case n:return this._GetTooltip();case p:return this._IsEnabled();case q:return this._autoFontSize;case r:return this._IsChecked()}}SetPropertyValueByIndex(e,t){switch(e){case m:this._SetText(t);break;case n:this._SetTooltip(t);break;case p:this._SetEnabled(!!t);break;case q:this._autoFontSize=!!t;break;case r:this._SetChecked(!!t)}}GetDebuggerProperties(){const e="plugins.button";return[{title:e+".name",properties:[{name:e+".properties.text.name",value:this._GetText(),onedit:e=>this._SetText(e)},{name:e+".properties.enabled.name",value:this._IsEnabled(),onedit:e=>this._SetEnabled(e)},{name:e+".properties.checked.name",value:this._IsChecked(),onedit:e=>this._SetChecked(e)}]}]}GetScriptInterfaceClass(){return self.IButtonInstance}},new WeakMap);self.IButtonInstance=class extends self.IDOMInstance{constructor(){super(),v.set(this,self.IInstance._GetInitInst().GetSdkInstance())}set text(e){k.RequireString(e),v.get(this)._SetText(e)}get text(){return v.get(this)._GetText()}set tooltip(e){k.RequireString(e),v.get(this)._SetTooltip(e)}get tooltip(){return v.get(this)._GetTooltip()}set isEnabled(e){v.get(this)._SetEnabled(e)}get isEnabled(){return v.get(this)._IsEnabled()}set isChecked(e){v.get(this)._SetChecked(e)}get isChecked(){return v.get(this)._IsChecked()}}}{const S=self.C3;S.Plugins.Button.Cnds={OnClicked(){return!0},IsChecked(){return this._isChecked},CompareText(e,t){return t?this._text===e:S.equalsNoCase(this._text,e)}}}{const V=self.C3;V.Plugins.Button.Acts={SetText(e){this._SetText(e)},SetTooltip(e){this._SetTooltip(e)},SetChecked(e){this._SetChecked(0!==e)},ToggleChecked(){this._isCheckbox&&(this._isChecked=!this._isChecked,this.UpdateElementState())}}}{const Z=self.C3;Z.Plugins.Button.Exps={Text(){return this._text}}}
+}
+
 // scripts/plugins/Touch/c3runtime/runtime.js
 {
 {const a=self.C3;a.Plugins.Touch=class extends a.SDKPluginBase{constructor(t){super(t)}Release(){super.Release()}}}{const d=self.C3,e=self.C3X;d.Plugins.Touch.Type=class extends d.SDKTypeBase{constructor(t){super(t)}Release(){super.Release()}OnCreate(){}GetScriptInterfaceClass(){return self.ITouchObjectType}};let s=null;function GetTouchSdkInstance(){return s.GetSingleGlobalInstance().GetSdkInstance()}self.ITouchObjectType=class extends self.IObjectClass{constructor(t){super(t),(s=t).GetRuntime()._GetCommonScriptInterfaces().touch=this}requestPermission(t){e.RequireString(t);const s=GetTouchSdkInstance();if("orientation"===t)return s._RequestPermission(0);if("motion"===t)return s._RequestPermission(1);throw new Error("invalid type")}}}{const m=self.C3,n="touch";m.Plugins.Touch.Instance=class extends m.SDKInstanceBase{constructor(t,e){super(t,n),this._touches=new Map,this._useMouseInput=!1,this._isMouseDown=!1,this._orientCompassHeading=0,this._orientAlpha=0,this._orientBeta=0,this._orientGamma=0,this._accX=0,this._accY=0,this._accZ=0,this._accWithGX=0,this._accWithGY=0,this._accWithGZ=0,this._triggerIndex=0,this._triggerId=0,this._triggerPermission=0,this._curTouchX=0,this._curTouchY=0,this._getTouchIndex=0,this._triggerType=0,this._permissionPromises=[],e&&(this._useMouseInput=e[0]),this.AddDOMMessageHandler("permission-result",t=>this._OnPermissionResult(t));const s=this.GetRuntime().Dispatcher();this._disposables=new m.CompositeDisposable(m.Disposable.From(s,"pointerdown",t=>this._OnPointerDown(t.data)),m.Disposable.From(s,"pointermove",t=>this._OnPointerMove(t.data)),m.Disposable.From(s,"pointerup",t=>this._OnPointerUp(t.data,!1)),m.Disposable.From(s,"pointercancel",t=>this._OnPointerUp(t.data,!0)),m.Disposable.From(s,"deviceorientation",t=>this._OnDeviceOrientation(t.data)),m.Disposable.From(s,"deviceorientationabsolute",t=>this._OnDeviceOrientationAbsolute(t.data)),m.Disposable.From(s,"devicemotion",t=>this._OnDeviceMotion(t.data)),m.Disposable.From(s,"tick2",t=>this._OnTick2()))}Release(){this._touches.clear(),super.Release()}_OnPointerDown(t){if("mouse"===t["pointerType"]){if(!this._useMouseInput)return;this._isMouseDown=!0}const e=t["pointerId"];if(!this._touches.has(e)){const s=t["pageX"]-this._runtime.GetCanvasClientX(),i=t["pageY"]-this._runtime.GetCanvasClientY(),n=performance.now(),r=this._touches.size,o=(this._triggerIndex=r,this._triggerId=e,m.New(m.Plugins.Touch.TouchInfo));o.Init(n,s,i,e,r),this._touches.set(e,o),this.Trigger(m.Plugins.Touch.Cnds.OnNthTouchStart),this.Trigger(m.Plugins.Touch.Cnds.OnTouchStart),this._curTouchX=s,this._curTouchY=i,this._triggerType=0,this.Trigger(m.Plugins.Touch.Cnds.OnTouchObject)}}_OnPointerMove(t){if("mouse"!==t["pointerType"]||this._isMouseDown){const e=this._touches.get(t["pointerId"]);if(e){const s=performance.now();if(!(s-e.GetTime()<2)){const i=t["pageX"]-this._runtime.GetCanvasClientX(),n=t["pageY"]-this._runtime.GetCanvasClientY();e.Update(s,i,n,t["width"],t["height"],t["pressure"])}}}}_OnPointerUp(t,e){if("mouse"===t["pointerType"]){if(!this._isMouseDown)return;this._isMouseDown=!1}const s=performance.now(),i=t["pointerId"],n=this._touches.get(i);if(n){if(this._triggerIndex=n.GetStartIndex(),this._triggerId=n.GetId(),!e){const r=t["pageX"]-this._runtime.GetCanvasClientX(),o=t["pageY"]-this._runtime.GetCanvasClientY();this._curTouchX=r,this._curTouchY=o,this._triggerType=1,this.Trigger(m.Plugins.Touch.Cnds.OnTouchObject)}if(this.Trigger(m.Plugins.Touch.Cnds.OnNthTouchEnd),this.Trigger(m.Plugins.Touch.Cnds.OnTouchEnd),!e){const u=n.ShouldTriggerTap(s);"single-tap"===u?(this.Trigger(m.Plugins.Touch.Cnds.OnTapGesture),this._curTouchX=n.GetX(),this._curTouchY=n.GetY(),this.Trigger(m.Plugins.Touch.Cnds.OnTapGestureObject)):"double-tap"===u&&(this.Trigger(m.Plugins.Touch.Cnds.OnDoubleTapGesture),this._curTouchX=n.GetX(),this._curTouchY=n.GetY(),this.Trigger(m.Plugins.Touch.Cnds.OnDoubleTapGestureObject))}n.Release(),this._touches.delete(i)}}_RequestPermission(s){return this._PostToDOMMaybeSync("request-permission",{"type":s}),new Promise((t,e)=>{this._permissionPromises.push({type:s,resolve:t,reject:e})})}_OnPermissionResult(t){const e=t["result"],s=t["type"],i=(this._triggerPermission=s,this._permissionPromises.filter(t=>t.type===s));for(const n of i)n.resolve(e?"granted":"denied");this._permissionPromises=this._permissionPromises.filter(t=>t.type!==s),e?(this.Trigger(m.Plugins.Touch.Cnds.OnPermissionGranted),0===s?this._runtime.RequestDeviceOrientationEvent():this._runtime.RequestDeviceMotionEvent()):this.Trigger(m.Plugins.Touch.Cnds.OnPermissionDenied)}_OnDeviceOrientation(t){"number"==typeof t["webkitCompassHeading"]?this._orientCompassHeading=t["webkitCompassHeading"]:t["absolute"]&&(this._orientCompassHeading=t["alpha"]),this._orientAlpha=t["alpha"],this._orientBeta=t["beta"],this._orientGamma=t["gamma"]}_OnDeviceOrientationAbsolute(t){this._orientCompassHeading=t["alpha"]}_OnDeviceMotion(t){const e=t["acceleration"],s=(e&&(this._accX=e["x"],this._accY=e["y"],this._accZ=e["z"]),t["accelerationIncludingGravity"]);s&&(this._accWithGX=s["x"],this._accWithGY=s["y"],this._accWithGZ=s["z"])}_OnTick2(){const t=performance.now();let e=0;for(const s of this._touches.values())s.GetTime()<=t-50&&s._SetLastTime(t),s.ShouldTriggerHold(t)&&(this._triggerIndex=s.GetStartIndex(),this._triggerId=s.GetId(),this._getTouchIndex=e,this.Trigger(m.Plugins.Touch.Cnds.OnHoldGesture),this._curTouchX=s.GetX(),this._curTouchY=s.GetY(),this.Trigger(m.Plugins.Touch.Cnds.OnHoldGestureObject),this._getTouchIndex=0),++e}_GetTouchByIndex(t){t=Math.floor(t);for(const e of this._touches.values()){if(0===t)return e;--t}return null}_IsClientPosOnCanvas(t,e){return 0<=t&&0<=e&&t<this._runtime.GetCanvasCssWidth()&&e<this._runtime.GetCanvasCssHeight()}GetDebuggerProperties(){return[{title:"plugins.touch.debugger.touches",properties:[...this._touches.values()].map(t=>({name:"$"+t.GetId(),value:t.GetX()+", "+t.GetY()}))}]}}}{const ra=self.C3,sa=[];ra.Plugins.Touch.Cnds={OnTouchStart(){return!0},OnTouchEnd(){return!0},IsInTouch(){return 0<this._touches.size},OnTouchObject(t,e){return!!t&&e===this._triggerType&&!!this._IsClientPosOnCanvas(this._curTouchX,this._curTouchY)&&this._runtime.GetCollisionEngine().TestAndSelectCanvasPointOverlap(t,[[this._curTouchX,this._curTouchY]],!1)},IsTouchingObject(t){if(!t)return!1;const e=this._runtime.GetCurrentCondition(),s=e.IsInverted(),i=[...this._touches.values()].filter(t=>this._IsClientPosOnCanvas(t.GetX(),t.GetY())).map(t=>[t.GetX(),t.GetY()]);return ra.xor(this._runtime.GetCollisionEngine().TestAndSelectCanvasPointOverlap(t,i,s),s)},CompareTouchSpeed(t,e,s){const i=this._GetTouchByIndex(t);return!!i&&ra.compare(i.GetSpeed(),e,s)},OrientationSupported(){return!0},MotionSupported(){return!0},CompareOrientation(t,e,s){this._runtime.RequestDeviceOrientationEvent();let i=0;return i=0===t?this._orientAlpha:1===t?this._orientBeta:this._orientGamma,ra.compare(i,e,s)},CompareAcceleration(t,e,s){this._runtime.RequestDeviceMotionEvent();let i=0;return i=0===t?this._accWithGX:1===t?this._accWithGY:2===t?this._accWithGZ:3===t?this._accX:4===t?this._accY:this._accZ,ra.compare(i,e,s)},OnNthTouchStart(t){return(t=Math.floor(t))===this._triggerIndex},OnNthTouchEnd(t){return(t=Math.floor(t))===this._triggerIndex},HasNthTouch(t){return t=Math.floor(t),this._touches.size>=t+1},OnHoldGesture(){return!0},OnTapGesture(){return!0},OnDoubleTapGesture(){return!0},OnHoldGestureObject(t){return!!t&&!!this._IsClientPosOnCanvas(this._curTouchX,this._curTouchY)&&this._runtime.GetCollisionEngine().TestAndSelectCanvasPointOverlap(t,[[this._curTouchX,this._curTouchY]],!1)},OnTapGestureObject(t){return!!t&&!!this._IsClientPosOnCanvas(this._curTouchX,this._curTouchY)&&this._runtime.GetCollisionEngine().TestAndSelectCanvasPointOverlap(t,[[this._curTouchX,this._curTouchY]],!1)},OnDoubleTapGestureObject(t){return!!t&&!!this._IsClientPosOnCanvas(this._curTouchX,this._curTouchY)&&this._runtime.GetCollisionEngine().TestAndSelectCanvasPointOverlap(t,[[this._curTouchX,this._curTouchY]],!1)},OnPermissionGranted(t){return this._triggerPermission===t},OnPermissionDenied(t){return this._triggerPermission===t}}}{const Va=self.C3;Va.Plugins.Touch.Acts={RequestPermission(t){this._RequestPermission(t)}}}{const Xa=self.C3;Xa.Plugins.Touch.Exps={TouchCount(){return this._touches.size},X(t){const e=this._GetTouchByIndex(this._getTouchIndex);return e?e.GetPositionForLayer(this._runtime.GetCurrentLayout(),t,!0):0},Y(t){const e=this._GetTouchByIndex(this._getTouchIndex);return e?e.GetPositionForLayer(this._runtime.GetCurrentLayout(),t,!1):0},XAt(t,e){const s=this._GetTouchByIndex(t);return s?s.GetPositionForLayer(this._runtime.GetCurrentLayout(),e,!0):0},YAt(t,e){const s=this._GetTouchByIndex(t);return s?s.GetPositionForLayer(this._runtime.GetCurrentLayout(),e,!1):0},XForID(t,e){const s=this._touches.get(t);return s?s.GetPositionForLayer(this._runtime.GetCurrentLayout(),e,!0):0},YForID(t,e){const s=this._touches.get(t);return s?s.GetPositionForLayer(this._runtime.GetCurrentLayout(),e,!1):0},AbsoluteX(){const t=this._GetTouchByIndex(0);return t?t.GetX():0},AbsoluteY(){const t=this._GetTouchByIndex(0);return t?t.GetY():0},AbsoluteXAt(t){const e=this._GetTouchByIndex(t);return e?e.GetX():0},AbsoluteYAt(t){const e=this._GetTouchByIndex(t);return e?e.GetY():0},AbsoluteXForID(t){const e=this._touches.get(t);return e?e.GetX():0},AbsoluteYForID(t){const e=this._touches.get(t);return e?e.GetY():0},SpeedAt(t){const e=this._GetTouchByIndex(t);return e?e.GetSpeed():0},SpeedForID(t){const e=this._touches.get(t);return e?e.GetSpeed():0},AngleAt(t){const e=this._GetTouchByIndex(t);return e?Xa.toDegrees(e.GetAngle()):0},AngleForID(t){const e=this._touches.get(t);return e?Xa.toDegrees(e.GetAngle()):0},CompassHeading(){return this._runtime.RequestDeviceOrientationEvent(),this._orientCompassHeading},Alpha(){return this._runtime.RequestDeviceOrientationEvent(),this._orientAlpha},Beta(){return this._runtime.RequestDeviceOrientationEvent(),this._orientBeta},Gamma(){return this._runtime.RequestDeviceOrientationEvent(),this._orientGamma},AccelerationXWithG(){return this._runtime.RequestDeviceMotionEvent(),this._accWithGX},AccelerationYWithG(){return this._runtime.RequestDeviceMotionEvent(),this._accWithGY},AccelerationZWithG(){return this._runtime.RequestDeviceMotionEvent(),this._accWithGZ},AccelerationX(){return this._runtime.RequestDeviceMotionEvent(),this._accX},AccelerationY(){return this._runtime.RequestDeviceMotionEvent(),this._accY},AccelerationZ(){return this._runtime.RequestDeviceMotionEvent(),this._accZ},TouchIndex(){return this._triggerIndex},TouchID(){return this._triggerId},WidthForID(t){const e=this._touches.get(t);return e?e.GetWidth():0},HeightForID(t){const e=this._touches.get(t);return e?e.GetHeight():0},PressureForID(t){const e=this._touches.get(t);return e?e.GetPressure():0}}}
@@ -1288,23 +1303,22 @@ const C3=self.C3,GESTURE_HOLD_THRESHOLD=15,GESTURE_HOLD_TIMEOUT=500,GESTURE_TAP_
 
 // scripts/plugins/MetaproPlugin/c3runtime/plugin.js
 {
+const C3 = self.C3
 
-const C3 = self.C3;
+const DOM_COMPONENT_ID = 'MetaproPlugin'
 
-const DOM_COMPONENT_ID = "MetaproPlugin";
-
-C3.Plugins.MetaproPlugin = class MetaproPluginPlugin extends C3.SDKDOMPluginBase
-{
-	constructor(opts)
-	{
-		super(opts, DOM_COMPONENT_ID);
+C3.Plugins.MetaproPlugin = class MetaproPluginPlugin extends (
+	C3.SDKDOMPluginBase
+) {
+	constructor(opts) {
+		super(opts, DOM_COMPONENT_ID)
 	}
-	
-	Release()
-	{
-		super.Release();
+
+	Release() {
+		super.Release()
 	}
-}; 
+}
+
 }
 
 // scripts/plugins/MetaproPlugin/c3runtime/type.js
@@ -1333,1903 +1347,1975 @@ C3.Plugins.MetaproPlugin.Type = class MetaproPluginType extends C3.SDKTypeBase
 
 // scripts/plugins/MetaproPlugin/c3runtime/instance.js
 {
-const C3 = self.C3;
+const C3 = self.C3
 
-const DOM_COMPONENT_ID = "MetaproPlugin";
+const DOM_COMPONENT_ID = 'MetaproPlugin'
 
 C3.Plugins.MetaproPlugin.Instance = class MetaproPluginInstance extends (
-  C3.SDKInstanceBase
+	C3.SDKInstanceBase
 ) {
-  constructor(inst, properties) {
-    super(inst, DOM_COMPONENT_ID);
-
-    // Initial setup
-    this._projectId = "";
-    this._leaderboardId = "";
-    this._leaderboardApiKey = "";
-    this._usersServiceApiUrl = "";
-    this._leaderboardApiUrl = "";
-    this._referralApiUrl = "";
-    this._nftApiUrl = "";
-    this._platformId = "";
-
-    // Error
-    this._errorMsg = "";
-
-    // Triggers
-    this._triggerAccountReceived = false;
-    this._triggerUserLoggedIn = false;
-    this._triggerLeaderboardReceived = false;
-    this._triggerUsernameUpdated = false;
-    this._triggerAvatarUpdated = false;
-    this._triggerIsRegistered = false;
-    this._triggerIsNotRegistered = false;
-    this._triggerUserScoreReceived = false;
-    this._triggerReferralCodeExists = false;
-    this._triggerReferralCodeEmpty = false;
-    this._triggerReferralCodeGenerated = false;
-    this._triggerReferralStructureReceived = false;
-    this._triggerBestScoreReceived = false;
-    this._triggerBestScoresLeaderboardReceived = false;
-    this._triggerReferralLeaderboardReceived = false;
-    this._triggerTransactionSent = false;
-    this._triggerNumberOfRunsReceived = false;
-    this._triggerRefCodeFromDeeplinkExists = false;
-    this._triggerReadContractDataReceived = false;
-    this._triggerMultipleReadContractDataReceived = false;
-    this._triggerUserNftsReceived = false;
-    this._triggerError = false;
-
-    // User data
-    this._account = null; // string
-    this._accessToken = null; // string
-    this._avatar = null; // string
-    this._username = null; // string
-    this._userId = null; // string
-    this._personalDetails = {};
-
-    this._userNfts = {};
-
-    // Referral data
-    this._referralCode = null; // string
-    this._referralStructure = [];
-
-    // Leaderboard data
-    this._bestScore = 0;
-    this._leaderboard = [];
-    this._bestScoresLeaderboard = [];
-    this._currentScore = 0;
-    this._totalScore = 0;
-    this._dynamicRewards = 0;
-    this._referralLeaderboard = [];
-    this._numberOfRuns = 0;
-
-    // Send transaction
-    this._lastTransactionHash = null;
-    this._transactionStatus = "initial";
-
-    // Read data
-    this._lastReadContractData = null;
-    this._lastMultipleReadContractData = null;
-
-    this._refCodeFromDeeplink = "";
-
-    if (properties) {
-      this._projectId = properties[0];
-      this._leaderboardId = properties[1];
-      this._leaderboardApiKey = properties[2];
-      this._usersServiceApiUrl = properties[3];
-      this._leaderboardApiUrl = properties[4];
-      this._referralApiUrl = properties[5];
-      this._nftApiUrl = properties[6];
-      this._platformId = properties[7];
-    }
-  }
-
-  Release() {
-    super.Release();
-  }
-
-  ConvertToBoolean(value) {
-    if (value === 0) {
-      return false;
-    } else if (value === 1) {
-      return true;
-    } else {
-      throw new Error("Invalid value for rules_checked. Expected 0 or 1.");
-    }
-  }
-
-  ShortenText(text, firstChars = 4, lastChars = 4) {
-    const textLength = text.length;
-    if (textLength <= firstChars + lastChars) return text;
-    return `${text.substring(0, firstChars)}...${text.substring(
-      textLength - lastChars
-    )}`;
-  }
-
-  HandleError(errorMsg) {
-    console.log(errorMsg, "errorMsg");
-    this._errorMsg = errorMsg;
-    this._triggerError = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnError);
-  }
-
-  GetFunctionFromAbi(abi, functionName) {
-    for (const abiItem of abi) {
-      if (abiItem.type === "function" && abiItem.name === functionName)
-        return abiItem;
-    }
-    return null;
-  }
-
-  SerializeData(data) {
-    if (typeof data === "bigint") {
-      return Number(data); // Convert BigInt to number
-    } else if (Array.isArray(data)) {
-      return data.map(this.SerializeData); // Recursively handle arrays
-    } else if (typeof data === "object" && data !== null) {
-      return Object.fromEntries(
-        Object.entries(data).map(([key, value]) => [
-          key,
-          this.SerializeData(value),
-        ])
-      ); // Recursively handle objects
-    }
-    return data; // Return other data types unchanged
-  }
-
-  GetURLParams({ params, paramsToSkip = [] }) {
-    const requestParams = new URLSearchParams();
-
-    Object.keys(params)
-      .filter((param) => !paramsToSkip.includes(param))
-      .forEach((param) => {
-        const value = params[param];
-        if (param === "sort")
-          requestParams.append(
-            `sort[${value.sortKey}]`,
-            `${value.sortDirection}`
-          );
-        else if (param === "tokens" || param === "skipTokens")
-          value.forEach((token) => {
-            requestParams.append(
-              `${param}[${token.contractAddress}]`,
-              token.tokenId.toString()
-            );
-          });
-        else if (param === "collections")
-          value.forEach((collection) => {
-            requestParams.append(
-              `${param}[${collection.createdBy}]`,
-              collection.collectionName
-            );
-          });
-        else if (param === "properties") {
-          value.forEach((item) => {
-            if (item.name && isArrayPopulated(item.values)) {
-              item.values.forEach((v) => {
-                requestParams.append(`${param}[${item.name}]`, v.toString());
-              });
-            }
-          });
-        } else if (Array.isArray(value))
-          value.forEach((item) => requestParams.append(param, item.toString()));
-        else requestParams.append(param, value);
-      });
-
-    return requestParams;
-  }
-
-  GetDynamicRewards(dynamic_rewards) {
-    let props = {};
-
-    if (!!dynamic_rewards) {
-      // Parse the JSON string
-      props = JSON.parse(
-        dynamic_rewards.replace(/&quot;/g, '"').replace(/'/g, '"')
-      );
-
-      // Validate that each value in the object is a number
-      const isValid = Object.values(props).every(
-        (value) => typeof value === "number"
-      );
-
-      if (!isValid) {
-        throw new Error("All values in dynamic rewards must be numbers.");
-      }
-    }
-
-    return props;
-  }
-
-  // Actions
-  async _RequestAccount() {
-    try {
-      const accounts = await this.PostToDOMAsync("eth-request-accounts");
-
-      if (accounts?.[0]) {
-        this._account = accounts[0].toLowerCase();
-        this.OnAccountReceived();
-      }
-    } catch (error) {
-      console.error("Error in _RequestAccount:", error);
-      this.HandleError("Failed to request account: " + error.message);
-    }
-  }
-
-  async _Login(referral_settings_id, referral_code, rules_checked) {
-    try {
-      const hashResponse = await fetch(
-        `${this._usersServiceApiUrl}/v2/auth/web3/signature/hash`,
-        {
-          headers: {
-            "x-account-wallet": this._account,
-          },
-        }
-      );
-
-      if (!hashResponse.ok) {
-        const errorData = await hashResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const { hash } = await hashResponse.json();
-      const signature = await this.PostToDOMAsync("get-signature", {
-        account: this._account,
-        hash,
-      });
-
-      const checkWalletResponse = await fetch(
-        `${this._usersServiceApiUrl}/v2/auth/web3/check/${this._account}?projectId=${this._projectId}`
-      );
-
-      if (!checkWalletResponse.ok) {
-        const errorData = await checkWalletResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const { hasAccount, hasRulesChecked } = await checkWalletResponse.json();
-
-      let body = {
-        wallet: this._account,
-        signature,
-        projectId: this._projectId,
-        platformId: this._platformId,
-      };
-
-      if (!(hasAccount && hasRulesChecked)) {
-        body.rulesChecked = this.ConvertToBoolean(rules_checked);
-        if (referral_code && referral_settings_id) {
-          body.referralSettingsId = referral_settings_id;
-          body.referralCode = referral_code;
-        }
-      }
-
-      const loginResponse = await fetch(
-        `${this._usersServiceApiUrl}/v2/auth/web3/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-account-wallet": this._account,
-            "x-account-login-hash": hash,
-          },
-          body: JSON.stringify(body),
-        }
-      );
-
-      if (!loginResponse.ok) {
-        const errorData = await loginResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const user = await loginResponse.json();
-
-      this._accessToken = user.token.accessToken;
-      this._username =
-        user.account.personalDetails?.username ||
-        this.ShortenText(this._account, 6, 4);
-      this._avatar = user.account.personalDetails?.avatar || "";
-      this._userId = user.account.userId;
-
-      this._personalDetails = user.account.personalDetails;
-
-      this.OnUserLoggedIn();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Login failed: " + error.message);
-    }
-  }
-
-  async _RequestLeaderboard(limit, min_balance, max_balance) {
-    try {
-      const params = new URLSearchParams({
-        limit: limit || 20,
-        ...(min_balance && { minBalance: min_balance }),
-        ...(max_balance && { maxBalance: max_balance }),
-      }).toString();
-
-      const url = `${this._leaderboardApiUrl}/score-total/leaderboard/${this._leaderboardId}?${params}`;
-
-      const leaderboardResponse = await fetch(url, {
-        headers: {
-          leaderboardApiKey: this._leaderboardApiKey,
-        },
-      });
-
-      if (!leaderboardResponse.ok) {
-        const errorData = await leaderboardResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      let leaderboard = await leaderboardResponse.json();
-      let personal = null;
-
-      if (this._userId) {
-        const personalResponse = await fetch(
-          `${this._leaderboardApiUrl}/score-total/personal/${this._leaderboardId}/${this._userId}`,
-          {
-            headers: {
-              leaderboardApiKey: this._leaderboardApiKey,
-            },
-          }
-        );
-
-        if (!personalResponse.ok) {
-          const errorData = await personalResponse.json();
-          throw new Error(
-            errorData?.messages?.[0] ||
-              errorData?.message ||
-              "Something went wrong. Try again later!"
-          );
-        }
-
-        const personalData = await personalResponse.json();
-
-        if (typeof personalData === "object") {
-          personal = {
-            userId: this._userId,
-            position: personalData.mainScore.position,
-            currentScore: personalData.mainScore.currentRoundData.score,
-            totalScore: personalData.mainScore.totalRoundData.score,
-            username:
-              this._personalDetails?.username ||
-              this.ShortenText(this._account, 6, 4),
-            avatar: this._personalDetails?.avatar || "",
-          };
-        }
-      }
-
-      if (leaderboard.length > 0) {
-        const requestParams = new URLSearchParams({ limit: 99999 });
-
-        leaderboard.forEach((item) =>
-          requestParams.append("userIds", item.userId)
-        );
-
-        const usersResponse = await fetch(
-          `${this._usersServiceApiUrl}/profiles?${requestParams}`
-        );
-
-        if (!usersResponse.ok) {
-          const errorData = await usersResponse.json();
-          throw new Error(
-            errorData?.messages?.[0] ||
-              errorData?.message ||
-              "Something went wrong. Try again later!"
-          );
-        }
-
-        const { results } = await usersResponse.json();
-
-        leaderboard = leaderboard.map((player) => {
-          const user = results.find(({ userId }) => userId === player.userId);
-          const walletAddress = user?.addresses[0]?.wallet;
-
-          if (user) {
-            return {
-              userId: player.userId,
-              position: player.position,
-              currentScore: player.currentRoundData.score,
-              totalScore: player.totalRoundData.score,
-              username:
-                user?.personalDetails?.username ||
-                this.ShortenText(walletAddress, 6, 4),
-              avatar: user?.personalDetails?.avatar || "",
-            };
-          } else {
-            return {
-              userId: player.userId,
-              position: player.position,
-              currentScore: player.currentRoundData.score,
-              totalScore: player.totalRoundData.score,
-              username: player.userId,
-              avatar: "",
-            };
-          }
-        });
-      }
-
-      const countResponse = await fetch(
-        `${this._leaderboardApiUrl}/score-total/count/leaderboard/${this._leaderboardId}`
-      );
-
-      if (!countResponse.ok) {
-        const errorData = await countResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      let count = 0;
-      try {
-        count = Number(await countResponse.text());
-      } catch (err) {
-        console.log(err);
-      }
-
-      this._leaderboard = {
-        count,
-        results: leaderboard,
-        ...(!!personal && { personal }),
-      };
-
-      this.OnLeaderboardReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to get leaderboard: " + error.message);
-    }
-  }
-
-  async _UpdateScore(score, dynamic_rewards) {
-    try {
-      const dynamicRewards = this.GetDynamicRewards(dynamic_rewards);
-
-      const updateScoreResponse = await fetch(
-        `${this._leaderboardApiUrl}/score-total/${this._userId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            leaderboardApiKey: this._leaderboardApiKey,
-          },
-          body: JSON.stringify({
-            leaderboardId: this._leaderboardId,
-            projectId: this._projectId,
-            roundData: {
-              score,
-              ...dynamicRewards,
-            },
-          }),
-        }
-      );
-
-      if (!updateScoreResponse.ok) {
-        const errorData = await updateScoreResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-      const updatedScore = await updateScoreResponse.json();
-
-      this._currentScore = updatedScore.scoreTotal.currentRoundData.score;
-      this._totalScore = updatedScore.scoreTotal.totalRoundData.score;
-
-      this.OnUserScoreReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to update score: " + error.message);
-    }
-  }
-
-  async _AddScore(score, map_id, asset_id, addons, dynamic_rewards) {
-    try {
-      // Create match ID
-      const createMatchResponse = await fetch(
-        `${this._leaderboardApiUrl}/match-data/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            leaderboardApiKey: this._leaderboardApiKey,
-          },
-          body: JSON.stringify({
-            leaderboardId: this._leaderboardId,
-          }),
-        }
-      );
-
-      if (!createMatchResponse.ok) {
-        const errorData = await createMatchResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-      const matchId = await createMatchResponse.text();
-
-      let parsedAddons = [];
-
-      if (!!addons) {
-        parsedAddons = JSON.parse(addons);
-      }
-
-      const dynamicRewards = this.GetDynamicRewards(dynamic_rewards);
-
-      // Create score per map
-      const scoreResponse = await fetch(
-        `${this._leaderboardApiUrl}/score-map/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            leaderboardApiKey: this._leaderboardApiKey,
-          },
-          body: JSON.stringify({
-            leaderboardId: this._leaderboardId,
-            userId: this._userId,
-            matchId,
-            map: map_id,
-            startedAt: new Date().toISOString(),
-            endedAt: new Date().toISOString(),
-            projectId: this._projectId,
-            roundData: {
-              score,
-              ...dynamicRewards,
-            },
-            ...(!!asset_id && { assetId: asset_id }),
-            ...(parsedAddons.length > 0 && { addons: parsedAddons }),
-          }),
-        }
-      );
-
-      if (!scoreResponse.ok) {
-        const errorData = await scoreResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const params = new URLSearchParams({
-        leaderboardId: this._leaderboardId,
-        map: map_id,
-      }).toString();
-
-      const url = `${this._leaderboardApiUrl}/score-map/get/personal/${this._userId}?${params}`;
-
-      const bestScoreResponse = await fetch(url, {
-        headers: {
-          leaderboardApiKey: this._leaderboardApiKey,
-        },
-      });
-
-      if (!bestScoreResponse.ok) {
-        const errorData = await bestScoreResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const bestScore = await bestScoreResponse.json();
-
-      this._bestScore = bestScore?.[0]?.roundData?.score || 0;
-
-      this.OnBestScoreReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to add score: " + error.message);
-    }
-  }
-
-  async _RequestBestScoresLeaderboardByMapId(map_id, limit) {
-    try {
-      const params = new URLSearchParams({
-        map: map_id,
-        leaderboardId: this._leaderboardId,
-        limit: limit || 20,
-      }).toString();
-
-      const url = `${this._leaderboardApiUrl}/score-map/get?${params}`;
-
-      const leaderboardResponse = await fetch(url, {
-        headers: {
-          leaderboardApiKey: this._leaderboardApiKey,
-        },
-      });
-
-      if (!leaderboardResponse.ok) {
-        const errorData = await leaderboardResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const { results, count } = await leaderboardResponse.json();
-      let leaderboard = results;
-      let personal = null;
-
-      if (this._userId) {
-        const personalResponse = await fetch(
-          `${this._leaderboardApiUrl}/score-map/get/personal/${this._userId}?leaderboardId=${this._leaderboardId}&map=${map_id}`,
-          {
-            headers: {
-              leaderboardApiKey: this._leaderboardApiKey,
-            },
-          }
-        );
-
-        if (!personalResponse.ok) {
-          const errorData = await personalResponse.json();
-          throw new Error(
-            errorData?.messages?.[0] ||
-              errorData?.message ||
-              "Something went wrong. Try again later!"
-          );
-        }
-
-        const personalData = await personalResponse.json();
-
-        if (!!personalData[0]) {
-          personal = {
-            userId: this._userId,
-            position: personalData[0].position,
-            bestScore: personalData[0].roundData.score,
-            username:
-              this._personalDetails?.username ||
-              this.ShortenText(this._account, 6, 4),
-            avatar: this._personalDetails?.avatar || "",
-          };
-        }
-      }
-
-      if (leaderboard.length > 0) {
-        const requestParams = new URLSearchParams({ limit: 99999 });
-
-        leaderboard.forEach((item) =>
-          requestParams.append("userIds", item.userId)
-        );
-
-        const usersResponse = await fetch(
-          `${this._usersServiceApiUrl}/profiles?${requestParams}`
-        );
-
-        if (!usersResponse.ok) {
-          const errorData = await usersResponse.json();
-          throw new Error(
-            errorData?.messages?.[0] ||
-              errorData?.message ||
-              "Something went wrong. Try again later!"
-          );
-        }
-
-        const { results } = await usersResponse.json();
-
-        leaderboard = leaderboard.map((player) => {
-          const user = results.find(({ userId }) => userId === player.userId);
-          const walletAddress = user?.addresses[0]?.wallet;
-
-          if (user) {
-            return {
-              userId: player.userId,
-              position: player.position,
-              bestScore: player.roundData.score,
-              username:
-                user?.personalDetails?.username ||
-                this.ShortenText(walletAddress, 6, 4),
-              avatar: user?.personalDetails?.avatar || "",
-            };
-          } else {
-            return {
-              userId: player.userId,
-              position: player.position,
-              bestScore: player.roundData.score,
-              username: player.userId,
-              avatar: "",
-            };
-          }
-        });
-      }
-
-      this._bestScoresLeaderboard = {
-        results: leaderboard,
-        count,
-        ...(!!personal && { personal }),
-      };
-
-      this.OnBestScoresLeaderboardReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError(
-        "Failed to get best scores leaderboard: " + error.message
-      );
-    }
-  }
-
-  async _RequestBestScore(map_id) {
-    try {
-      const params = new URLSearchParams({
-        map: map_id,
-        leaderboardId: this._leaderboardId,
-      }).toString();
-
-      const url = `${this._leaderboardApiUrl}/score-map/get/personal/${this._userId}?${params}`;
-
-      const bestScoreResponse = await fetch(url, {
-        headers: {
-          leaderboardApiKey: this._leaderboardApiKey,
-        },
-      });
-
-      if (!bestScoreResponse.ok) {
-        const errorData = await bestScoreResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const bestScore = await bestScoreResponse.json();
-
-      this._bestScore = bestScore?.[0]?.roundData?.score || 0;
-
-      this.OnBestScoreReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to fetch best score: " + error.message);
-    }
-  }
-
-  async _RequestReferralLeaderboard(
-    ref_leaderboard_id,
-    ref_leaderboard_api_key,
-    limit,
-    min_balance,
-    max_balance
-  ) {
-    try {
-      const params = new URLSearchParams({
-        limit: limit || 20,
-        ...(min_balance && { minBalance: min_balance }),
-        ...(max_balance && { maxBalance: max_balance }),
-      }).toString();
-
-      const url = `${this._leaderboardApiUrl}/score-total/leaderboard/${ref_leaderboard_id}?${params}`;
-
-      const leaderboardResponse = await fetch(url, {
-        headers: {
-          leaderboardApiKey: ref_leaderboard_api_key,
-        },
-      });
-
-      if (!leaderboardResponse.ok) {
-        const errorData = await leaderboardResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      let leaderboard = await leaderboardResponse.json();
-      let personal = null;
-
-      if (this._userId) {
-        const personalResponse = await fetch(
-          `${this._leaderboardApiUrl}/score-total/personal/${this._leaderboardId}/${this._userId}`,
-          {
-            headers: {
-              leaderboardApiKey: this._leaderboardApiKey,
-            },
-          }
-        );
-
-        if (!personalResponse.ok) {
-          const errorData = await personalResponse.json();
-          throw new Error(
-            errorData?.messages?.[0] ||
-              errorData?.message ||
-              "Something went wrong. Try again later!"
-          );
-        }
-
-        const personalData = await personalResponse.json();
-
-        if (typeof personalData === "object") {
-          personal = {
-            userId: this._userId,
-            position: personalData.mainScore.position,
-            currentScore: personalData.mainScore.currentRoundData.score,
-            totalScore: personalData.mainScore.totalRoundData.score,
-            username:
-              this._personalDetails?.username ||
-              this.ShortenText(this._account, 6, 4),
-            avatar: this._personalDetails?.avatar || "",
-          };
-        }
-      }
-
-      if (leaderboard.length > 0) {
-        const requestParams = new URLSearchParams({ limit: 99999 });
-
-        leaderboard.forEach((item) =>
-          requestParams.append("userIds", item.userId)
-        );
-
-        const usersResponse = await fetch(
-          `${this._usersServiceApiUrl}/profiles?${requestParams}`
-        );
-
-        if (!usersResponse.ok) {
-          const errorData = await usersResponse.json();
-          throw new Error(
-            errorData?.messages?.[0] ||
-              errorData?.message ||
-              "Something went wrong. Try again later!"
-          );
-        }
-
-        const { results } = await usersResponse.json();
-
-        leaderboard = leaderboard.map((player) => {
-          const user = results.find(({ userId }) => userId === player.userId);
-          const walletAddress = user?.addresses[0]?.wallet;
-
-          if (user) {
-            return {
-              userId: player.userId,
-              position: player.position,
-              currentScore: player.currentRoundData.score,
-              totalScore: player.totalRoundData.score,
-              username:
-                user?.personalDetails?.username ||
-                this.ShortenText(walletAddress, 6, 4),
-              avatar: user?.personalDetails?.avatar || "",
-            };
-          } else {
-            return {
-              userId: player.userId,
-              position: player.position,
-              currentScore: player.currentRoundData.score,
-              totalScore: player.totalRoundData.score,
-              username: player.userId,
-              avatar: "",
-            };
-          }
-        });
-      }
-
-      const countResponse = await fetch(
-        `${this._leaderboardApiUrl}/score-total/count/leaderboard/${ref_leaderboard_id}`
-      );
-
-      if (!countResponse.ok) {
-        const errorData = await countResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      let count = 0;
-      try {
-        count = Number(await countResponse.text());
-      } catch (err) {
-        console.log(err);
-      }
-
-      this._referralLeaderboard = {
-        results: leaderboard,
-        count,
-        ...(!!personal && { personal }),
-      };
-
-      this.OnReferralLeaderboardReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to get referral leaderboard: " + error.message);
-    }
-  }
-
-  async _UpdateUsername(username) {
-    try {
-      const body = { ...this._personalDetails };
-      if (username !== "") {
-        body.username = username;
-      } else {
-        delete body.username;
-      }
-
-      const updateResponse = await fetch(`${this._usersServiceApiUrl}/update`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-account-userid": this._userId,
-          Authorization: this._accessToken,
-        },
-        body: JSON.stringify({ personalDetails: body }),
-      });
-
-      if (!updateResponse.ok) {
-        const errorData = await updateResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-      const user = await updateResponse.json();
-
-      this._personalDetails = user.personalDetails;
-      this._username = user.personalDetails?.username || "";
-
-      this.OnUsernameUpdated();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to update username: " + error.message);
-    }
-  }
-
-  async _UpdateAvatar(avatar) {
-    try {
-      const body = { ...this._personalDetails };
-      if (avatar !== "") {
-        body.avatar = avatar;
-      } else {
-        delete body.avatar;
-      }
-
-      const updateResponse = await fetch(`${this._usersServiceApiUrl}/update`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-account-userid": this._userId,
-          Authorization: this._accessToken,
-        },
-        body: JSON.stringify({ personalDetails: body }),
-      });
-
-      if (!updateResponse.ok) {
-        const errorData = await updateResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const user = await updateResponse.json();
-
-      this._personalDetails = user.personalDetails;
-      this._avatar = user.personalDetails?.avatar || "";
-
-      this.OnAvatarUpdated();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to update avatar: " + error.message);
-    }
-  }
-
-  async _RequestUserScore(dynamic_rewards_names) {
-    try {
-      let dynamicRewardsNames;
-
-      if (!!dynamic_rewards_names) {
-        try {
-          dynamicRewardsNames = JSON.parse(
-            dynamic_rewards_names.replace(/&quot;/g, '"').replace(/'/g, '"')
-          );
-        } catch (parseError) {
-          throw new Error("Invalid JSON format for dynamic rewards names.");
-        }
-
-        // Validate the parsed data
-        if (
-          typeof dynamicRewardsNames !== "string" &&
-          !Array.isArray(dynamicRewardsNames)
-        ) {
-          throw new Error(
-            "Dynamic rewards names must be a string or an array of strings."
-          );
-        }
-
-        // Ensure all elements in the array (if it's an array) are strings
-        if (
-          Array.isArray(dynamicRewardsNames) &&
-          !dynamicRewardsNames.every((item) => typeof item === "string")
-        ) {
-          throw new Error(
-            "All elements in Dynamic rewards names array must be strings."
-          );
-        }
-      }
-
-      const scoreResponse = await fetch(
-        `${this._leaderboardApiUrl}/score-total/get?userId=${this._userId}&leaderboardId=${this._leaderboardId}`,
-        {
-          headers: {
-            leaderboardApiKey: this._leaderboardApiKey,
-          },
-        }
-      );
-
-      if (!scoreResponse.ok) {
-        const errorData = await scoreResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const score = await scoreResponse.json();
-      const currentRoundData = score?.currentRoundData;
-
-      this._currentScore = currentRoundData?.score;
-      this._totalScore = score?.totalRoundData?.score;
-
-      if (typeof dynamicRewardsNames === "string") {
-        // Single dynamic reward - return type: number
-        this._dynamicRewards = currentRoundData?.[dynamicRewardsNames] || 0;
-      } else if (Array.isArray(dynamicRewardsNames)) {
-        // Multiple dynamic rewards - return type: object
-        this._dynamicRewards = dynamicRewardsNames.reduce((acc, rewardName) => {
-          acc[rewardName] = currentRoundData?.[rewardName] || 0; // Default to 0 if not found
-          return acc;
-        }, {});
-      } else {
-        this._dynamicRewards = 0;
-      }
-
-      this.OnUserScoreReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Requesting user score failed: " + error.message);
-    }
-  }
-
-  async _CheckIfRegistered() {
-    try {
-      const checkWalletResponse = await fetch(
-        `${this._usersServiceApiUrl}/v2/auth/web3/check/${this._account}?projectId=${this._projectId}`
-      );
-
-      if (!checkWalletResponse.ok) {
-        const errorData = await checkWalletResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const { hasAccount, hasRulesChecked } = await checkWalletResponse.json();
-
-      const isRegistered = hasAccount && hasRulesChecked;
-
-      if (isRegistered) {
-        this.OnIsRegistered();
-      } else {
-        this.OnIsNotRegistered();
-      }
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to check if registered: " + error.message);
-    }
-  }
-
-  async _FetchReferralCode() {
-    try {
-      const refCodeResponse = await fetch(
-        `${this._referralApiUrl}/users/projects/${this._projectId}/referral-code`,
-        {
-          headers: {
-            "x-account-userid": this._userId,
-            Authorization: this._accessToken,
-          },
-        }
-      );
-
-      if (!refCodeResponse.ok) {
-        const errorData = await refCodeResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const response = await refCodeResponse.json();
-
-      if (response.referralCode) {
-        this._referralCode = response.referralCode;
-        this.OnReferralCodeExists();
-      } else {
-        this.OnReferralCodeEmpty();
-      }
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to retrieve referral code: " + error.message);
-    }
-  }
-
-  async _GenerateReferralCode() {
-    try {
-      const refCodeResponse = await fetch(
-        `${this._referralApiUrl}/users/projects/referral-code`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-account-UserId": this._userId,
-            Authorization: this._accessToken,
-          },
-          body: JSON.stringify({ projectId: this._projectId }),
-        }
-      );
-
-      if (!refCodeResponse.ok) {
-        const errorData = await refCodeResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const response = await refCodeResponse.json();
-
-      this._referralCode = response.referralCode;
-
-      this.OnReferralCodeGenerated();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to generate referral code: " + error.message);
-    }
-  }
-
-  async _RequestReferralStructure() {
-    try {
-      const refStructureResponse = await fetch(
-        `${this._leaderboardApiUrl}/score-total/downline/${this._leaderboardId}/${this._userId}`,
-        {
-          headers: {
-            leaderboardApiKey: this._leaderboardApiKey,
-          },
-        }
-      );
-
-      if (!refStructureResponse.ok) {
-        const errorData = await refStructureResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const response = await refStructureResponse.json();
-
-      this._referralStructure = response.map((refLevel) => ({
-        ...refLevel,
-        percentage: refLevel.percentage * 100,
-      }));
-
-      this.OnReferralStructureReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Failed to get referral structure: " + error.message);
-    }
-  }
-
-  async _SendContractTransaction(
-    contract_address,
-    abi,
-    function_name,
-    input_data,
-    chain_id
-  ) {
-    try {
-      if (!this._account) {
-        throw new Error("Account information is missing or not initialized.");
-      }
-
-      const parsedAbi = JSON.parse(abi);
-      const functionAbi = this.GetFunctionFromAbi(parsedAbi, function_name);
-      if (!functionAbi) {
-        throw new Error(
-          `Function "${function_name}" not found in the provided ABI.`
-        );
-      }
-
-      const inputData = JSON.parse(
-        input_data.replace(/&quot;/g, '"').replace(/'/g, '"')
-      );
-
-      const missingKeys = functionAbi.inputs.length !== inputData.length;
-      if (missingKeys) {
-        throw new Error("Mismatch in number of function arguments");
-      }
-
-      this._transactionStatus = "pending";
-
-      await this.PostToDOMAsync("switch-chain", chain_id);
-
-      const contract = new web3.eth.Contract(parsedAbi, contract_address);
-      const estimatedGas = await contract.methods[function_name](
-        ...inputData
-      ).estimateGas({
-        from: this._account,
-      });
-      const currentGasPrice = await web3.eth.getGasPrice();
-
-      const transaction = await contract.methods[function_name](
-        ...inputData
-      ).send({
-        from: this._account,
-        gas: estimatedGas,
-        gasPrice: currentGasPrice,
-      });
-
-      this._lastTransactionHash = transaction.transactionHash;
-
-      // Wait for transaction confirmation
-      const timeout = 120000; // 120sec
-      const startTime = Date.now();
-      let receipt = null;
-
-      while (receipt === null) {
-        receipt = await web3.eth.getTransactionReceipt(
-          transaction.transactionHash
-        );
-
-        if (receipt === null) {
-          const elapsedTime = Date.now() - startTime;
-
-          if (elapsedTime > timeout) {
-            throw new Error("Transaction confirmation timed out.");
-          }
-
-          // Wait for a short time before polling again to avoid spamming the node
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-        }
-      }
-
-      if (!!receipt && this.SerializeData(receipt.status)) {
-        this._transactionStatus = "success";
-      } else {
-        throw new Error("Transaction failed or was reverted.");
-      }
-
-      this.OnTransactionSent();
-    } catch (error) {
-      console.log(error, "error");
-
-      this._transactionStatus = "error";
-
-      let errorMsg = "Something went wrong.";
-      if (typeof error === "string") {
-        errorMsg = error;
-      } else if (!!error.data?.message) {
-        errorMsg = error.data?.message;
-      } else if (!!error.message) {
-        errorMsg = error.message;
-      }
-
-      this.HandleError(errorMsg);
-    }
-  }
-
-  _SetTransactionStatus(status) {
-    this._transactionStatus = status;
-  }
-
-  async _ReadContract(
-    contract_address,
-    abi,
-    function_name,
-    input_data,
-    rpc_url
-  ) {
-    try {
-      const parsedAbi = JSON.parse(abi);
-      const functionAbi = this.GetFunctionFromAbi(parsedAbi, function_name);
-      if (!functionAbi) {
-        throw new Error(
-          `Function "${function_name}" not found in the provided ABI.`
-        );
-      }
-
-      const inputData = JSON.parse(
-        input_data.replace(/&quot;/g, '"').replace(/'/g, '"')
-      );
-
-      const missingKeys = functionAbi.inputs.length !== inputData.length;
-      if (missingKeys) {
-        throw new Error("Mismatch in number of function arguments");
-      }
-      const web3Provider = new Web3.providers.HttpProvider(rpc_url);
-      const web3 = new Web3(web3Provider);
-      const contract = new web3.eth.Contract(parsedAbi, contract_address);
-      const readData = await contract.methods[function_name](
-        ...inputData
-      ).call();
-
-      this._lastReadContractData = this.SerializeData(readData);
-
-      this.OnReadContractDataReceived();
-    } catch (error) {
-      console.log(error, "error");
-
-      this._transactionStatus = "error";
-
-      let errorMsg = "Something went wrong.";
-      if (typeof error === "string") {
-        errorMsg = error;
-      } else if (!!error.data?.message) {
-        errorMsg = error.data?.message;
-      } else if (!!error.message) {
-        errorMsg = error.message;
-      }
-
-      this.HandleError(errorMsg);
-    }
-  }
-
-  async _MultipleReadContract(
-    contract_address,
-    abi,
-    function_names,
-    inputs_data,
-    rpc_url
-  ) {
-    const parsedAbi = JSON.parse(abi);
-    const functionsArray = JSON.parse(
-      function_names.replace(/&quot;/g, '"').replace(/'/g, '"')
-    );
-    const inputsArray = JSON.parse(
-      inputs_data.replace(/&quot;/g, '"').replace(/'/g, '"')
-    );
-    const web3Provider = new Web3.providers.HttpProvider(rpc_url);
-    const web3 = new Web3(web3Provider);
-    const contract = new web3.eth.Contract(parsedAbi, contract_address);
-
-    const promises = functionsArray.map(async (function_name, index) => {
-      const functionAbi = this.GetFunctionFromAbi(parsedAbi, function_name);
-      if (!functionAbi) {
-        throw new Error(
-          `Function "${function_name}" not found in the provided ABI.`
-        );
-      }
-
-      const inputData = inputsArray[index];
-
-      const missingKeys = functionAbi.inputs.length !== inputData.length;
-      if (missingKeys) {
-        throw new Error("Mismatch in number of function arguments");
-      }
-
-      // Call the contract function and return the result
-      return contract.methods[function_name](...inputData).call();
-    });
-    try {
-      const data = await Promise.all(promises);
-
-      this._lastMultipleReadContractData = this.SerializeData(data);
-
-      this.OnMultipleReadContractDataReceived();
-    } catch (error) {
-      console.log(error, "error");
-
-      this._transactionStatus = "error";
-
-      let errorMsg = "Something went wrong.";
-      if (typeof error === "string") {
-        errorMsg = error;
-      } else if (!!error.data?.message) {
-        errorMsg = error.data?.message;
-      } else if (!!error.message) {
-        errorMsg = error.message;
-      }
-
-      this.HandleError(errorMsg);
-    }
-  }
-
-  async _RequestNumberOfRuns(map_id) {
-    try {
-      const params = new URLSearchParams({
-        leaderboardId: this._leaderboardId,
-        ...(map_id && { map: map_id }),
-      }).toString();
-
-      const countResponse = await fetch(
-        `${this._leaderboardApiUrl}/score-map/get/count/${this._userId}?${params}`,
-        {
-          headers: {
-            leaderboardApiKey: this._leaderboardApiKey,
-          },
-        }
-      );
-
-      if (!countResponse.ok) {
-        const errorData = await countResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      let count = 0;
-      try {
-        count = Number(await countResponse.text());
-      } catch (err) {
-        console.log(err);
-      }
-
-      this._numberOfRuns = count;
-
-      this.OnNumberOfRunsReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Requesting user score failed: " + error.message);
-    }
-  }
-
-  _CheckReferralCodeFromDeeplink() {
-    const refCode = this.PostToDOM("get-referral-code-from-deeplink");
-
-    if (refCode) {
-      this._refCodeFromDeeplink = refCode;
-
-      this.OnRefCodeFromDeeplinkExists();
-    }
-  }
-
-  async _RequestUserNfts(query) {
-    try {
-      let parsedQuery = {};
-
-      if (!!query) {
-        parsedQuery = JSON.parse(
-          query.replace(/&quot;/g, '"').replace(/'/g, '"')
-        );
-      }
-
-      const requestParams = this.GetURLParams({
-        params: parsedQuery,
-      });
-
-      const nftResponse = await fetch(
-        `${this._nftApiUrl}/v1/user/${this._account}/tokens?${requestParams}`
-      );
-
-      if (!nftResponse.ok) {
-        const errorData = await nftResponse.json();
-        throw new Error(
-          errorData?.messages?.[0] ||
-            errorData?.message ||
-            "Something went wrong. Try again later!"
-        );
-      }
-
-      const nfts = await nftResponse.json();
-
-      this._userNfts = nfts;
-
-      this.OnUserNftsReceived();
-    } catch (error) {
-      console.log(error);
-      this.HandleError("Requesting user nfts failed: " + error.message);
-    }
-  }
-
-  async _SendCrypto(token_address, amount, receiver, chain_id) {
-    const abi = [
-      {
-        constant: false,
-        inputs: [
-          { name: "_to", type: "address" },
-          { name: "_value", type: "uint256" },
-        ],
-        name: "transfer",
-        outputs: [{ name: "", type: "bool" }],
-        type: "function",
-      },
-      {
-        constant: true,
-        inputs: [{ name: "_owner", type: "address" }],
-        name: "balanceOf",
-        outputs: [{ name: "balance", type: "uint256" }],
-        type: "function",
-      },
-    ];
-
-    this._transactionStatus = "pending";
-    try {
-      if (!this._account) {
-        throw new Error("Account information is missing or not initialized.");
-      }
-
-      await this.PostToDOMAsync("switch-chain", chain_id);
-
-      const amountInBigInt = BigInt(amount);
-      const currentGasPrice = await web3.eth.getGasPrice();
-      let transaction;
-
-      if (!token_address) {
-        const tx = {
-          from: this._account,
-          to: receiver,
-          value: amountInBigInt,
-        };
-        const estimatedGas = await web3.eth.estimateGas(tx);
-
-        transaction = await web3.eth.sendTransaction({
-          ...tx,
-          gas: estimatedGas,
-          gasPrice: currentGasPrice,
-        });
-      } else {
-        const contract = new web3.eth.Contract(abi, token_address);
-        const estimatedGas = await contract.methods
-          .transfer(receiver, amountInBigInt)
-          .estimateGas({
-            from: this._account,
-          });
-
-        transaction = await contract.methods
-          .transfer(receiver, amountInBigInt)
-          .send({
-            from: this._account,
-            gas: estimatedGas,
-            gasPrice: currentGasPrice,
-          });
-      }
-
-      this._lastTransactionHash = transaction.transactionHash;
-
-      // Wait for transaction confirmation
-      const timeout = 120000; // 120sec
-      const startTime = Date.now();
-      let receipt = null;
-
-      while (receipt === null) {
-        receipt = await web3.eth.getTransactionReceipt(
-          transaction.transactionHash
-        );
-
-        if (receipt === null) {
-          const elapsedTime = Date.now() - startTime;
-
-          if (elapsedTime > timeout) {
-            throw new Error("Transaction confirmation timed out.");
-          }
-
-          // Wait for a short time before polling again to avoid spamming the node
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-        }
-      }
-
-      if (!!receipt && this.SerializeData(receipt.status)) {
-        this._transactionStatus = "success";
-      } else {
-        throw new Error("Transaction failed or was reverted.");
-      }
-
-      this.OnTransactionSent();
-    } catch (error) {
-      console.log(error, "error");
-
-      this._transactionStatus = "error";
-
-      let errorMsg = "Something went wrong.";
-      if (typeof error === "string") {
-        errorMsg = error;
-      } else if (!!error.data?.message) {
-        errorMsg = error.data?.message;
-      } else if (!!error.message) {
-        errorMsg = error.message;
-      }
-
-      this.HandleError(errorMsg);
-    }
-  }
-
-  // Conditions
-  OnAccountReceived() {
-    this._triggerAccountReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnAccountReceived);
-  }
-
-  OnUserLoggedIn() {
-    this._triggerUserLoggedIn = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnUserLoggedIn);
-  }
-
-  OnLeaderboardReceived() {
-    this._triggerLeaderboardReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnLeaderboardReceived);
-  }
-
-  OnUsernameUpdated() {
-    this._triggerUsernameUpdated = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnUsernameUpdated);
-  }
-
-  OnAvatarUpdated() {
-    this._triggerAvatarUpdated = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnAvatarUpdated);
-  }
-
-  OnUserScoreReceived() {
-    this._triggerUserScoreReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnUserScoreReceived);
-  }
-
-  OnIsRegistered() {
-    this._triggerIsRegistered = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnIsRegistered);
-  }
-
-  OnIsNotRegistered() {
-    this._triggerIsNotRegistered = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnIsNotRegistered);
-  }
-
-  OnReferralCodeExists() {
-    this._triggerReferralCodeExists = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralCodeExists);
-  }
-
-  OnReferralCodeEmpty() {
-    this._triggerReferralCodeEmpty = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralCodeEmpty);
-  }
-
-  OnReferralCodeGenerated() {
-    this._triggerReferralCodeGenerated = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralCodeGenerated);
-  }
-
-  OnReferralStructureReceived() {
-    this._triggerReferralStructureReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralStructureReceived);
-  }
-
-  OnBestScoreReceived() {
-    this._triggerBestScoreReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnBestScoreReceived);
-  }
-
-  OnBestScoresLeaderboardReceived() {
-    this._triggerBestScoresLeaderboardReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnBestScoresLeaderboardReceived);
-  }
-
-  OnReferralLeaderboardReceived() {
-    this._triggerReferralLeaderboardReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralLeaderboardReceived);
-  }
-
-  OnTransactionSent() {
-    this._triggerTransactionSent = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnTransactionSent);
-  }
-
-  OnNumberOfRunsReceived() {
-    this._triggerNumberOfRunsReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnNumberOfRunsReceived);
-  }
-
-  OnRefCodeFromDeeplinkExists() {
-    this._triggerRefCodeFromDeeplinkExists = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnRefCodeFromDeeplinkExists);
-  }
-
-  OnUserNftsReceived() {
-    this._triggerUserNftsReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnUserNftsReceived);
-  }
-
-  OnReadContractDataReceived() {
-    this._triggerReadContractDataReceived = true;
-    this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReadContractDataReceived);
-  }
-
-  OnMultipleReadContractDataReceived() {
-    this._triggerMultipleReadContractDataReceived = true;
-    this.Trigger(
-      C3.Plugins.MetaproPlugin.Cnds.OnMultipleReadContractDataReceived
-    );
-  }
-
-  // Expressions
-  _GetAccount() {
-    return this._account;
-  }
-
-  _GetAvatar() {
-    return this._avatar;
-  }
-
-  _GetUserId() {
-    return this._userId;
-  }
-
-  _GetUsername() {
-    return this._username;
-  }
-
-  _GetAccessToken() {
-    return this._accessToken;
-  }
-
-  _GetLeaderboard() {
-    return this._leaderboard;
-  }
-
-  _GetCurrentScore() {
-    return this._currentScore;
-  }
-
-  _GetTotalScore() {
-    return this._totalScore;
-  }
-
-  _GetDynamicReward() {
-    return this._dynamicRewards;
-  }
-
-  _GetReferralCode() {
-    return this._referralCode;
-  }
-
-  _GetReferralStructure() {
-    return this._referralStructure;
-  }
-
-  _GetBestScore() {
-    return this._bestScore;
-  }
-
-  _GetBestScoresLeaderboard() {
-    return this._bestScoresLeaderboard;
-  }
-
-  _GetReferralLeaderboard() {
-    return this._referralLeaderboard;
-  }
-
-  _GetNumberOfRuns() {
-    return this._numberOfRuns;
-  }
-
-  _GetRefCodeFromDeeplink() {
-    return this._refCodeFromDeeplink;
-  }
-
-  _GetLastTransactionHash() {
-    return this._lastTransactionHash;
-  }
-
-  _GetTransactionStatus() {
-    return this._transactionStatus;
-  }
-
-  _GetLastReadContractData() {
-    return this._lastReadContractData;
-  }
-
-  _GetLastMultipleReadContractData() {
-    return this._lastMultipleReadContractData;
-  }
-
-  _GetUserNfts() {
-    return this._userNfts;
-  }
-
-  _GetLastError() {
-    return this._errorMsg;
-  }
-
-  _GetProjectId() {
-    return this._projectId;
-  }
-
-  _GetLeaderboardId() {
-    return this._leaderboardId;
-  }
-
-  _GetLeaderboardApiKey() {
-    return this._leaderboardApiKey;
-  }
-
-  _GetUsersServiceApiUrl() {
-    return this._usersServiceApiUrl;
-  }
-
-  _GetLeaderboardApiUrl() {
-    return this._leaderboardApiUrl;
-  }
-
-  _GetReferralApiUrl() {
-    return this._referralApiUrl;
-  }
-
-  _GetNftApiUrl() {
-    return this._nftApiUrl;
-  }
-
-  _GetPlatformId() {
-    return this._platformId;
-  }
-
-  Release() {
-    super.Release();
-  }
-
-  SaveToJson() {
-    return {
-      // data to be saved for savegames
-    };
-  }
-
-  LoadFromJson(o) {
-    // load state for savegames
-  }
-
-  GetScriptInterfaceClass() {
-    return self.IMyMetaproPluginInstance;
-  }
-};
+	constructor(inst, properties) {
+		super(inst, DOM_COMPONENT_ID)
+
+		// Initial setup
+		this._projectId = ''
+		this._leaderboardId = ''
+		this._leaderboardApiKey = ''
+		this._usersServiceApiUrl = ''
+		this._leaderboardApiUrl = ''
+		this._referralApiUrl = ''
+		this._nftApiUrl = ''
+		this._platformId = ''
+
+		// Error
+		this._errorMsg = ''
+
+		// Triggers
+		this._triggerAccountReceived = false
+		this._triggerUserLoggedIn = false
+		this._triggerLeaderboardReceived = false
+		this._triggerUsernameUpdated = false
+		this._triggerAvatarUpdated = false
+		this._triggerIsRegistered = false
+		this._triggerIsNotRegistered = false
+		this._triggerUserScoreReceived = false
+		this._triggerReferralCodeExists = false
+		this._triggerReferralCodeEmpty = false
+		this._triggerReferralCodeGenerated = false
+		this._triggerReferralStructureReceived = false
+		this._triggerBestScoreReceived = false
+		this._triggerBestScoresLeaderboardReceived = false
+		this._triggerReferralLeaderboardReceived = false
+		this._triggerTransactionSent = false
+		this._triggerNumberOfRunsReceived = false
+		this._triggerRefCodeFromDeeplinkExists = false
+		this._triggerReadContractDataReceived = false
+		this._triggerMultipleReadContractDataReceived = false
+		this._triggerUserNftsReceived = false
+		this._triggerError = false
+
+		// User data
+		this._account = null // string
+		this._accessToken = null // string
+		this._avatar = null // string
+		this._username = null // string
+		this._userId = null // string
+		this._personalDetails = {}
+
+		this._userNfts = {}
+
+		// Referral data
+		this._referralCode = null // string
+		this._referralStructure = []
+
+		// Leaderboard data
+		this._bestScore = 0
+		this._leaderboard = []
+		this._bestScoresLeaderboard = []
+		this._currentScore = 0
+		this._totalScore = 0
+		this._dynamicRewards = 0
+		this._referralLeaderboard = []
+		this._numberOfRuns = 0
+
+		// Send transaction
+		this._lastTransactionHash = null
+		this._transactionStatus = 'initial'
+
+		// Read data
+		this._lastReadContractData = null
+		this._lastMultipleReadContractData = null
+
+		this._refCodeFromDeeplink = ''
+
+		if (properties) {
+			this._projectId = properties[0]
+			this._leaderboardId = properties[1]
+			this._leaderboardApiKey = properties[2]
+			this._usersServiceApiUrl = properties[3]
+			this._leaderboardApiUrl = properties[4]
+			this._referralApiUrl = properties[5]
+			this._nftApiUrl = properties[6]
+			this._platformId = properties[7]
+		}
+	}
+
+	Release() {
+		super.Release()
+	}
+
+	ConvertToBoolean(value) {
+		if (value === 0) {
+			return false
+		} else if (value === 1) {
+			return true
+		} else {
+			throw new Error('Invalid value for rules_checked. Expected 0 or 1.')
+		}
+	}
+
+	ShortenText(text, firstChars = 4, lastChars = 4) {
+		const textLength = text.length
+		if (textLength <= firstChars + lastChars) return text
+		return `${text.substring(0, firstChars)}...${text.substring(
+			textLength - lastChars,
+		)}`
+	}
+
+	HandleError(errorMsg) {
+		console.log(errorMsg, 'errorMsg')
+		this._errorMsg = errorMsg
+		this._triggerError = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnError)
+	}
+
+	GetFunctionFromAbi(abi, functionName) {
+		for (const abiItem of abi) {
+			if (abiItem.type === 'function' && abiItem.name === functionName)
+				return abiItem
+		}
+		return null
+	}
+
+	SerializeData(data) {
+		if (typeof data === 'bigint') {
+			return Number(data) // Convert BigInt to number
+		} else if (Array.isArray(data)) {
+			return data.map(this.SerializeData) // Recursively handle arrays
+		} else if (typeof data === 'object' && data !== null) {
+			return Object.fromEntries(
+				Object.entries(data).map(([key, value]) => [
+					key,
+					this.SerializeData(value),
+				]),
+			) // Recursively handle objects
+		}
+		return data // Return other data types unchanged
+	}
+
+	GetURLParams({params, paramsToSkip = []}) {
+		const requestParams = new URLSearchParams()
+
+		Object.keys(params)
+			.filter(param => !paramsToSkip.includes(param))
+			.forEach(param => {
+				const value = params[param]
+				if (param === 'sort')
+					requestParams.append(
+						`sort[${value.sortKey}]`,
+						`${value.sortDirection}`,
+					)
+				else if (param === 'tokens' || param === 'skipTokens')
+					value.forEach(token => {
+						requestParams.append(
+							`${param}[${token.contractAddress}]`,
+							token.tokenId.toString(),
+						)
+					})
+				else if (param === 'collections')
+					value.forEach(collection => {
+						requestParams.append(
+							`${param}[${collection.createdBy}]`,
+							collection.collectionName,
+						)
+					})
+				else if (param === 'properties') {
+					value.forEach(item => {
+						if (item.name && isArrayPopulated(item.values)) {
+							item.values.forEach(v => {
+								requestParams.append(`${param}[${item.name}]`, v.toString())
+							})
+						}
+					})
+				} else if (Array.isArray(value))
+					value.forEach(item => requestParams.append(param, item.toString()))
+				else requestParams.append(param, value)
+			})
+
+		return requestParams
+	}
+
+	GetDynamicRewards(dynamic_rewards) {
+		let props = {}
+
+		if (!!dynamic_rewards) {
+			// Parse the JSON string
+			props = JSON.parse(
+				dynamic_rewards.replace(/&quot;/g, '"').replace(/'/g, '"'),
+			)
+
+			// Validate that each value in the object is a number
+			const isValid = Object.values(props).every(
+				value => typeof value === 'number',
+			)
+
+			if (!isValid) {
+				throw new Error('All values in dynamic rewards must be numbers.')
+			}
+		}
+
+		return props
+	}
+
+	// Actions
+	async _RequestAccount() {
+		try {
+			const accounts = await this.PostToDOMAsync('eth-request-accounts')
+
+			if (accounts?.[0]) {
+				this._account = accounts[0].toLowerCase()
+				this.OnAccountReceived()
+			}
+		} catch (error) {
+			console.error('Error in _RequestAccount:', error)
+			this.HandleError('Failed to request account: ' + error.message)
+		}
+	}
+
+	async _Login(referral_settings_id, referral_code, rules_checked) {
+		try {
+			const hashResponse = await fetch(
+				`${this._usersServiceApiUrl}/v2/auth/web3/signature/hash`,
+				{
+					headers: {
+						'x-account-wallet': this._account,
+					},
+				},
+			)
+
+			if (!hashResponse.ok) {
+				const errorData = await hashResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const {hash} = await hashResponse.json()
+			const signature = await this.PostToDOMAsync('get-signature', {
+				account: this._account,
+				hash,
+			})
+
+			const checkWalletResponse = await fetch(
+				`${this._usersServiceApiUrl}/v2/auth/web3/check/${this._account}?projectId=${this._projectId}`,
+			)
+
+			if (!checkWalletResponse.ok) {
+				const errorData = await checkWalletResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const {hasAccount, hasRulesChecked} = await checkWalletResponse.json()
+
+			let body = {
+				wallet: this._account,
+				signature,
+				projectId: this._projectId,
+				platformId: this._platformId,
+			}
+
+			if (!(hasAccount && hasRulesChecked)) {
+				body.rulesChecked = this.ConvertToBoolean(rules_checked)
+				if (referral_code && referral_settings_id) {
+					body.referralSettingsId = referral_settings_id
+					body.referralCode = referral_code
+				}
+			}
+
+			const loginResponse = await fetch(
+				`${this._usersServiceApiUrl}/v2/auth/web3/login`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-account-wallet': this._account,
+						'x-account-login-hash': hash,
+					},
+					body: JSON.stringify(body),
+				},
+			)
+
+			if (!loginResponse.ok) {
+				const errorData = await loginResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const user = await loginResponse.json()
+
+			this._accessToken = user.token.accessToken
+			this._username =
+				user.account.personalDetails?.username ||
+				this.ShortenText(this._account, 6, 4)
+			this._avatar = user.account.personalDetails?.avatar || ''
+			this._userId = user.account.userId
+
+			this._personalDetails = user.account.personalDetails
+
+			this.OnUserLoggedIn()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Login failed: ' + error.message)
+		}
+	}
+
+	async _RequestLeaderboard(limit, min_balance, max_balance) {
+		try {
+			const params = new URLSearchParams({
+				limit: limit || 20,
+				...(min_balance && {minBalance: min_balance}),
+				...(max_balance && {maxBalance: max_balance}),
+			}).toString()
+
+			const url = `${this._leaderboardApiUrl}/score-total/leaderboard/${this._leaderboardId}?${params}`
+
+			const leaderboardResponse = await fetch(url, {
+				headers: {
+					leaderboardApiKey: this._leaderboardApiKey,
+				},
+			})
+
+			if (!leaderboardResponse.ok) {
+				const errorData = await leaderboardResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			let leaderboard = await leaderboardResponse.json()
+			let personal = null
+
+			if (this._userId) {
+				const personalResponse = await fetch(
+					`${this._leaderboardApiUrl}/score-total/personal/${this._leaderboardId}/${this._userId}`,
+					{
+						headers: {
+							leaderboardApiKey: this._leaderboardApiKey,
+						},
+					},
+				)
+
+				if (!personalResponse.ok) {
+					const errorData = await personalResponse.json()
+					throw new Error(
+						errorData?.messages?.[0] ||
+							errorData?.message ||
+							'Something went wrong. Try again later!',
+					)
+				}
+
+				const personalData = await personalResponse.json()
+
+				if (typeof personalData === 'object') {
+					personal = {
+						userId: this._userId,
+						position: personalData.mainScore.position,
+						currentScore: personalData.mainScore.currentRoundData.score,
+						totalScore: personalData.mainScore.totalRoundData.score,
+						username:
+							this._personalDetails?.username ||
+							this.ShortenText(this._account, 6, 4),
+						avatar: this._personalDetails?.avatar || '',
+					}
+				}
+			}
+
+			if (leaderboard.length > 0) {
+				const requestParams = new URLSearchParams({limit: 99999})
+
+				leaderboard.forEach(item =>
+					requestParams.append('userIds', item.userId),
+				)
+
+				const usersResponse = await fetch(
+					`${this._usersServiceApiUrl}/profiles?${requestParams}`,
+				)
+
+				if (!usersResponse.ok) {
+					const errorData = await usersResponse.json()
+					throw new Error(
+						errorData?.messages?.[0] ||
+							errorData?.message ||
+							'Something went wrong. Try again later!',
+					)
+				}
+
+				const {results} = await usersResponse.json()
+
+				leaderboard = leaderboard.map(player => {
+					const user = results.find(({userId}) => userId === player.userId)
+					const walletAddress = user?.addresses[0]?.wallet
+
+					if (user) {
+						return {
+							userId: player.userId,
+							position: player.position,
+							currentScore: player.currentRoundData.score,
+							totalScore: player.totalRoundData.score,
+							username:
+								user?.personalDetails?.username ||
+								this.ShortenText(walletAddress, 6, 4),
+							avatar: user?.personalDetails?.avatar || '',
+						}
+					} else {
+						return {
+							userId: player.userId,
+							position: player.position,
+							currentScore: player.currentRoundData.score,
+							totalScore: player.totalRoundData.score,
+							username: player.userId,
+							avatar: '',
+						}
+					}
+				})
+			}
+
+			const countResponse = await fetch(
+				`${this._leaderboardApiUrl}/score-total/count/leaderboard/${this._leaderboardId}`,
+			)
+
+			if (!countResponse.ok) {
+				const errorData = await countResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			let count = 0
+			try {
+				count = Number(await countResponse.text())
+			} catch (err) {
+				console.log(err)
+			}
+
+			this._leaderboard = {
+				count,
+				results: leaderboard,
+				...(!!personal && {personal}),
+			}
+
+			this.OnLeaderboardReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to get leaderboard: ' + error.message)
+		}
+	}
+
+	async _UpdateScore(score, dynamic_rewards) {
+		try {
+			const dynamicRewards = this.GetDynamicRewards(dynamic_rewards)
+
+			const updateScoreResponse = await fetch(
+				`${this._leaderboardApiUrl}/score-total/${this._userId}`,
+				{
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						leaderboardApiKey: this._leaderboardApiKey,
+					},
+					body: JSON.stringify({
+						leaderboardId: this._leaderboardId,
+						projectId: this._projectId,
+						roundData: {
+							score,
+							...dynamicRewards,
+						},
+					}),
+				},
+			)
+
+			if (!updateScoreResponse.ok) {
+				const errorData = await updateScoreResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+			const updatedScore = await updateScoreResponse.json()
+
+			this._currentScore = updatedScore.scoreTotal.currentRoundData.score
+			this._totalScore = updatedScore.scoreTotal.totalRoundData.score
+
+			this.OnUserScoreReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to update score: ' + error.message)
+		}
+	}
+
+	async _AddScore(score, map_id, asset_id, addons, dynamic_rewards) {
+		try {
+			// Create match ID
+			const createMatchResponse = await fetch(
+				`${this._leaderboardApiUrl}/match-data/create`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						leaderboardApiKey: this._leaderboardApiKey,
+					},
+					body: JSON.stringify({
+						leaderboardId: this._leaderboardId,
+					}),
+				},
+			)
+
+			if (!createMatchResponse.ok) {
+				const errorData = await createMatchResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+			const matchId = await createMatchResponse.text()
+
+			let parsedAddons = []
+
+			if (!!addons) {
+				parsedAddons = JSON.parse(addons)
+			}
+
+			const dynamicRewards = this.GetDynamicRewards(dynamic_rewards)
+
+			// Create score per map
+			const scoreResponse = await fetch(
+				`${this._leaderboardApiUrl}/score-map/create`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						leaderboardApiKey: this._leaderboardApiKey,
+					},
+					body: JSON.stringify({
+						leaderboardId: this._leaderboardId,
+						userId: this._userId,
+						matchId,
+						map: map_id,
+						startedAt: new Date().toISOString(),
+						endedAt: new Date().toISOString(),
+						projectId: this._projectId,
+						roundData: {
+							score,
+							...dynamicRewards,
+						},
+						...(!!asset_id && {assetId: asset_id}),
+						...(parsedAddons.length > 0 && {addons: parsedAddons}),
+					}),
+				},
+			)
+
+			if (!scoreResponse.ok) {
+				const errorData = await scoreResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const params = new URLSearchParams({
+				leaderboardId: this._leaderboardId,
+				map: map_id,
+			}).toString()
+
+			const url = `${this._leaderboardApiUrl}/score-map/get/personal/${this._userId}?${params}`
+
+			const bestScoreResponse = await fetch(url, {
+				headers: {
+					leaderboardApiKey: this._leaderboardApiKey,
+				},
+			})
+
+			if (!bestScoreResponse.ok) {
+				const errorData = await bestScoreResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const bestScore = await bestScoreResponse.json()
+
+			this._bestScore = bestScore?.[0]?.roundData?.score || 0
+
+			this.OnBestScoreReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to add score: ' + error.message)
+		}
+	}
+
+	async _RequestBestScoresLeaderboardByMapId(map_id, limit) {
+		try {
+			const params = new URLSearchParams({
+				map: map_id,
+				leaderboardId: this._leaderboardId,
+				limit: limit || 20,
+			}).toString()
+
+			const url = `${this._leaderboardApiUrl}/score-map/get?${params}`
+
+			const leaderboardResponse = await fetch(url, {
+				headers: {
+					leaderboardApiKey: this._leaderboardApiKey,
+				},
+			})
+
+			if (!leaderboardResponse.ok) {
+				const errorData = await leaderboardResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const {results, count} = await leaderboardResponse.json()
+			let leaderboard = results
+			let personal = null
+
+			if (this._userId) {
+				const personalResponse = await fetch(
+					`${this._leaderboardApiUrl}/score-map/get/personal/${this._userId}?leaderboardId=${this._leaderboardId}&map=${map_id}`,
+					{
+						headers: {
+							leaderboardApiKey: this._leaderboardApiKey,
+						},
+					},
+				)
+
+				if (!personalResponse.ok) {
+					const errorData = await personalResponse.json()
+					throw new Error(
+						errorData?.messages?.[0] ||
+							errorData?.message ||
+							'Something went wrong. Try again later!',
+					)
+				}
+
+				const personalData = await personalResponse.json()
+
+				if (!!personalData[0]) {
+					personal = {
+						userId: this._userId,
+						position: personalData[0].position,
+						bestScore: personalData[0].roundData.score,
+						username:
+							this._personalDetails?.username ||
+							this.ShortenText(this._account, 6, 4),
+						avatar: this._personalDetails?.avatar || '',
+					}
+				}
+			}
+
+			if (leaderboard.length > 0) {
+				const requestParams = new URLSearchParams({limit: 99999})
+
+				leaderboard.forEach(item =>
+					requestParams.append('userIds', item.userId),
+				)
+
+				const usersResponse = await fetch(
+					`${this._usersServiceApiUrl}/profiles?${requestParams}`,
+				)
+
+				if (!usersResponse.ok) {
+					const errorData = await usersResponse.json()
+					throw new Error(
+						errorData?.messages?.[0] ||
+							errorData?.message ||
+							'Something went wrong. Try again later!',
+					)
+				}
+
+				const {results} = await usersResponse.json()
+
+				leaderboard = leaderboard.map(player => {
+					const user = results.find(({userId}) => userId === player.userId)
+					const walletAddress = user?.addresses[0]?.wallet
+
+					if (user) {
+						return {
+							userId: player.userId,
+							position: player.position,
+							bestScore: player.roundData.score,
+							username:
+								user?.personalDetails?.username ||
+								this.ShortenText(walletAddress, 6, 4),
+							avatar: user?.personalDetails?.avatar || '',
+						}
+					} else {
+						return {
+							userId: player.userId,
+							position: player.position,
+							bestScore: player.roundData.score,
+							username: player.userId,
+							avatar: '',
+						}
+					}
+				})
+			}
+
+			this._bestScoresLeaderboard = {
+				results: leaderboard,
+				count,
+				...(!!personal && {personal}),
+			}
+
+			this.OnBestScoresLeaderboardReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError(
+				'Failed to get best scores leaderboard: ' + error.message,
+			)
+		}
+	}
+
+	async _RequestBestScore(map_id) {
+		try {
+			const params = new URLSearchParams({
+				map: map_id,
+				leaderboardId: this._leaderboardId,
+			}).toString()
+
+			const url = `${this._leaderboardApiUrl}/score-map/get/personal/${this._userId}?${params}`
+
+			const bestScoreResponse = await fetch(url, {
+				headers: {
+					leaderboardApiKey: this._leaderboardApiKey,
+				},
+			})
+
+			if (!bestScoreResponse.ok) {
+				const errorData = await bestScoreResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const bestScore = await bestScoreResponse.json()
+
+			this._bestScore = bestScore?.[0]?.roundData?.score || 0
+
+			this.OnBestScoreReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to fetch best score: ' + error.message)
+		}
+	}
+
+	async _RequestReferralLeaderboard(
+		ref_leaderboard_id,
+		ref_leaderboard_api_key,
+		limit,
+		min_balance,
+		max_balance,
+	) {
+		try {
+			const params = new URLSearchParams({
+				limit: limit || 20,
+				...(min_balance && {minBalance: min_balance}),
+				...(max_balance && {maxBalance: max_balance}),
+			}).toString()
+
+			const url = `${this._leaderboardApiUrl}/score-total/leaderboard/${ref_leaderboard_id}?${params}`
+
+			const leaderboardResponse = await fetch(url, {
+				headers: {
+					leaderboardApiKey: ref_leaderboard_api_key,
+				},
+			})
+
+			if (!leaderboardResponse.ok) {
+				const errorData = await leaderboardResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			let leaderboard = await leaderboardResponse.json()
+			let personal = null
+
+			if (this._userId) {
+				const personalResponse = await fetch(
+					`${this._leaderboardApiUrl}/score-total/personal/${this._leaderboardId}/${this._userId}`,
+					{
+						headers: {
+							leaderboardApiKey: this._leaderboardApiKey,
+						},
+					},
+				)
+
+				if (!personalResponse.ok) {
+					const errorData = await personalResponse.json()
+					throw new Error(
+						errorData?.messages?.[0] ||
+							errorData?.message ||
+							'Something went wrong. Try again later!',
+					)
+				}
+
+				const personalData = await personalResponse.json()
+
+				if (typeof personalData === 'object') {
+					personal = {
+						userId: this._userId,
+						position: personalData.mainScore.position,
+						currentScore: personalData.mainScore.currentRoundData.score,
+						totalScore: personalData.mainScore.totalRoundData.score,
+						username:
+							this._personalDetails?.username ||
+							this.ShortenText(this._account, 6, 4),
+						avatar: this._personalDetails?.avatar || '',
+					}
+				}
+			}
+
+			if (leaderboard.length > 0) {
+				const requestParams = new URLSearchParams({limit: 99999})
+
+				leaderboard.forEach(item =>
+					requestParams.append('userIds', item.userId),
+				)
+
+				const usersResponse = await fetch(
+					`${this._usersServiceApiUrl}/profiles?${requestParams}`,
+				)
+
+				if (!usersResponse.ok) {
+					const errorData = await usersResponse.json()
+					throw new Error(
+						errorData?.messages?.[0] ||
+							errorData?.message ||
+							'Something went wrong. Try again later!',
+					)
+				}
+
+				const {results} = await usersResponse.json()
+
+				leaderboard = leaderboard.map(player => {
+					const user = results.find(({userId}) => userId === player.userId)
+					const walletAddress = user?.addresses[0]?.wallet
+
+					if (user) {
+						return {
+							userId: player.userId,
+							position: player.position,
+							currentScore: player.currentRoundData.score,
+							totalScore: player.totalRoundData.score,
+							username:
+								user?.personalDetails?.username ||
+								this.ShortenText(walletAddress, 6, 4),
+							avatar: user?.personalDetails?.avatar || '',
+						}
+					} else {
+						return {
+							userId: player.userId,
+							position: player.position,
+							currentScore: player.currentRoundData.score,
+							totalScore: player.totalRoundData.score,
+							username: player.userId,
+							avatar: '',
+						}
+					}
+				})
+			}
+
+			const countResponse = await fetch(
+				`${this._leaderboardApiUrl}/score-total/count/leaderboard/${ref_leaderboard_id}`,
+			)
+
+			if (!countResponse.ok) {
+				const errorData = await countResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			let count = 0
+			try {
+				count = Number(await countResponse.text())
+			} catch (err) {
+				console.log(err)
+			}
+
+			this._referralLeaderboard = {
+				results: leaderboard,
+				count,
+				...(!!personal && {personal}),
+			}
+
+			this.OnReferralLeaderboardReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to get referral leaderboard: ' + error.message)
+		}
+	}
+
+	async _UpdateUsername(username) {
+		try {
+			const body = {...this._personalDetails}
+			if (username !== '') {
+				body.username = username
+			} else {
+				delete body.username
+			}
+
+			const updateResponse = await fetch(`${this._usersServiceApiUrl}/update`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-account-userid': this._userId,
+					Authorization: this._accessToken,
+				},
+				body: JSON.stringify({personalDetails: body}),
+			})
+
+			if (!updateResponse.ok) {
+				const errorData = await updateResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+			const user = await updateResponse.json()
+
+			this._personalDetails = user.personalDetails
+			this._username = user.personalDetails?.username || ''
+
+			this.OnUsernameUpdated()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to update username: ' + error.message)
+		}
+	}
+
+	async _UpdateAvatar(avatar) {
+		try {
+			const body = {...this._personalDetails}
+			if (avatar !== '') {
+				body.avatar = avatar
+			} else {
+				delete body.avatar
+			}
+
+			const updateResponse = await fetch(`${this._usersServiceApiUrl}/update`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-account-userid': this._userId,
+					Authorization: this._accessToken,
+				},
+				body: JSON.stringify({personalDetails: body}),
+			})
+
+			if (!updateResponse.ok) {
+				const errorData = await updateResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const user = await updateResponse.json()
+
+			this._personalDetails = user.personalDetails
+			this._avatar = user.personalDetails?.avatar || ''
+
+			this.OnAvatarUpdated()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to update avatar: ' + error.message)
+		}
+	}
+
+	async _RequestUserScore(dynamic_rewards_names) {
+		try {
+			let dynamicRewardsNames
+
+			if (!!dynamic_rewards_names) {
+				try {
+					dynamicRewardsNames = JSON.parse(
+						dynamic_rewards_names.replace(/&quot;/g, '"').replace(/'/g, '"'),
+					)
+				} catch (parseError) {
+					throw new Error('Invalid JSON format for dynamic rewards names.')
+				}
+
+				// Validate the parsed data
+				if (
+					typeof dynamicRewardsNames !== 'string' &&
+					!Array.isArray(dynamicRewardsNames)
+				) {
+					throw new Error(
+						'Dynamic rewards names must be a string or an array of strings.',
+					)
+				}
+
+				// Ensure all elements in the array (if it's an array) are strings
+				if (
+					Array.isArray(dynamicRewardsNames) &&
+					!dynamicRewardsNames.every(item => typeof item === 'string')
+				) {
+					throw new Error(
+						'All elements in Dynamic rewards names array must be strings.',
+					)
+				}
+			}
+
+			const scoreResponse = await fetch(
+				`${this._leaderboardApiUrl}/score-total/get?userId=${this._userId}&leaderboardId=${this._leaderboardId}`,
+				{
+					headers: {
+						leaderboardApiKey: this._leaderboardApiKey,
+					},
+				},
+			)
+
+			if (!scoreResponse.ok) {
+				const errorData = await scoreResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const score = await scoreResponse.json()
+			const currentRoundData = score?.currentRoundData
+
+			this._currentScore = currentRoundData?.score
+			this._totalScore = score?.totalRoundData?.score
+
+			if (typeof dynamicRewardsNames === 'string') {
+				// Single dynamic reward - return type: number
+				this._dynamicRewards = currentRoundData?.[dynamicRewardsNames] || 0
+			} else if (Array.isArray(dynamicRewardsNames)) {
+				// Multiple dynamic rewards - return type: object
+				this._dynamicRewards = dynamicRewardsNames.reduce((acc, rewardName) => {
+					acc[rewardName] = currentRoundData?.[rewardName] || 0 // Default to 0 if not found
+					return acc
+				}, {})
+			} else {
+				this._dynamicRewards = 0
+			}
+
+			this.OnUserScoreReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Requesting user score failed: ' + error.message)
+		}
+	}
+
+	async _CheckIfRegistered() {
+		try {
+			const checkWalletResponse = await fetch(
+				`${this._usersServiceApiUrl}/v2/auth/web3/check/${this._account}?projectId=${this._projectId}`,
+			)
+
+			if (!checkWalletResponse.ok) {
+				const errorData = await checkWalletResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const {hasAccount, hasRulesChecked} = await checkWalletResponse.json()
+
+			const isRegistered = hasAccount && hasRulesChecked
+
+			if (isRegistered) {
+				this.OnIsRegistered()
+			} else {
+				this.OnIsNotRegistered()
+			}
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to check if registered: ' + error.message)
+		}
+	}
+
+	async _FetchReferralCode() {
+		try {
+			const refCodeResponse = await fetch(
+				`${this._referralApiUrl}/users/projects/${this._projectId}/referral-code`,
+				{
+					headers: {
+						'x-account-userid': this._userId,
+						Authorization: this._accessToken,
+					},
+				},
+			)
+
+			if (!refCodeResponse.ok) {
+				const errorData = await refCodeResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const response = await refCodeResponse.json()
+
+			if (response.referralCode) {
+				this._referralCode = response.referralCode
+				this.OnReferralCodeExists()
+			} else {
+				this.OnReferralCodeEmpty()
+			}
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to retrieve referral code: ' + error.message)
+		}
+	}
+
+	async _GenerateReferralCode() {
+		try {
+			const refCodeResponse = await fetch(
+				`${this._referralApiUrl}/users/projects/referral-code`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-account-UserId': this._userId,
+						Authorization: this._accessToken,
+					},
+					body: JSON.stringify({projectId: this._projectId}),
+				},
+			)
+
+			if (!refCodeResponse.ok) {
+				const errorData = await refCodeResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const response = await refCodeResponse.json()
+
+			this._referralCode = response.referralCode
+
+			this.OnReferralCodeGenerated()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to generate referral code: ' + error.message)
+		}
+	}
+
+	async _RequestReferralStructure() {
+		try {
+			const refStructureResponse = await fetch(
+				`${this._leaderboardApiUrl}/score-total/downline/${this._leaderboardId}/${this._userId}`,
+				{
+					headers: {
+						leaderboardApiKey: this._leaderboardApiKey,
+					},
+				},
+			)
+
+			if (!refStructureResponse.ok) {
+				const errorData = await refStructureResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const response = await refStructureResponse.json()
+
+			this._referralStructure = response.map(refLevel => ({
+				...refLevel,
+				percentage: refLevel.percentage * 100,
+			}))
+
+			this.OnReferralStructureReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Failed to get referral structure: ' + error.message)
+		}
+	}
+
+	async _SendContractTransaction(
+		contract_address,
+		abi,
+		function_name,
+		input_data,
+		chain_id,
+	) {
+		try {
+			if (!this._account) {
+				throw new Error('Account information is missing or not initialized.')
+			}
+
+			const parsedAbi = JSON.parse(abi)
+			const functionAbi = this.GetFunctionFromAbi(parsedAbi, function_name)
+			if (!functionAbi) {
+				throw new Error(
+					`Function "${function_name}" not found in the provided ABI.`,
+				)
+			}
+
+			const inputData = JSON.parse(
+				input_data.replace(/&quot;/g, '"').replace(/'/g, '"'),
+			)
+
+			const missingKeys = functionAbi.inputs.length !== inputData.length
+			if (missingKeys) {
+				throw new Error('Mismatch in number of function arguments')
+			}
+
+			this._transactionStatus = 'pending'
+
+			await this.PostToDOMAsync('switch-chain', chain_id)
+
+			const contract = new web3.eth.Contract(parsedAbi, contract_address)
+			const estimatedGas = await contract.methods[function_name](
+				...inputData,
+			).estimateGas({
+				from: this._account,
+			})
+			const currentGasPrice = await web3.eth.getGasPrice()
+
+			const transaction = await contract.methods[function_name](
+				...inputData,
+			).send({
+				from: this._account,
+				gas: estimatedGas,
+				gasPrice: currentGasPrice,
+			})
+
+			this._lastTransactionHash = transaction.transactionHash
+
+			// Wait for transaction confirmation
+			const timeout = 120000 // 120sec
+			const startTime = Date.now()
+			let receipt = null
+
+			while (receipt === null) {
+				receipt = await web3.eth.getTransactionReceipt(
+					transaction.transactionHash,
+				)
+
+				if (receipt === null) {
+					const elapsedTime = Date.now() - startTime
+
+					if (elapsedTime > timeout) {
+						throw new Error('Transaction confirmation timed out.')
+					}
+
+					// Wait for a short time before polling again to avoid spamming the node
+					await new Promise(resolve => setTimeout(resolve, 3000))
+				}
+			}
+
+			if (!!receipt && this.SerializeData(receipt.status)) {
+				this._transactionStatus = 'success'
+			} else {
+				throw new Error('Transaction failed or was reverted.')
+			}
+
+			this.OnTransactionSent()
+		} catch (error) {
+			console.log(error, 'error')
+
+			this._transactionStatus = 'error'
+
+			let errorMsg = 'Something went wrong.'
+			if (typeof error === 'string') {
+				errorMsg = error
+			} else if (!!error.data?.message) {
+				errorMsg = error.data?.message
+			} else if (!!error.message) {
+				errorMsg = error.message
+			}
+
+			this.HandleError(errorMsg)
+		}
+	}
+
+	_SetTransactionStatus(status) {
+		this._transactionStatus = status
+	}
+
+	async _ReadContract(
+		contract_address,
+		abi,
+		function_name,
+		input_data,
+		rpc_url,
+	) {
+		try {
+			const parsedAbi = JSON.parse(abi)
+			const functionAbi = this.GetFunctionFromAbi(parsedAbi, function_name)
+			if (!functionAbi) {
+				throw new Error(
+					`Function "${function_name}" not found in the provided ABI.`,
+				)
+			}
+
+			const inputData = JSON.parse(
+				input_data.replace(/&quot;/g, '"').replace(/'/g, '"'),
+			)
+
+			const missingKeys = functionAbi.inputs.length !== inputData.length
+			if (missingKeys) {
+				throw new Error('Mismatch in number of function arguments')
+			}
+			const web3Provider = new Web3.providers.HttpProvider(rpc_url)
+			const web3 = new Web3(web3Provider)
+			const contract = new web3.eth.Contract(parsedAbi, contract_address)
+			const readData = await contract.methods[function_name](
+				...inputData,
+			).call()
+
+			this._lastReadContractData = this.SerializeData(readData)
+
+			this.OnReadContractDataReceived()
+		} catch (error) {
+			console.log(error, 'error')
+
+			this._transactionStatus = 'error'
+
+			let errorMsg = 'Something went wrong.'
+			if (typeof error === 'string') {
+				errorMsg = error
+			} else if (!!error.data?.message) {
+				errorMsg = error.data?.message
+			} else if (!!error.message) {
+				errorMsg = error.message
+			}
+
+			this.HandleError(errorMsg)
+		}
+	}
+
+	async _MultipleReadContract(
+		contract_address,
+		abi,
+		function_names,
+		inputs_data,
+		rpc_url,
+	) {
+		const parsedAbi = JSON.parse(abi)
+		const functionsArray = JSON.parse(
+			function_names.replace(/&quot;/g, '"').replace(/'/g, '"'),
+		)
+		const inputsArray = JSON.parse(
+			inputs_data.replace(/&quot;/g, '"').replace(/'/g, '"'),
+		)
+		const web3Provider = new Web3.providers.HttpProvider(rpc_url)
+		const web3 = new Web3(web3Provider)
+
+		// Assuming you have a multicall contract address for the desired chain
+		const multicallAddress = '0xcA11bde05977b3631167028862bE2a173976CA11' // Replace with actual address
+		const multicall = new web3.eth.Contract(
+			[
+				{
+					inputs: [
+						{
+							components: [
+								{
+									internalType: 'address',
+									name: 'target',
+									type: 'address',
+								},
+								{
+									internalType: 'bool',
+									name: 'allowFailure',
+									type: 'bool',
+								},
+								{
+									internalType: 'bytes',
+									name: 'callData',
+									type: 'bytes',
+								},
+							],
+							internalType: 'struct Multicall3.Call3[]',
+							name: 'calls',
+							type: 'tuple[]',
+						},
+					],
+					name: 'aggregate3',
+					outputs: [
+						{
+							components: [
+								{
+									internalType: 'bool',
+									name: 'success',
+									type: 'bool',
+								},
+								{
+									internalType: 'bytes',
+									name: 'returnData',
+									type: 'bytes',
+								},
+							],
+							internalType: 'struct Multicall3.Result[]',
+							name: 'returnData',
+							type: 'tuple[]',
+						},
+					],
+					stateMutability: 'payable',
+					type: 'function',
+				},
+			],
+			multicallAddress,
+		)
+
+		const calls = functionsArray.map((function_name, index) => {
+			const functionAbi = this.GetFunctionFromAbi(parsedAbi, function_name)
+			if (!functionAbi) {
+				throw new Error(
+					`Function "${function_name}" not found in the provided ABI.`,
+				)
+			}
+
+			const inputData = inputsArray[index]
+			const missingKeys = functionAbi.inputs.length !== inputData.length
+			if (missingKeys) {
+				throw new Error('Mismatch in number of function arguments')
+			}
+
+			// Prepare the call data for multicall
+			return {
+				target: contract_address,
+				allowFailure: true,
+				callData: web3.eth.abi.encodeFunctionCall(functionAbi, inputData),
+			}
+		})
+
+		try {
+			// Execute all calls in a single multicall
+			const returnData = await multicall.methods.aggregate3(calls).call()
+
+			// Decode the return data
+			const data = returnData.map(({returnData: _returnData}, index) => {
+				const functionAbi = this.GetFunctionFromAbi(
+					parsedAbi,
+					functionsArray[index],
+				)
+
+				return web3.eth.abi.decodeParameters(
+					functionAbi.outputs,
+					_returnData,
+				)[0]
+			})
+
+			this._lastMultipleReadContractData = this.SerializeData(data)
+			this.OnMultipleReadContractDataReceived()
+		} catch (error) {
+			console.log(error, 'error')
+
+			this._transactionStatus = 'error'
+
+			let errorMsg = 'Something went wrong.'
+			if (typeof error === 'string') {
+				errorMsg = error
+			} else if (!!error.data?.message) {
+				errorMsg = error.data?.message
+			} else if (!!error.message) {
+				errorMsg = error.message
+			}
+
+			this.HandleError(errorMsg)
+		}
+	}
+
+	async _RequestNumberOfRuns(map_id) {
+		try {
+			const params = new URLSearchParams({
+				leaderboardId: this._leaderboardId,
+				...(map_id && {map: map_id}),
+			}).toString()
+
+			const countResponse = await fetch(
+				`${this._leaderboardApiUrl}/score-map/get/count/${this._userId}?${params}`,
+				{
+					headers: {
+						leaderboardApiKey: this._leaderboardApiKey,
+					},
+				},
+			)
+
+			if (!countResponse.ok) {
+				const errorData = await countResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			let count = 0
+			try {
+				count = Number(await countResponse.text())
+			} catch (err) {
+				console.log(err)
+			}
+
+			this._numberOfRuns = count
+
+			this.OnNumberOfRunsReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Requesting user score failed: ' + error.message)
+		}
+	}
+
+	_CheckReferralCodeFromDeeplink() {
+		const refCode = this.PostToDOM('get-referral-code-from-deeplink')
+
+		if (refCode) {
+			this._refCodeFromDeeplink = refCode
+
+			this.OnRefCodeFromDeeplinkExists()
+		}
+	}
+
+	async _RequestUserNfts(query) {
+		try {
+			let parsedQuery = {}
+
+			if (!!query) {
+				parsedQuery = JSON.parse(
+					query.replace(/&quot;/g, '"').replace(/'/g, '"'),
+				)
+			}
+
+			const requestParams = this.GetURLParams({
+				params: parsedQuery,
+			})
+
+			const nftResponse = await fetch(
+				`${this._nftApiUrl}/v1/user/${this._account}/tokens?${requestParams}`,
+			)
+
+			if (!nftResponse.ok) {
+				const errorData = await nftResponse.json()
+				throw new Error(
+					errorData?.messages?.[0] ||
+						errorData?.message ||
+						'Something went wrong. Try again later!',
+				)
+			}
+
+			const nfts = await nftResponse.json()
+
+			this._userNfts = nfts
+
+			this.OnUserNftsReceived()
+		} catch (error) {
+			console.log(error)
+			this.HandleError('Requesting user nfts failed: ' + error.message)
+		}
+	}
+
+	async _SendCrypto(token_address, amount, receiver, chain_id) {
+		const abi = [
+			{
+				constant: false,
+				inputs: [
+					{name: '_to', type: 'address'},
+					{name: '_value', type: 'uint256'},
+				],
+				name: 'transfer',
+				outputs: [{name: '', type: 'bool'}],
+				type: 'function',
+			},
+			{
+				constant: true,
+				inputs: [{name: '_owner', type: 'address'}],
+				name: 'balanceOf',
+				outputs: [{name: 'balance', type: 'uint256'}],
+				type: 'function',
+			},
+		]
+
+		this._transactionStatus = 'pending'
+		try {
+			if (!this._account) {
+				throw new Error('Account information is missing or not initialized.')
+			}
+
+			await this.PostToDOMAsync('switch-chain', chain_id)
+
+			const amountInBigInt = BigInt(amount)
+			const currentGasPrice = await web3.eth.getGasPrice()
+			let transaction
+
+			if (!token_address) {
+				const tx = {
+					from: this._account,
+					to: receiver,
+					value: amountInBigInt,
+				}
+				const estimatedGas = await web3.eth.estimateGas(tx)
+
+				transaction = await web3.eth.sendTransaction({
+					...tx,
+					gas: estimatedGas,
+					gasPrice: currentGasPrice,
+				})
+			} else {
+				const contract = new web3.eth.Contract(abi, token_address)
+				const estimatedGas = await contract.methods
+					.transfer(receiver, amountInBigInt)
+					.estimateGas({
+						from: this._account,
+					})
+
+				transaction = await contract.methods
+					.transfer(receiver, amountInBigInt)
+					.send({
+						from: this._account,
+						gas: estimatedGas,
+						gasPrice: currentGasPrice,
+					})
+			}
+
+			this._lastTransactionHash = transaction.transactionHash
+
+			// Wait for transaction confirmation
+			const timeout = 120000 // 120sec
+			const startTime = Date.now()
+			let receipt = null
+
+			while (receipt === null) {
+				receipt = await web3.eth.getTransactionReceipt(
+					transaction.transactionHash,
+				)
+
+				if (receipt === null) {
+					const elapsedTime = Date.now() - startTime
+
+					if (elapsedTime > timeout) {
+						throw new Error('Transaction confirmation timed out.')
+					}
+
+					// Wait for a short time before polling again to avoid spamming the node
+					await new Promise(resolve => setTimeout(resolve, 3000))
+				}
+			}
+
+			if (!!receipt && this.SerializeData(receipt.status)) {
+				this._transactionStatus = 'success'
+			} else {
+				throw new Error('Transaction failed or was reverted.')
+			}
+
+			this.OnTransactionSent()
+		} catch (error) {
+			console.log(error, 'error')
+
+			this._transactionStatus = 'error'
+
+			let errorMsg = 'Something went wrong.'
+			if (typeof error === 'string') {
+				errorMsg = error
+			} else if (!!error.data?.message) {
+				errorMsg = error.data?.message
+			} else if (!!error.message) {
+				errorMsg = error.message
+			}
+
+			this.HandleError(errorMsg)
+		}
+	}
+
+	// Conditions
+	OnAccountReceived() {
+		this._triggerAccountReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnAccountReceived)
+	}
+
+	OnUserLoggedIn() {
+		this._triggerUserLoggedIn = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnUserLoggedIn)
+	}
+
+	OnLeaderboardReceived() {
+		this._triggerLeaderboardReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnLeaderboardReceived)
+	}
+
+	OnUsernameUpdated() {
+		this._triggerUsernameUpdated = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnUsernameUpdated)
+	}
+
+	OnAvatarUpdated() {
+		this._triggerAvatarUpdated = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnAvatarUpdated)
+	}
+
+	OnUserScoreReceived() {
+		this._triggerUserScoreReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnUserScoreReceived)
+	}
+
+	OnIsRegistered() {
+		this._triggerIsRegistered = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnIsRegistered)
+	}
+
+	OnIsNotRegistered() {
+		this._triggerIsNotRegistered = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnIsNotRegistered)
+	}
+
+	OnReferralCodeExists() {
+		this._triggerReferralCodeExists = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralCodeExists)
+	}
+
+	OnReferralCodeEmpty() {
+		this._triggerReferralCodeEmpty = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralCodeEmpty)
+	}
+
+	OnReferralCodeGenerated() {
+		this._triggerReferralCodeGenerated = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralCodeGenerated)
+	}
+
+	OnReferralStructureReceived() {
+		this._triggerReferralStructureReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralStructureReceived)
+	}
+
+	OnBestScoreReceived() {
+		this._triggerBestScoreReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnBestScoreReceived)
+	}
+
+	OnBestScoresLeaderboardReceived() {
+		this._triggerBestScoresLeaderboardReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnBestScoresLeaderboardReceived)
+	}
+
+	OnReferralLeaderboardReceived() {
+		this._triggerReferralLeaderboardReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReferralLeaderboardReceived)
+	}
+
+	OnTransactionSent() {
+		this._triggerTransactionSent = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnTransactionSent)
+	}
+
+	OnNumberOfRunsReceived() {
+		this._triggerNumberOfRunsReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnNumberOfRunsReceived)
+	}
+
+	OnRefCodeFromDeeplinkExists() {
+		this._triggerRefCodeFromDeeplinkExists = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnRefCodeFromDeeplinkExists)
+	}
+
+	OnUserNftsReceived() {
+		this._triggerUserNftsReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnUserNftsReceived)
+	}
+
+	OnReadContractDataReceived() {
+		this._triggerReadContractDataReceived = true
+		this.Trigger(C3.Plugins.MetaproPlugin.Cnds.OnReadContractDataReceived)
+	}
+
+	OnMultipleReadContractDataReceived() {
+		this._triggerMultipleReadContractDataReceived = true
+		this.Trigger(
+			C3.Plugins.MetaproPlugin.Cnds.OnMultipleReadContractDataReceived,
+		)
+	}
+
+	// Expressions
+	_GetAccount() {
+		return this._account
+	}
+
+	_GetAvatar() {
+		return this._avatar
+	}
+
+	_GetUserId() {
+		return this._userId
+	}
+
+	_GetUsername() {
+		return this._username
+	}
+
+	_GetAccessToken() {
+		return this._accessToken
+	}
+
+	_GetLeaderboard() {
+		return this._leaderboard
+	}
+
+	_GetCurrentScore() {
+		return this._currentScore
+	}
+
+	_GetTotalScore() {
+		return this._totalScore
+	}
+
+	_GetDynamicReward() {
+		return this._dynamicRewards
+	}
+
+	_GetReferralCode() {
+		return this._referralCode
+	}
+
+	_GetReferralStructure() {
+		return this._referralStructure
+	}
+
+	_GetBestScore() {
+		return this._bestScore
+	}
+
+	_GetBestScoresLeaderboard() {
+		return this._bestScoresLeaderboard
+	}
+
+	_GetReferralLeaderboard() {
+		return this._referralLeaderboard
+	}
+
+	_GetNumberOfRuns() {
+		return this._numberOfRuns
+	}
+
+	_GetRefCodeFromDeeplink() {
+		return this._refCodeFromDeeplink
+	}
+
+	_GetLastTransactionHash() {
+		return this._lastTransactionHash
+	}
+
+	_GetTransactionStatus() {
+		return this._transactionStatus
+	}
+
+	_GetLastReadContractData() {
+		return this._lastReadContractData
+	}
+
+	_GetLastMultipleReadContractData() {
+		return this._lastMultipleReadContractData
+	}
+
+	_GetUserNfts() {
+		return this._userNfts
+	}
+
+	_GetLastError() {
+		return this._errorMsg
+	}
+
+	_GetProjectId() {
+		return this._projectId
+	}
+
+	_GetLeaderboardId() {
+		return this._leaderboardId
+	}
+
+	_GetLeaderboardApiKey() {
+		return this._leaderboardApiKey
+	}
+
+	_GetUsersServiceApiUrl() {
+		return this._usersServiceApiUrl
+	}
+
+	_GetLeaderboardApiUrl() {
+		return this._leaderboardApiUrl
+	}
+
+	_GetReferralApiUrl() {
+		return this._referralApiUrl
+	}
+
+	_GetNftApiUrl() {
+		return this._nftApiUrl
+	}
+
+	_GetPlatformId() {
+		return this._platformId
+	}
+
+	Release() {
+		super.Release()
+	}
+
+	SaveToJson() {
+		return {
+			// data to be saved for savegames
+		}
+	}
+
+	LoadFromJson(o) {
+		// load state for savegames
+	}
+
+	GetScriptInterfaceClass() {
+		return self.IMyMetaproPluginInstance
+	}
+}
 
 // Script interface. Use a WeakMap to safely hide the internal implementation details from the
 // caller using the script interface.
-const map = new WeakMap();
+const map = new WeakMap()
 
 self.IMyMetaproPluginInstance = class IMyMetaproPluginInstance extends (
-  self.IInstance
+	self.IInstance
 ) {
-  constructor() {
-    super();
+	constructor() {
+		super()
 
-    // Map by SDK instance
-    map.set(this, self.IInstance._GetInitInst().GetSdkInstance());
-  }
+		// Map by SDK instance
+		map.set(this, self.IInstance._GetInitInst().GetSdkInstance())
+	}
 
-  // Note: This is where the setter/getter properties are defined on the script interface.
-};
+	// Note: This is where the setter/getter properties are defined on the script interface.
+}
 
 }
 
@@ -3666,24 +3752,9 @@ self.C3.Plugins.MetaproPlugin.Exps = {
 
 }
 
-// scripts/plugins/Browser/c3runtime/runtime.js
-{
-{const C3=self.C3;C3.Plugins.Browser=class BrowserPlugin extends C3.SDKPluginBase{constructor(e){super(e)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.Browser.Type=class BrowserType extends C3.SDKTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const C3=self.C3,DOM_COMPONENT_ID="browser";C3.Plugins.Browser.Instance=class BrowserInstance extends C3.SDKInstanceBase{constructor(e,t){super(e,DOM_COMPONENT_ID),this._initLocationStr="",this._isOnline=!1,this._referrer="",this._docTitle="",this._isCookieEnabled=!1,this._screenWidth=0,this._screenHeight=0,this._windowOuterWidth=0,this._windowOuterHeight=0,this._isConstructArcade=!1,this._cssStyleMap=new Map,this._isInstallAvailable=!1,this._installResult="",this._isWarnOnCloseEnabled=!1,this.AddDOMMessageHandlers([["online-state",e=>this._OnOnlineStateChanged(e)],["backbutton",()=>this._OnBackButton()],["sw-message",e=>this._OnSWMessage(e)],["hashchange",e=>this._OnHashChange(e)],["install-available",()=>this._OnInstallAvailable()],["app-installed",e=>this._OnAppInstalled(e)]]);const n=this.GetRuntime().Dispatcher();this._disposables=new C3.CompositeDisposable(C3.Disposable.From(n,"afterfirstlayoutstart",()=>this._OnAfterFirstLayoutStart()),C3.Disposable.From(n,"window-resize",()=>this._OnWindowResize()),C3.Disposable.From(n,"suspend",()=>this._OnSuspend()),C3.Disposable.From(n,"resume",()=>this._OnResume())),this._runtime.AddLoadPromise(this.PostToDOMAsync("get-initial-state",{"exportType":this._runtime.GetExportType()}).then(e=>{this._initLocationStr=e["location"],this._isOnline=e["isOnline"],this._referrer=e["referrer"],this._docTitle=e["title"],this._isCookieEnabled=e["isCookieEnabled"],this._screenWidth=e["screenWidth"],this._screenHeight=e["screenHeight"],this._windowOuterWidth=e["windowOuterWidth"],this._windowOuterHeight=e["windowOuterHeight"],this._isConstructArcade=e["isConstructArcade"]}))}Release(){super.Release()}_OnAfterFirstLayoutStart(){this.PostToDOM("ready-for-sw-messages")}async _OnOnlineStateChanged(e){const t=!!e["isOnline"];this._isOnline!==t&&(this._isOnline=t,this._isOnline?await this.TriggerAsync(C3.Plugins.Browser.Cnds.OnOnline):await this.TriggerAsync(C3.Plugins.Browser.Cnds.OnOffline))}async _OnWindowResize(){await this.TriggerAsync(C3.Plugins.Browser.Cnds.OnResize)}_OnSuspend(){this.Trigger(C3.Plugins.Browser.Cnds.OnPageHidden)}_OnResume(){this.Trigger(C3.Plugins.Browser.Cnds.OnPageVisible)}async _OnBackButton(){await this.TriggerAsync(C3.Plugins.Browser.Cnds.OnBackButton)}_OnSWMessage(e){const t=e["type"];"downloading-update"===t?this.Trigger(C3.Plugins.Browser.Cnds.OnUpdateFound):"update-ready"===t||"update-pending"===t?this.Trigger(C3.Plugins.Browser.Cnds.OnUpdateReady):"offline-ready"===t&&this.Trigger(C3.Plugins.Browser.Cnds.OnOfflineReady)}_OnHashChange(e){this._initLocationStr=e["location"],this.Trigger(C3.Plugins.Browser.Cnds.OnHashChange)}_OnInstallAvailable(){this._isInstallAvailable=!0,this.Trigger(C3.Plugins.Browser.Cnds.OnInstallAvailable)}_OnAppInstalled(e){this._isInstallAvailable=!1,this.Trigger(C3.Plugins.Browser.Cnds.OnAppInstalled)}_IsWarnOnCloseEnabled(){return this._isWarnOnCloseEnabled}_SetWarnOnCloseEnabled(e){this._isWarnOnCloseEnabled!==(e=!!e)&&(this._isWarnOnCloseEnabled=e,this.PostToDOM("set-warn-on-close",{"enabled":e}))}GetDebuggerProperties(){const e="plugins.browser.debugger";return[{title:"plugins.browser.name",properties:[{name:e+".user-agent",value:navigator.userAgent},{name:e+".is-online",value:this._isOnline},{name:e+".is-fullscreen",value:this._runtime.GetCanvasManager().IsDocumentFullscreen()}]}]}}}{const C3=self.C3;C3.Plugins.Browser.Cnds={IsOnline(){return this._isOnline},OnOnline(){return!0},OnOffline(){return!0},OnResize(){return!0},CookiesEnabled(){return this._isCookieEnabled},IsFullscreen(){return this._runtime.GetCanvasManager().IsDocumentFullscreen()},OnBackButton(){return!0},IsPortraitLandscape(e){const t=this._runtime.GetCanvasManager().GetLastWidth(),n=this._runtime.GetCanvasManager().GetLastHeight(),s=t<=n?0:1;return s===e},OnUpdateFound(){return!0},OnUpdateReady(){return!0},OnOfflineReady(){return!0},OnHashChange(){return!0},OnInstallAvailable(){return!0},IsInstallAvailable(){return this._isInstallAvailable},OnInstallResult(e){switch(e){case 0:return"accepted"===this._installResult;case 1:return"dismissed"===this._installResult;case 2:return"error"===this._installResult;case 3:return!0;default:return!1}},OnAppInstalled(){return!0},CompareDisplayMode(e){const t=this._runtime.GetCanvasManager().GetCssDisplayMode();switch(e){case 0:return"browser"===t;case 1:return"minimal-ui"===t;case 2:return"standalone"===t;case 3:return"fullscreen"===t;default:return!1}},IsWarnOnCloseEnabled(){return this._IsWarnOnCloseEnabled()},PageVisible(){return!this._runtime.IsSuspended()},OnPageHidden(){return!0},OnPageVisible(){return!0},HasJava(){return!1},IsDownloadingUpdate(){return!1},OnMenuButton(){return!1},OnSearchButton(){return!1},IsMetered(){return!1},IsCharging(){return!0},SupportsFullscreen(){return!0}}}{const C3=self.C3,ORIENTATIONS=["portrait","landscape","portrait-primary","portrait-secondary","landscape-primary","landscape-secondary"];C3.Plugins.Browser.Acts={Alert(e){this.PostToDOM("alert",{"message":e.toString()})},Close(){this._isConstructArcade||(this._runtime.IsDebug()?self.C3Debugger.CloseWindow():this.PostToDOM("close"))},Focus(){this.PostToDOM("set-focus",{"isFocus":!0})},Blur(){this.PostToDOM("set-focus",{"isFocus":!1})},GoBack(){this._isConstructArcade||this.PostToDOM("navigate",{"type":"back"})},GoForward(){this._isConstructArcade||this.PostToDOM("navigate",{"type":"forward"})},GoHome(){},Reload(){this._isConstructArcade||(this._runtime.IsDebug()?this._runtime.PostToDebugger({"type":"reload"}):this.PostToDOM("navigate",{"type":"reload"}))},GoToURL(e,t){this._PostToDOMMaybeSync("navigate",{"type":"url","url":e,"target":t,"exportType":this._runtime.GetExportType()})},GoToURLWindow(e,t){this._PostToDOMMaybeSync("navigate",{"type":"new-window","url":e,"tag":t,"exportType":this._runtime.GetExportType()})},RequestFullScreen(e,t){2<=e&&(e+=1),1===(e=6===e?2:e)&&(e=0);const n=C3.CanvasManager._FullscreenModeNumberToString(e);this._runtime.GetCanvasManager().SetDocumentFullscreenMode(n),this._PostToDOMMaybeSync("request-fullscreen",{"navUI":t})},CancelFullScreen(){this._PostToDOMMaybeSync("exit-fullscreen")},Vibrate(e){const n=e.split(",");for(let e=0,t=n.length;e<t;++e)n[e]=parseInt(n[e],10);this._PostToDOMMaybeSync("vibrate",{"pattern":n})},async InvokeDownload(e,t){if(e&&t){const n=await this._runtime.GetAssetManager().GetProjectFileUrl(e);this._runtime.InvokeDownload(n,t)}},InvokeDownloadString(e,t,n){if(n){const s=`data:${t},`+encodeURIComponent(e);this._runtime.InvokeDownload(s,n)}},ConsoleLog(e,t){t=t.toString(),0===e?console.log(t):1===e?console.warn(t):2===e&&console.error(t)},ConsoleGroup(e){console.group(e)},ConsoleGroupEnd(){console.groupEnd()},ExecJs(jsStr){try{eval(jsStr)}catch(err){console.error("Error executing JavaScript: ",err)}},LockOrientation(e){if(!((e=Math.floor(e))<0||e>=ORIENTATIONS.length)){const t=ORIENTATIONS[e];this._PostToDOMMaybeSync("lock-orientation",{"orientation":t})}},UnlockOrientation(){this._PostToDOMMaybeSync("unlock-orientation")},LoadStyleSheet(e){this._runtime.GetAssetManager().LoadStyleSheet(e)},async SetDocumentCSSStyle(e,t,n,s){await this.PostToDOMAsync("set-document-css-style",{"prop":C3.CSSToCamelCase(e),"value":t,"selector":n,"is-all":0!==s})},async GetDocumentCSSStyle(e,t,n){const s=await this.PostToDOMAsync("get-document-css-style",{"prop":e,"selector":t});s["isOk"]&&this._cssStyleMap.set(n.toLowerCase(),s["result"].trim())},SetHash(e){this.PostToDOM("set-hash",{"hash":e})},SetWindowSize(e,t){this.PostToDOM("set-window-size",{"windowWidth":e,"windowHeight":t})},SetWindowPosition(e,t){this.PostToDOM("set-window-position",{"windowX":e,"windowY":t})},async RequestInstall(){const e=await this.PostToDOMAsync("request-install");this._installResult=e["result"],this.Trigger(C3.Plugins.Browser.Cnds.OnInstallResult)},SetWarnOnClose(e){this._SetWarnOnCloseEnabled(e)}}}{const C3=self.C3;C3.Plugins.Browser.Exps={URL(){return this._runtime.IsInWorker()?this._initLocationStr:location.toString()},Protocol(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).protocol},Domain(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).hostname},Port(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).port},PathName(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).pathname},Hash(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).hash},QueryString(){return(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).search},QueryParam(e){const t=(this._runtime.IsInWorker()?new URL(this._initLocationStr):location).search,n=RegExp("[?&]"+e+"=([^&]*)").exec(t);return n?decodeURIComponent(n[1].replace(/\+/g," ")):""},Referrer(){return this._referrer},Title(){return this._docTitle},Language(){return navigator.language},Platform(){return navigator.platform},UserAgent(){return navigator.userAgent},ExecJS(jsStr){let result=0;try{result=eval(jsStr)}catch(err){console.error("Error executing JavaScript: ",err)}return"number"==typeof result||"string"==typeof result?result:"boolean"==typeof result&&result?1:0},CSSStyleValue(e){return this._cssStyleMap.get(e)||""},Name(){return navigator.appName},Version(){return navigator.appVersion},Product(){return navigator.product},Vendor(){return navigator.vendor},BatteryLevel(){return 1},BatteryTimeLeft(){return 1/0},Bandwidth(){const e=navigator["connection"];return e&&(e["downlink"]||e["downlinkMax"]||e["bandwidth"])||1/0},ConnectionType(){const e=navigator["connection"];return e&&e["type"]||"unknown"},DevicePixelRatio(){return self.devicePixelRatio},ScreenWidth(){return this._screenWidth},ScreenHeight(){return this._screenHeight},WindowInnerWidth(){return this._runtime.GetCanvasManager().GetLastWidth()},WindowInnerHeight(){return this._runtime.GetCanvasManager().GetLastHeight()},WindowOuterWidth(){return this._windowOuterWidth},WindowOuterHeight(){return this._windowOuterWidth},DisplayMode(){return this._runtime.GetCanvasManager().GetCssDisplayMode()},InstallResult(){return this._installResult}}}
-}
-
-// scripts/plugins/Button/c3runtime/runtime.js
-{
-{const a=self.C3,b="button";a.Plugins.Button=class extends a.SDKDOMPluginBase{constructor(e){super(e,b),this.AddElementMessageHandler("click",(e,t)=>e._OnClick(t))}Release(){super.Release()}}}{const g=self.C3;g.Plugins.Button.Type=class extends g.SDKTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const j=self.C3,k=self.C3X,l=0,m=1,n=2,o=3,p=4,q=5,r=6,s=7,t=8,u="button",v=(j.Plugins.Button.Instance=class extends j.SDKDOMInstanceBase{constructor(e,i){super(e,u),this._text="OK",this._isCheckbox=!1,this._isChecked=!1,this._title="",this._id="",this._className="",this._isEnabled=!0,this._autoFontSize=!0,i&&(this._isCheckbox=1===i[l],this._text=i[m],this._title=i[n],this.GetWorldInfo().SetVisible(i[o]),this._isEnabled=i[p],this._autoFontSize=i[q],this._isChecked=i[r],this._id=i[s],this._className=i[t]),this.CreateElement({"id":this._id,"className":this._className})}Release(){super.Release()}GetElementState(){return{"text":this._text,"isCheckbox":this._isCheckbox,"isChecked":this._isChecked,"title":this._title,"isVisible":this.GetWorldInfo().IsVisible(),"isEnabled":this._isEnabled}}async _OnClick(e){this._isChecked=e["isChecked"],this.DispatchScriptEvent("click",!0),await this.TriggerAsync(j.Plugins.Button.Cnds.OnClicked)}_SetText(e){this._text!==e&&(this._text=e,this.UpdateElementState())}_GetText(){return this._text}_SetTooltip(e){this._title!==e&&(this._title=e,this.UpdateElementState())}_GetTooltip(){return this._title}_SetEnabled(e){this._isEnabled!==(e=!!e)&&(this._isEnabled=e,this.UpdateElementState())}_IsEnabled(){return this._isEnabled}_SetChecked(e){this._isCheckbox&&this._isChecked!==(e=!!e)&&(this._isChecked=e,this.UpdateElementState())}_IsChecked(){return this._isChecked}Draw(e){}SaveToJson(){return{"text":this._text,"checked":this._isChecked,"title":this._title,"enabled":this._isEnabled}}LoadFromJson(e){this._text=e["text"],this._isChecked=e["checked"],this._title=e["title"],this._isEnabled=e["enabled"],this.UpdateElementState()}GetPropertyValueByIndex(e){switch(e){case m:return this._GetText();case n:return this._GetTooltip();case p:return this._IsEnabled();case q:return this._autoFontSize;case r:return this._IsChecked()}}SetPropertyValueByIndex(e,t){switch(e){case m:this._SetText(t);break;case n:this._SetTooltip(t);break;case p:this._SetEnabled(!!t);break;case q:this._autoFontSize=!!t;break;case r:this._SetChecked(!!t)}}GetDebuggerProperties(){const e="plugins.button";return[{title:e+".name",properties:[{name:e+".properties.text.name",value:this._GetText(),onedit:e=>this._SetText(e)},{name:e+".properties.enabled.name",value:this._IsEnabled(),onedit:e=>this._SetEnabled(e)},{name:e+".properties.checked.name",value:this._IsChecked(),onedit:e=>this._SetChecked(e)}]}]}GetScriptInterfaceClass(){return self.IButtonInstance}},new WeakMap);self.IButtonInstance=class extends self.IDOMInstance{constructor(){super(),v.set(this,self.IInstance._GetInitInst().GetSdkInstance())}set text(e){k.RequireString(e),v.get(this)._SetText(e)}get text(){return v.get(this)._GetText()}set tooltip(e){k.RequireString(e),v.get(this)._SetTooltip(e)}get tooltip(){return v.get(this)._GetTooltip()}set isEnabled(e){v.get(this)._SetEnabled(e)}get isEnabled(){return v.get(this)._IsEnabled()}set isChecked(e){v.get(this)._SetChecked(e)}get isChecked(){return v.get(this)._IsChecked()}}}{const S=self.C3;S.Plugins.Button.Cnds={OnClicked(){return!0},IsChecked(){return this._isChecked},CompareText(e,t){return t?this._text===e:S.equalsNoCase(this._text,e)}}}{const V=self.C3;V.Plugins.Button.Acts={SetText(e){this._SetText(e)},SetTooltip(e){this._SetTooltip(e)},SetChecked(e){this._SetChecked(0!==e)},ToggleChecked(){this._isCheckbox&&(this._isChecked=!this._isChecked,this.UpdateElementState())}}}{const Z=self.C3;Z.Plugins.Button.Exps={Text(){return this._text}}}
-}
-
 // scripts/plugins/HTMLElement/c3runtime/runtime.js
 {
 {const a=self.C3,b="html-element";a.Plugins.HTMLElement=class extends a.SDKDOMPluginBase{constructor(t){super(t,b),this.AddElementMessageHandler("initial-content",(t,e)=>t._OnInitialContent(e)),this.AddElementMessageHandler("click",(t,e)=>t._OnClick(e)),this.AddElementMessageHandler("animationend",(t,e)=>t._OnAnimationEnd(e))}Release(){super.Release()}}}{const k=self.C3;k.Plugins.HTMLElement.Type=class extends k.SDKTypeBase{constructor(t){super(t)}Release(){super.Release()}OnCreate(){}}}{const n=self.C3,o=self.C3X,p=0,q=1,r=2,s=3,t=4,u=5,v=6,w=7,x=9,y=10,z=11,A=12,B=13,C=14,D=15,E="html-element",F=(n.Plugins.HTMLElement.Instance=class extends n.SDKDOMInstanceBase{constructor(e,i){super(e,E),this._tag="div",this._htmlContent="",this._textContent="",this._id="",this._className="",this._targetId="",this._targetClass="";let a=this._cssAnimationName="",o=!(this._initialType="html"),l=0,h=!1,c=n.New(n.Color),g=!1,m=n.New(n.Color),_=(this._autoFontSize=!0,this._autoFontSizeOffset=0,!1),d="";if(i){this._tag=i[p]||"div",a=i[q];const S=i[r];1===S?a=n.New(n.BBString,a,{convertLineBreaks:!0}).toHTML():2===S&&(this._initialType="text"),this.GetWorldInfo().SetVisible(i[s]),this._id=i[t],this._className=i[u],o=i[v],l=i[w],h=i[x],c.setFromJSON(i[y]),g=i[z],m.setFromJSON(i[A]),this._autoFontSize=i[B],_=i[C],d=i[D]}"html"===this._initialType?this._htmlContent=a:this._textContent=a,this.CreateElement({"tag":this._tag,"str":a,"type":this._initialType,"id":this._id,"className":this._className,"allow-context-menu":o,"stop-input-events-mode":l,"css-color":h?c.getCssRgb():"","css-background-color":g?m.getCssRgb():"","allow-text-selection":_,"style-attribute":d})}Release(){super.Release()}_GetStringContent(t,e){let s="html";return"bbcode"===e?t=n.New(n.BBString,t,{convertLineBreaks:!0}).toHTML():"text"===e&&(s="text"),{contentType:s,str:t}}async _SetContent(t,e="html",n="",s=!1){const{contentType:i,str:r}=this._GetStringContent(t,e);if(!n)if("html"===i){if("html"===this._initialType&&this._htmlContent===r)return;this._htmlContent=r}else if("text"===i){if("text"===this._initialType&&this._textContent===r)return;this._textContent=r}await this._SendHTMLUpdateMessage("set-content",{"str":r,"type":i,"selector":n,"is-all":s})}async _InsertContent(t,e="html",n=!0,s="",i=!1){if(t){const{contentType:r,str:a}=this._GetStringContent(t,e);await this._SendHTMLUpdateMessage("insert-content",{"str":a,"type":r,"at-end":n,"selector":s,"is-all":i})}}async _RemoveContent(t,e=!1,n=!1){await this._SendHTMLUpdateMessage("remove-content",{"selector":t,"is-clear":e,"is-all":n})}async _SetContentClass(t,e,n,s=!1){await this._SendHTMLUpdateMessage("set-content-class",{"mode":t,"class-array":e,"selector":n,"is-all":s})}async _SetContentAttribute(t,e,n,s,i=!1){await this._SendHTMLUpdateMessage("set-content-attribute",{"mode":t,"attribute":e,"value":n,"selector":s,"is-all":i})}async _SetContentCSSStyle(t,e,s,i=!1){await this._SendHTMLUpdateMessage("set-content-css-style",{"prop":n.CSSToCamelCase(t),"value":e,"selector":s,"is-all":i})}async _SendHTMLUpdateMessage(t,e){const n=await this.PostToDOMElementAsync(t,e);n["isOk"]&&(this._htmlContent=n["html"],this._textContent=n["text"])}async _PositionObjectAtElement(t,e){const n=await this.PostToDOMElementAsync("get-element-box",{"selector":e});if(n["isOk"]){const s=this._runtime.GetCanvasManager(),i=n["left"]-s.GetCanvasClientX(),r=n["top"]-s.GetCanvasClientY(),a=n["right"]-s.GetCanvasClientX(),o=n["bottom"]-s.GetCanvasClientY();for(const l of t){const h=l.GetWorldInfo();if(h){const c=h.GetLayer(),[C,g]=c.CanvasCssToLayer(i,r,h.GetZElevation()),[m,_]=c.CanvasCssToLayer(a,o,h.GetZElevation());if(isFinite(C)&&isFinite(g)&&isFinite(m)&&isFinite(_)){const d=m-C,S=_-g,u=h.GetOriginX(),p=h.GetOriginY(),I=C+u*d,y=g+p*S;h.GetX()===I&&h.GetY()===y&&h.GetWidth()===d&&h.GetHeight()===S||(h.SetXY(I,y),h.SetSize(d,S),h.SetBboxChanged())}}}}}async _CreateSpriteImgElement(t,e,n,s,i){const r=t.GetWorldInfo(),a=t.GetCurrentImageInfo();if(r&&a){const o=await a.ExtractImageToBlobURL(),l=await this.PostToDOMElementAsync("insert-img-element",{"blobUrl":o,"width":a.GetWidth(),"height":a.GetHeight(),"selector":e,"insertAt":n,"id":s,"class":i});l["isOk"]&&(this._htmlContent=l["html"],this._textContent=l["text"])}}async _SetElementScrollPosition(t,e,n){await this.PostToDOMElementAsync("set-scroll-position",{"selector":t,"direction":e,"position":n})}GetElementState(){return{"html":this._htmlContent}}_OnInitialContent(t){this._htmlContent=t["html"],this._textContent=t["text"]}_GetHTMLContent(){return this._htmlContent}_GetTextContent(){return this._textContent}async _OnClick(t){const e=t["chain"];for(const s of e)this._targetId=s["targetId"],this._targetClass=s["targetClass"],this.DispatchScriptEvent("click",!0,{"targetId":this._targetId,"targetClass":this._targetClass}),this._targetId&&await this.TriggerAsync(n.Plugins.HTMLElement.Cnds.OnClickedID),this._targetClass&&await this.TriggerAsync(n.Plugins.HTMLElement.Cnds.OnClickedClass);if(0<e.length){const i=e[0];this._targetId=i["targetId"],this._targetClass=i["targetClass"]}else this._targetId="",this._targetClass="";await this.TriggerAsync(n.Plugins.HTMLElement.Cnds.OnClicked),this._targetId="",this._targetClass=""}async _OnAnimationEnd(t){this._targetId=t["targetId"],this._targetClass=t["targetClass"],this._cssAnimationName=t["animationName"],this.DispatchScriptEvent("animationend",!0,{"targetId":this._targetId,"targetClass":this._targetClass,"animationName":this._cssAnimationName}),await this.TriggerAsync(n.Plugins.HTMLElement.Cnds.OnCSSAnimationEnded),this._targetId="",this._targetClass="",this._cssAnimationName=""}Draw(t){}SaveToJson(){return{"t":this._tag,"h":this._htmlContent,"id":this._id,"c":this._className}}LoadFromJson(t){this._tag=t["t"],this._htmlContent=t["h"],this._id=t["id"],this._className=t["c"],this.UpdateElementState()}GetPropertyValueByIndex(t){}SetPropertyValueByIndex(t,e){}GetDebuggerProperties(){return[]}GetScriptInterfaceClass(){return self.IHTMLElementInstance}},new WeakMap),G=new Set(["html","bbcode","text"]),H=new Set(["add","toggle","remove"]),I=new Set(["set","remove"]),J=["start","end","replace"],K=new Set(["left","top"]);self.IHTMLElementInstance=class extends self.IDOMInstance{constructor(){super(),F.set(this,self.IInstance._GetInitInst().GetSdkInstance())}setContent(t,e="html",n="",s=!1){if(o.RequireString(t),G.has(e))return o.RequireString(n),F.get(this)._SetContent(t,e,n,!!s);throw new Error("invalid type")}insertContent(t,e="html",n=!0,s="",i=!1){if(o.RequireString(t),G.has(e))return o.RequireString(s),F.get(this)._InsertContent(t,e,!!n,s,!!i);throw new Error("invalid type")}setContentClass(t,e,n,s=!1){if(H.has(t))return"string"==typeof e&&(e=e.split(" ")),o.RequireArray(e),o.RequireString(n),F.get(this)._SetContentClass(t,e,n,!!s);throw new Error("invalid mode")}setContentAttribute(t,e,n,s,i=!1){if(I.has(t))return o.RequireString(e),n=n.toString(),o.RequireString(s),F.get(this)._SetContentAttribute(t,e,n,s,!!i);throw new Error("invalid type")}setContentCssStyle(t,e,n,s){return o.RequireString(t),e=e.toString(),o.RequireString(n),F.get(this)._SetContentCSSStyle(t,e,n,!!s)}positionInstanceAtElement(t,e){o.RequireInstanceOf(t,self.IWorldInstance),o.RequireString(e);const n=F.get(this),s=n.GetRuntime(),i=s._UnwrapIWorldInstance(t);return F.get(this)._PositionObjectAtElement([i],e)}createSpriteImgElement(t,e,n,s,i){o.RequireInstanceOf(t,self.ISpriteInstance),o.RequireString(e),o.RequireOptionalString(s),o.RequireOptionalString(i);const r=J.indexOf(n);if(r<0)throw new Error("invalid insert position");const a=F.get(this),l=a.GetRuntime(),h=l._UnwrapIWorldInstance(t);return F.get(this)._CreateSpriteImgElement(h,e,r,s,i)}setScrollPosition(t,e,n){if(o.RequireString("selector"),K.has(e))return o.RequireNumber(n),F.get(this)._SetElementScrollPosition(t,e,n);throw new Error("invalid direction")}get htmlContent(){return F.get(this)._GetHTMLContent()}set htmlContent(t){F.get(this)._SetContent(t,"html","",!1)}get textContent(){return F.get(this)._GetTextContent()}set textContent(t){F.get(this)._SetContent(t,"text","",!1)}}}{const jb=self.C3;jb.Plugins.HTMLElement.Cnds={OnClicked(){return!0},OnClickedID(t){return jb.equalsNoCase(this._targetId,t)},OnClickedClass(t){const e=this._targetClass.toLowerCase().split(" "),n=t.toLowerCase().split(" ");return n.every(t=>e.includes(t))},OnCSSAnimationEnded(t){return jb.equalsNoCase(this._cssAnimationName,t)}}}{const qb=self.C3,rb=["html","bbcode","text"],sb=["add","toggle","remove"],tb=["set","remove"];qb.Plugins.HTMLElement.Acts={SetContent(t,e,n,s){return this._SetContent(e,rb[t],n,0!==s)},InsertContent(t,e,n,s,i){return this._InsertContent(e,rb[t],0!==n,s,0!==i)},RemoveContent(t,e,n){return this._RemoveContent(e,0!==t,0!==n)},SetContentClass(t,e,n,s){return this._SetContentClass(sb[t],e.split(" "),n,0!==s)},SetContentAttribute(t,e,n,s,i){return this._SetContentAttribute(tb[t],e,n.toString(),s,0!==i)},SetContentCSSStyle(t,e,n,s){return this._SetContentCSSStyle(t,e,n,0!==s)},PositionObjectAtElement(t,e){if(t)return this._PositionObjectAtElement(t.GetCurrentSol().GetInstances(),e)},CreateSpriteImgElement(t,e,n,s,i){if(t){const r=t.GetFirstPicked();if(r)return this._CreateSpriteImgElement(r,e,n,s,i)}},SetScrollPosition(t,e,n){return this._SetElementScrollPosition(t,["left","top"][e],n)}}}{const c1=self.C3;c1.Plugins.HTMLElement.Exps={HTMLContent(){return this._htmlContent},TextContent(){return this._textContent},TargetID(){return this._targetId},TargetClass(){return this._targetClass},EscapeHTML(t){return c1.EscapeHTML(t.toString())}}}
-}
-
-// scripts/plugins/Share/c3runtime/runtime.js
-{
-{const a=self.C3;a.Plugins.Share=class extends a.SDKPluginBase{constructor(e){super(e)}Release(){super.Release()}}}{const d=self.C3;d.Plugins.Share.Type=class extends d.SDKTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3,h="share";g.Plugins.Share.Instance=class extends g.SDKInstanceBase{constructor(e,s){super(e,h),this._isSupported=!1,this._isFilesSupported=!1,this._files=[],this.AddDOMMessageHandlers([["share-completed",()=>this._OnShareCompleted()],["share-failed",()=>this._OnShareFailed()]]),this._runtime.AddLoadPromise(this.PostToDOMAsync("init").then(e=>{this._isFilesSupported=e["isFilesSupported"],this._isSupported=e["isSupported"]}))}_OnShareCompleted(){this.Trigger(g.Plugins.Share.Cnds.OnShareCompleted)}_OnShareFailed(){this.Trigger(g.Plugins.Share.Cnds.OnShareFailed)}}}{const m=self.C3;m.Plugins.Share.Cnds={IsSupported(){return this._isSupported},IsSharingFilesSupported(){return this._isFilesSupported},OnShareCompleted(){return!0},OnShareFailed(){return!0}}}{const n=self.C3;n.Plugins.Share.Acts={Share(e,s,t){this._isSupported&&(this._PostToDOMMaybeSync("share",{"text":e,"title":s,"url":t,"files":this._files}),n.clearArray(this._files))},AddFile(e,s,t){if(this._isFilesSupported&&t){const i=t.GetFirstPicked(this._inst);if(i){const r=i.GetSdkInstance().GetArrayBufferReadOnly();if(0!==r.byteLength){const n=s.indexOf(";"),a=(0<=n&&(s=s.substr(0,n)),self["RealFile"]||self["File"]),l=new a([r],e,{"type":s});this._files.push(l)}}}},RequestRate(e,s,t,i){this._PostToDOMMaybeSync("request-rate",{"body":e,"confirm":s,"cancel":t,"appID":i||this._runtime.GetAppId()})},RequestStore(e){this._PostToDOMMaybeSync("request-store",{"appID":e||this._runtime.GetAppId()})}}}{const E=self.C3;E.Plugins.Share.Exps={}}
 }
 
 // scripts/behaviors/scrollto/c3runtime/runtime.js
@@ -3699,11 +3770,6 @@ self.C3.Plugins.MetaproPlugin.Exps = {
 // scripts/behaviors/Sin/c3runtime/runtime.js
 {
 {const a=self.C3;a.Behaviors.Sin=class extends a.SDKBehaviorBase{constructor(e){super(e)}Release(){super.Release()}}}{const d=self.C3;d.Behaviors.Sin.Type=class extends d.SDKBehaviorTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3,h=self.C3X,i=self.IBehaviorInstance,j=0,k=1,l=2,m=3,n=4,o=5,p=6,q=7,r=8,s=0,t=1,u=2,v=3,w=4,x=5,y=6,z=7,A=8,B=9,C=0,D=1,E=2,F=3,G=4,H=2*Math.PI,I=Math.PI/2,J=3*Math.PI/2,K=[0,1,8,3,4,2,5,6,9,7],L=(g.Behaviors.Sin.Instance=class extends g.SDKBehaviorInstanceBase{constructor(e,t){super(e),this._i=0,this._movement=0,this._wave=0,this._period=0,this._mag=0,this._isEnabled=!0,this._basePeriod=0,this._basePeriodOffset=0,this._baseMag=0,this._periodRandom=0,this._periodOffsetRandom=0,this._magnitudeRandom=0,this._initialValue=0,this._initialValue2=0,this._lastKnownValue=0,this._lastKnownValue2=0,this._ratio=0,t&&(this._movement=K[t[j]],this._wave=t[k],this._periodRandom=this._runtime.Random()*t[m],this._basePeriod=t[l],this._period=t[l],this._period+=this._periodRandom,this._basePeriodOffset=t[n],0!==this._period&&(this._periodOffsetRandom=this._runtime.Random()*t[o],this._i=t[n]/this._period*H,this._i+=this._periodOffsetRandom/this._period*H),this._magnitudeRandom=this._runtime.Random()*t[q],this._baseMag=t[p],this._mag=t[p],this._mag+=this._magnitudeRandom,this._isEnabled=!!t[r]),this._movement===x&&(this._mag=g.toRadians(this._mag)),this.Init(),this._isEnabled&&this._StartTicking()}Release(){super.Release()}SaveToJson(){return{"i":this._i,"e":this._isEnabled,"mv":this._movement,"w":this._wave,"p":this._period,"mag":this._mag,"iv":this._initialValue,"iv2":this._initialValue2,"r":this._ratio,"lkv":this._lastKnownValue,"lkv2":this._lastKnownValue2}}LoadFromJson(e){this._i=e["i"],this._SetEnabled(e["e"]),this._movement=e["mv"],this._wave=e["w"],this._period=e["p"],this._mag=e["mag"],this._initialValue=e["iv"],this._initialValue2=e["iv2"],this._ratio=e["r"],this._lastKnownValue=e["lkv"],this._lastKnownValue2=e["lkv2"]}Init(){const e=this._inst.GetWorldInfo();switch(this._movement){case s:this._initialValue=e.GetX();break;case t:this._initialValue=e.GetY();break;case u:this._initialValue=e.GetWidth(),this._ratio=e.GetHeight()/e.GetWidth();break;case v:this._initialValue=e.GetWidth();break;case w:this._initialValue=e.GetHeight();break;case x:this._initialValue=e.GetAngle();break;case y:this._initialValue=e.GetOpacity();break;case z:this._initialValue=0;break;case A:this._initialValue=e.GetX(),this._initialValue2=e.GetY();break;case B:this._initialValue=e.GetZElevation()}this._lastKnownValue=this._initialValue,this._lastKnownValue2=this._initialValue2}WaveFunc(e){switch(e%=H,this._wave){case C:return Math.sin(e);case D:return e<=I?e/I:e<=J?1-2*(e-I)/Math.PI:(e-J)/I-1;case E:return 2*e/H-1;case F:return-2*e/H+1;case G:return e<Math.PI?-1:1}return 0}Tick(){const e=this._runtime.GetDt(this._inst);this._isEnabled&&0!==e&&(0===this._period?this._i=0:this._i=(this._i+e/this._period*H)%H,this._UpdateFromPhase())}_UpdateFromPhase(){const e=this._inst.GetWorldInfo();switch(this._movement){case s:e.GetX()!==this._lastKnownValue&&(this._initialValue+=e.GetX()-this._lastKnownValue),e.SetX(this._initialValue+this.WaveFunc(this._i)*this._mag),this._lastKnownValue=e.GetX();break;case t:e.GetY()!==this._lastKnownValue&&(this._initialValue+=e.GetY()-this._lastKnownValue),e.SetY(this._initialValue+this.WaveFunc(this._i)*this._mag),this._lastKnownValue=e.GetY();break;case u:e.SetWidth(this._initialValue+this.WaveFunc(this._i)*this._mag),e.SetHeight(e.GetWidth()*this._ratio);break;case v:e.SetWidth(this._initialValue+this.WaveFunc(this._i)*this._mag);break;case w:e.SetHeight(this._initialValue+this.WaveFunc(this._i)*this._mag);break;case x:e.GetAngle()!==this._lastKnownValue&&(this._initialValue=g.clampAngle(this._initialValue+(e.GetAngle()-this._lastKnownValue))),e.SetAngle(this._initialValue+this.WaveFunc(this._i)*this._mag),this._lastKnownValue=e.GetAngle();break;case y:e.SetOpacity(this._initialValue+this.WaveFunc(this._i)*this._mag/100);break;case A:e.GetX()!==this._lastKnownValue&&(this._initialValue+=e.GetX()-this._lastKnownValue),e.GetY()!==this._lastKnownValue2&&(this._initialValue2+=e.GetY()-this._lastKnownValue2),e.SetX(this._initialValue+Math.cos(e.GetAngle())*this.WaveFunc(this._i)*this._mag),e.SetY(this._initialValue2+Math.sin(e.GetAngle())*this.WaveFunc(this._i)*this._mag),this._lastKnownValue=e.GetX(),this._lastKnownValue2=e.GetY();break;case B:e.SetZElevation(this._initialValue+this.WaveFunc(this._i)*this._mag)}e.SetBboxChanged()}_OnSpriteFrameChanged(e,t){}_SetPeriod(e){this._period=e}_GetPeriod(){return this._period}_SetMagnitude(e){this._mag=e}_SetMagnitude_ConvertAngle(e){5===this._movement&&(e=g.toRadians(e)),this._SetMagnitude(e)}_GetMagnitude(){return this._mag}_GetMagnitude_ConvertAngle(){let e=this._GetMagnitude();return e=5===this._movement?g.toDegrees(e):e}_SetMovement(e){5===this._movement&&5!==e&&(this._mag=g.toDegrees(this._mag)),this._movement=e,this.Init()}_GetMovement(){return this._movement}_SetWave(e){this._wave=e}_GetWave(){return this._wave}_SetPhase(e){this._i=g.clamp(e,0,2*Math.PI),this._UpdateFromPhase()}_GetPhase(){return this._i}_SetEnabled(e){this._isEnabled=!!e,this._isEnabled?this._StartTicking():this._StopTicking()}_IsEnabled(){return this._isEnabled}GetPropertyValueByIndex(e){switch(e){case j:return this._movement;case k:return this._wave;case l:return this._basePeriod;case p:return this._baseMag;case r:return this._isEnabled}}SetPropertyValueByIndex(e,t){switch(e){case j:this._movement=K[t],this.Init();break;case k:this._wave=t;break;case l:this._basePeriod=t,this._period=this._basePeriod+this._periodRandom,this._isEnabled||(0!==this._period?(this._i=this._basePeriodOffset/this._period*H,this._i+=this._periodOffsetRandom/this._period*H):this._i=0);break;case p:this._baseMag=t,this._mag=this._baseMag+this._magnitudeRandom,this._movement===x&&(this._mag=g.toRadians(this._mag));break;case r:this._isEnabled=!!t}}GetDebuggerProperties(){const e="behaviors.sin";return[{title:"$"+this.GetBehaviorType().GetName(),properties:[{name:e+".properties.enabled.name",value:this._IsEnabled(),onedit:e=>this._SetEnabled(e)},{name:e+".properties.period.name",value:this._GetPeriod(),onedit:e=>this._SetPeriod(e)},{name:e+".properties.magnitude.name",value:this._GetMagnitude_ConvertAngle(),onedit:e=>this._SetMagnitude_ConvertAngle(e)},{name:e+".debugger.value",value:this.WaveFunc(this._GetPhase())*this._GetMagnitude_ConvertAngle()}]}]}GetScriptInterfaceClass(){return self.ISineBehaviorInstance}},new WeakMap),M=["horizontal","vertical","size","width","height","angle","opacity","value-only","forwards-backwards","z-elevation"],N=["sine","triangle","sawtooth","reverse-sawtooth","square"];self.ISineBehaviorInstance=class extends i{constructor(){super(),L.set(this,i._GetInitInst().GetSdkInstance())}set period(e){h.RequireFiniteNumber(e),L.get(this)._SetPeriod(e)}get period(){return L.get(this)._GetPeriod()}set magnitude(e){h.RequireFiniteNumber(e),L.get(this)._SetMagnitude(e)}get magnitude(){return L.get(this)._GetMagnitude()}set phase(e){L.get(this)._SetPhase(e)}get phase(){return L.get(this)._GetPhase()}set movement(e){h.RequireString(e);const t=M.indexOf(e);if(-1===t)throw new Error("invalid movement");L.get(this)._SetMovement(t)}get movement(){return M[L.get(this)._GetMovement()]}set wave(e){h.RequireString(e);const t=N.indexOf(e);if(-1===t)throw new Error("invalid wave");L.get(this)._SetWave(t)}get wave(){return N[L.get(this)._GetWave()]}get value(){const e=L.get(this);return e.WaveFunc(e._GetPhase())*e._GetMagnitude()}updateInitialState(){L.get(this).Init()}set isEnabled(e){L.get(this)._SetEnabled(!!e)}get isEnabled(){return L.get(this)._IsEnabled()}}}{const va=self.C3;va.Behaviors.Sin.Cnds={IsEnabled(){return this._IsEnabled()},CompareMovement(e){return this._GetMovement()===e},ComparePeriod(e,t){return va.compare(this._GetPeriod(),e,t)},CompareMagnitude(e,t){return va.compare(this._GetMagnitude_ConvertAngle(),e,t)},CompareWave(e){return this._GetWave()===e}}}{const Ca=self.C3;Ca.Behaviors.Sin.Acts={SetEnabled(e){this._SetEnabled(0!==e)},SetPeriod(e){this._SetPeriod(e)},SetMagnitude(e){this._SetMagnitude_ConvertAngle(e)},SetMovement(e){this._SetMovement(e)},SetWave(e){this._wave=e},SetPhase(e){const t=2*Math.PI;this._SetPhase(e*t%t)},UpdateInitialState(){this.Init()}}}{const Ka=self.C3;Ka.Behaviors.Sin.Exps={CyclePosition(){return this._GetPhase()/(2*Math.PI)},Period(){return this._GetPeriod()},Magnitude(){return this._GetMagnitude_ConvertAngle()},Value(){return this.WaveFunc(this._GetPhase())*this._GetMagnitude_ConvertAngle()}}}
-}
-
-// scripts/behaviors/Bullet/c3runtime/runtime.js
-{
-{const a=self.C3;a.Behaviors.Bullet=class extends a.SDKBehaviorBase{constructor(t){super(t)}Release(){super.Release()}}}{const d=self.C3;d.Behaviors.Bullet.Type=class extends d.SDKBehaviorTypeBase{constructor(t){super(t)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3,h=self.C3X,i=self.IBehaviorInstance,j=0,k=1,l=2,m=3,n=4,o=5,p=6,q=(g.Behaviors.Bullet.Instance=class extends g.SDKBehaviorInstanceBase{constructor(t,e){super(t);const s=this.GetWorldInfo(),i=(this._speed=0,this._acc=0,this._g=0,this._bounceOffSolid=!1,this._setAngle=!1,this._isStepping=!1,this._isEnabled=!0,this._dx=0,this._dy=0,this._lastX=s.GetX(),this._lastY=s.GetY(),this._lastKnownAngle=s.GetAngle(),this._travelled=0,this._stepSize=Math.min(Math.abs(s.GetWidth()),Math.abs(s.GetHeight())/2),this._stopStepping=!1,e&&(this._speed=e[j],this._acc=e[k],this._g=e[l],this._bounceOffSolid=!!e[m],this._setAngle=!!e[n],this._isStepping=!!e[o],this._isEnabled=!!e[p]),s.GetAngle());this._dx=Math.cos(i)*this._speed,this._dy=Math.sin(i)*this._speed,this._isEnabled&&(this._StartTicking(),this._bounceOffSolid)&&this._StartPostTicking()}Release(){super.Release()}SaveToJson(){const t={"dx":this._dx,"dy":this._dy,"lx":this._lastX,"ly":this._lastY,"lka":this._lastKnownAngle,"t":this._travelled};return 0!==this._acc&&(t["acc"]=this._acc),0!==this._g&&(t["g"]=this._g),this._isStepping&&(t["st"]=this._isStepping),this._isEnabled||(t["e"]=this._isEnabled),this._bounceOffSolid&&(t["bos"]=this._bounceOffSolid),this._setAngle&&(t["sa"]=this._setAngle),t}LoadFromJson(t){this._dx=t["dx"],this._dy=t["dy"],this._lastX=t["lx"],this._lastY=t["ly"],this._lastKnownAngle=t["lka"],this._travelled=t["t"],this._acc=t.hasOwnProperty("acc")?t["acc"]:0,this._g=t.hasOwnProperty("g")?t["g"]:0,this._isStepping=!!t.hasOwnProperty("st")&&t["st"],this._bounceOffSolid=!!t.hasOwnProperty("bos")&&t["bos"],this._setAngle=!!t.hasOwnProperty("sa")&&t["sa"],this._SetEnabled(!t.hasOwnProperty("e")||t["e"])}Tick(){if(this._isEnabled){const n=this._runtime.GetDt(this._inst),h=this._inst.GetWorldInfo();if(h.GetAngle()!==this._lastKnownAngle){const t=h.GetAngle();if(this._setAngle){const e=g.distanceTo(0,0,this._dx,this._dy);this._dx=Math.cos(t)*e,this._dy=Math.sin(t)*e}this._lastKnownAngle=t}let s=0,i=0;if(0!==this._acc){let t=g.distanceTo(0,0,this._dx,this._dy),e=0;e=0===this._dx&&0===this._dy?h.GetAngle():g.angleTo(0,0,this._dx,this._dy),t+=this._acc*n,s=Math.cos(e)*this._acc,i=Math.sin(e)*this._acc,t<0&&(t=0,s=0,i=0),this._dx=Math.cos(e)*t,this._dy=Math.sin(e)*t}if(0!==this._g&&(this._dy+=this._g*n,i+=this._g),this._lastX=h.GetX(),this._lastY=h.GetY(),0!==this._dx||0!==this._dy){const a=this._dx*n+.5*s*n*n,_=this._dy*n+.5*i*n*n,l=g.distanceTo(0,0,a,_);if(this._MoveBy(a,_,l),this._travelled+=l,this._setAngle&&(0!=a||0!=_)){const o=g.angleTo(0,0,a,_);h.SetAngle(o),this._lastKnownAngle=h.GetAngle()}h.SetBboxChanged()}}}_MoveBy(t,e,s){const i=this.GetWorldInfo();if(!this._isStepping||s<=this._stepSize)i.OffsetXY(t,e),i.SetBboxChanged(),this._isStepping&&this.Trigger(g.Behaviors.Bullet.Cnds.OnStep);else{this._stopStepping=!1;const n=i.GetX(),h=i.GetY(),a=n+t,_=h+e,l=g.angleTo(0,0,t,e),o=Math.cos(l)*this._stepSize,r=Math.sin(l)*this._stepSize,d=Math.floor(s/this._stepSize);for(let t=1;t<=d;++t)if(i.SetXY(n+o*t,h+r*t),i.SetBboxChanged(),this.Trigger(g.Behaviors.Bullet.Cnds.OnStep),this._inst.IsDestroyed()||this._stopStepping)return;i.SetXY(a,_),i.SetBboxChanged(),this.Trigger(g.Behaviors.Bullet.Cnds.OnStep)}}PostTick(){if(this._isEnabled&&this._bounceOffSolid&&(0!==this._dx||0!==this._dy)){const t=this._runtime.GetDt(this._inst),e=this._inst.GetWorldInfo(),s=this._runtime.GetCollisionEngine(),i=s.TestOverlapSolid(this._inst);if(i){s.RegisterCollision(this._inst,i);const n=g.distanceTo(0,0,this._dx,this._dy),h=s.CalculateBounceAngle(this._inst,this._lastX,this._lastY);this._dx=Math.cos(h)*n,this._dy=Math.sin(h)*n,e.OffsetXY(this._dx*t,this._dy*t),e.SetBboxChanged(),this._setAngle&&(e.SetAngle(h),this._lastKnownAngle=e.GetAngle(),e.SetBboxChanged()),s.PushOutSolid(this._inst,this._dx/n,this._dy/n,Math.max(2.5*n*t,30))||s.PushOutSolidNearest(this._inst,100)}}}GetPropertyValueByIndex(t){switch(t){case j:return this._GetSpeed();case k:return this._GetAcceleration();case l:return this._GetGravity();case n:return this._setAngle;case o:return this._isStepping;case p:return this._IsEnabled()}}SetPropertyValueByIndex(t,e){switch(t){case j:this._SetSpeed(e);break;case k:this._acc=e;break;case l:this._g=e;break;case n:this._setAngle=!!e;break;case o:this._isStepping=!!e;break;case p:this._SetEnabled(!!e)}}_SetSpeed(t){const e=g.angleTo(0,0,this._dx,this._dy);this._dx=Math.cos(e)*t,this._dy=Math.sin(e)*t}_GetSpeed(){return g.roundToDp(g.distanceTo(0,0,this._dx,this._dy),6)}_SetAcceleration(t){this._acc=t}_GetAcceleration(){return this._acc}_SetGravity(t){this._g=t}_GetGravity(){return this._g}_SetAngleOfMotion(t){const e=g.distanceTo(0,0,this._dx,this._dy);this._dx=Math.cos(t)*e,this._dy=Math.sin(t)*e}_GetAngleOfMotion(){return g.angleTo(0,0,this._dx,this._dy)}_SetBounceOffSolids(t){this._bounceOffSolid!==(t=!!t)&&(this._bounceOffSolid=t,this._isEnabled)&&(this._bounceOffSolid?this._StartPostTicking():this._StopPostTicking())}_IsBounceOffSolids(){return this._bounceOffSolid}_SetDistanceTravelled(t){this._travelled=t}_GetDistanceTravelled(){return this._travelled}_SetEnabled(t){this._isEnabled=!!t,this._isEnabled?(this._StartTicking(),this._bounceOffSolid&&this._StartPostTicking()):(this._StopTicking(),this._StopPostTicking())}_IsEnabled(){return this._isEnabled}GetDebuggerProperties(){const t="behaviors.bullet";return[{title:"$"+this.GetBehaviorType().GetName(),properties:[{name:t+".debugger.vector-x",value:this._dx,onedit:t=>this._dx=t},{name:t+".debugger.vector-y",value:this._dy,onedit:t=>this._dy=t},{name:t+".properties.speed.name",value:this._GetSpeed(),onedit:t=>this._SetSpeed(t)},{name:t+".debugger.angle-of-motion",value:g.toDegrees(this._GetAngleOfMotion())},{name:t+".properties.gravity.name",value:this._GetGravity(),onedit:t=>this._SetGravity(t)},{name:t+".properties.acceleration.name",value:this._GetAcceleration(),onedit:t=>this._SetAcceleration(t)},{name:t+".debugger.distance-travelled",value:this._GetDistanceTravelled()},{name:t+".properties.enabled.name",value:this._IsEnabled(),onedit:t=>this._SetEnabled(t)}]}]}GetScriptInterfaceClass(){return self.IBulletBehaviorInstance}},new WeakMap);self.IBulletBehaviorInstance=class extends i{constructor(){super(),q.set(this,i._GetInitInst().GetSdkInstance())}get speed(){return q.get(this)._GetSpeed()}set speed(t){h.RequireFiniteNumber(t),q.get(this)._SetSpeed(t)}get acceleration(){return q.get(this)._GetAcceleration()}set acceleration(t){h.RequireFiniteNumber(t),q.get(this)._SetAcceleration(t)}get gravity(){return q.get(this)._GetGravity()}set gravity(t){h.RequireFiniteNumber(t),q.get(this)._SetGravity(t)}get angleOfMotion(){return q.get(this)._GetAngleOfMotion()}set angleOfMotion(t){h.RequireFiniteNumber(t),q.get(this)._SetAngleOfMotion(t)}get bounceOffSolids(){return q.get(this)._IsBounceOffSolids()}set bounceOffSolids(t){q.get(this)._SetBounceOffSolids(!!t)}get distanceTravelled(){return q.get(this)._GetDistanceTravelled()}set distanceTravelled(t){h.RequireFiniteNumber(t),q.get(this)._SetDistanceTravelled(t)}get isEnabled(){return q.get(this)._IsEnabled()}set isEnabled(t){q.get(this)._SetEnabled(t)}}}{const Ca=self.C3;Ca.Behaviors.Bullet.Cnds={CompareSpeed(t,e){const s=Math.hypot(this._dx,this._dy);return Ca.compare(s,t,e)},CompareTravelled(t,e){return Ca.compare(this._GetDistanceTravelled(),t,e)},OnStep(){return!0},IsEnabled(){return this._IsEnabled()}}}{const Ia=self.C3;Ia.Behaviors.Bullet.Acts={SetSpeed(t){this._SetSpeed(t)},SetAcceleration(t){this._SetAcceleration(t)},SetGravity(t){this._SetGravity(t)},SetAngleOfMotion(t){this._SetAngleOfMotion(Ia.toRadians(t))},Bounce(t){if(t){const e=t.GetFirstPicked(this._inst);if(e){const s=this._inst.GetWorldInfo(),i=this._runtime.GetCollisionEngine(),n=this._runtime.GetDt(this._inst),h=Ia.distanceTo(0,0,this._dx,this._dy),a=i.CalculateBounceAngle(this._inst,this._lastX,this._lastY,e);this._dx=Math.cos(a)*h,this._dy=Math.sin(a)*h,s.OffsetXY(this._dx*n,this._dy*n),s.SetBboxChanged(),this._setAngle&&(s.SetAngle(a),this._lastKnownAngle=s.GetAngle(),s.SetBboxChanged()),0!==h&&(this._bounceOffSolid?i.PushOutSolid(this._inst,this._dx/h,this._dy/h,Math.max(2.5*h*n,30))||i.PushOutSolidNearest(this._inst,100):i.PushOut(this._inst,this._dx/h,this._dy/h,Math.max(2.5*h*n,30),e))}}},SetBounceOffSolids(t){this._SetBounceOffSolids(t)},SetDistanceTravelled(t){this._SetDistanceTravelled(t)},SetEnabled(t){this._SetEnabled(t)},StopStepping(){this._stopStepping=!0}}}{const Xa=self.C3;Xa.Behaviors.Bullet.Exps={Speed(){return this._GetSpeed()},Acceleration(){return this._GetAcceleration()},AngleOfMotion(){return Xa.toDegrees(this._GetAngleOfMotion())},DistanceTravelled(){return this._GetDistanceTravelled()},Gravity(){return this._GetGravity()}}}
 }
 
 // scripts/behaviors/Tween/c3runtime/runtime.js
@@ -3741,6 +3807,11 @@ const C3=self.C3,NAMESPACE=C3.Behaviors.Tween;NAMESPACE.ValueGetters=class{const
 const C3=self.C3,C3X=self.C3X,IBehaviorInstance=self.IBehaviorInstance,Ease=self.Ease,NAMESPACE=C3.Behaviors.Tween,map=new WeakMap,TWEEN_PROPERTIES=new Map([["x",{name:"offsetX",type:"one"}],["y",{name:"offsetY",type:"one"}],["width",{name:"offsetWidth",type:"one"}],["height",{name:"offsetHeight",type:"one"}],["angle",{name:"offsetAngle",type:"one"}],["opacity",{name:"offsetOpacity",type:"one"}],["color",{name:"offsetColor",type:"color"}],["z-elevation",{name:"offsetZElevation",type:"one"}],["x-scale",{name:"offsetScaleX",type:"one"}],["y-scale",{name:"offsetScaleY",type:"one"}],["position",{name:"position",type:"two"}],["size",{name:"size",type:"two"}],["scale",{name:"scale",type:"two"}],["value",{name:"value",type:"value"}]]);function getIndexForEase(e){C3X.RequireString(e);const t=Ease.ToInternal(e);let n;if(-1===(n=t?Ease.GetIndexForEase(t,null):Ease.GetIndexForEase(e,null)))throw new Error(`invalid ease name '${e}'`);return n}const TWEEN_OPTS={tags:"",destroyOnComplete:!1,loop:!1,pingPong:!1,repeatCount:1,startValue:0},I_TWEEN_OPTS={easeToIndexFunc:getIndexForEase};function ValidateTags(e,t=!1){if(!(t&&null==e||"string"==typeof e||Array.isArray(e)))throw new Error("invalid tags")}self.ITweenBehaviorInstance=class extends IBehaviorInstance{constructor(){super(),map.set(this,IBehaviorInstance._GetInitInst().GetSdkInstance())}startTween(e,t,n,a,o){const s=map.get(this);if(!s.IsEnabled()||!s.IsInstanceValid())return null;const r=TWEEN_PROPERTIES.get(e);if(!r)throw new Error("invalid tween property");"one"===r.type||"value"===r.type?C3X.RequireNumber(t):(C3X.RequireArray(t),"two"===r.type?(C3X.RequireNumber(t[0]),C3X.RequireNumber(t[1])):"color"===r.type&&(C3X.RequireNumber(t[0]),C3X.RequireNumber(t[1]),C3X.RequireNumber(t[2]))),"angle"===e?t=C3.toDegrees(t):"opacity"===e?t*=100:"color"===e&&(t=C3.PackRGBEx(t[0],t[1],t[2]));const l=getIndexForEase(a);C3X.RequireFiniteNumber(n),o=Object.assign({},TWEEN_OPTS,o),"value"===r.type&&C3X.RequireNumber(o.startValue),ValidateTags(o.tags,!0);let i;if("one"===r.type||"color"===r.type?i=s.CreateTween(NAMESPACE.TweenArguments.OneProperty(s,o.tags,r.name,t,n,l,!!o.destroyOnComplete,!!o.loop,!!o.pingPong,o.repeatCount)):"two"===r.type?i=s.CreateTween(NAMESPACE.TweenArguments.TwoProperties(s,o.tags,r.name,t[0],t[1],n,l,!!o.destroyOnComplete,!!o.loop,!!o.pingPong,o.repeatCount)):"value"===r.type&&(i=s.CreateTween(NAMESPACE.TweenArguments.ValueProperty(s,o.tags,o.startValue,t,n,l,!!o.destroyOnComplete,!!o.loop,!!o.pingPong,o.repeatCount))),i.Play())return i.GetITweenState(s,I_TWEEN_OPTS);throw new Error("failed to start tween")}*allTweens(){const e=map.get(this);for(const t of e.AllTweens())yield t.GetITweenState(e,I_TWEEN_OPTS)}*tweensByTags(e){ValidateTags(e);const t=map.get(this);for(const n of t.GetTweens(e))yield n.GetITweenState(t,I_TWEEN_OPTS)}get isEnabled(){return map.get(this).IsEnabled()}set isEnabled(e){map.get(this).SetEnabled(e)}};
 }
 
+// scripts/behaviors/Bullet/c3runtime/runtime.js
+{
+{const a=self.C3;a.Behaviors.Bullet=class extends a.SDKBehaviorBase{constructor(t){super(t)}Release(){super.Release()}}}{const d=self.C3;d.Behaviors.Bullet.Type=class extends d.SDKBehaviorTypeBase{constructor(t){super(t)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3,h=self.C3X,i=self.IBehaviorInstance,j=0,k=1,l=2,m=3,n=4,o=5,p=6,q=(g.Behaviors.Bullet.Instance=class extends g.SDKBehaviorInstanceBase{constructor(t,e){super(t);const s=this.GetWorldInfo(),i=(this._speed=0,this._acc=0,this._g=0,this._bounceOffSolid=!1,this._setAngle=!1,this._isStepping=!1,this._isEnabled=!0,this._dx=0,this._dy=0,this._lastX=s.GetX(),this._lastY=s.GetY(),this._lastKnownAngle=s.GetAngle(),this._travelled=0,this._stepSize=Math.min(Math.abs(s.GetWidth()),Math.abs(s.GetHeight())/2),this._stopStepping=!1,e&&(this._speed=e[j],this._acc=e[k],this._g=e[l],this._bounceOffSolid=!!e[m],this._setAngle=!!e[n],this._isStepping=!!e[o],this._isEnabled=!!e[p]),s.GetAngle());this._dx=Math.cos(i)*this._speed,this._dy=Math.sin(i)*this._speed,this._isEnabled&&(this._StartTicking(),this._bounceOffSolid)&&this._StartPostTicking()}Release(){super.Release()}SaveToJson(){const t={"dx":this._dx,"dy":this._dy,"lx":this._lastX,"ly":this._lastY,"lka":this._lastKnownAngle,"t":this._travelled};return 0!==this._acc&&(t["acc"]=this._acc),0!==this._g&&(t["g"]=this._g),this._isStepping&&(t["st"]=this._isStepping),this._isEnabled||(t["e"]=this._isEnabled),this._bounceOffSolid&&(t["bos"]=this._bounceOffSolid),this._setAngle&&(t["sa"]=this._setAngle),t}LoadFromJson(t){this._dx=t["dx"],this._dy=t["dy"],this._lastX=t["lx"],this._lastY=t["ly"],this._lastKnownAngle=t["lka"],this._travelled=t["t"],this._acc=t.hasOwnProperty("acc")?t["acc"]:0,this._g=t.hasOwnProperty("g")?t["g"]:0,this._isStepping=!!t.hasOwnProperty("st")&&t["st"],this._bounceOffSolid=!!t.hasOwnProperty("bos")&&t["bos"],this._setAngle=!!t.hasOwnProperty("sa")&&t["sa"],this._SetEnabled(!t.hasOwnProperty("e")||t["e"])}Tick(){if(this._isEnabled){const n=this._runtime.GetDt(this._inst),h=this._inst.GetWorldInfo();if(h.GetAngle()!==this._lastKnownAngle){const t=h.GetAngle();if(this._setAngle){const e=g.distanceTo(0,0,this._dx,this._dy);this._dx=Math.cos(t)*e,this._dy=Math.sin(t)*e}this._lastKnownAngle=t}let s=0,i=0;if(0!==this._acc){let t=g.distanceTo(0,0,this._dx,this._dy),e=0;e=0===this._dx&&0===this._dy?h.GetAngle():g.angleTo(0,0,this._dx,this._dy),t+=this._acc*n,s=Math.cos(e)*this._acc,i=Math.sin(e)*this._acc,t<0&&(t=0,s=0,i=0),this._dx=Math.cos(e)*t,this._dy=Math.sin(e)*t}if(0!==this._g&&(this._dy+=this._g*n,i+=this._g),this._lastX=h.GetX(),this._lastY=h.GetY(),0!==this._dx||0!==this._dy){const a=this._dx*n+.5*s*n*n,_=this._dy*n+.5*i*n*n,l=g.distanceTo(0,0,a,_);if(this._MoveBy(a,_,l),this._travelled+=l,this._setAngle&&(0!=a||0!=_)){const o=g.angleTo(0,0,a,_);h.SetAngle(o),this._lastKnownAngle=h.GetAngle()}h.SetBboxChanged()}}}_MoveBy(t,e,s){const i=this.GetWorldInfo();if(!this._isStepping||s<=this._stepSize)i.OffsetXY(t,e),i.SetBboxChanged(),this._isStepping&&this.Trigger(g.Behaviors.Bullet.Cnds.OnStep);else{this._stopStepping=!1;const n=i.GetX(),h=i.GetY(),a=n+t,_=h+e,l=g.angleTo(0,0,t,e),o=Math.cos(l)*this._stepSize,r=Math.sin(l)*this._stepSize,d=Math.floor(s/this._stepSize);for(let t=1;t<=d;++t)if(i.SetXY(n+o*t,h+r*t),i.SetBboxChanged(),this.Trigger(g.Behaviors.Bullet.Cnds.OnStep),this._inst.IsDestroyed()||this._stopStepping)return;i.SetXY(a,_),i.SetBboxChanged(),this.Trigger(g.Behaviors.Bullet.Cnds.OnStep)}}PostTick(){if(this._isEnabled&&this._bounceOffSolid&&(0!==this._dx||0!==this._dy)){const t=this._runtime.GetDt(this._inst),e=this._inst.GetWorldInfo(),s=this._runtime.GetCollisionEngine(),i=s.TestOverlapSolid(this._inst);if(i){s.RegisterCollision(this._inst,i);const n=g.distanceTo(0,0,this._dx,this._dy),h=s.CalculateBounceAngle(this._inst,this._lastX,this._lastY);this._dx=Math.cos(h)*n,this._dy=Math.sin(h)*n,e.OffsetXY(this._dx*t,this._dy*t),e.SetBboxChanged(),this._setAngle&&(e.SetAngle(h),this._lastKnownAngle=e.GetAngle(),e.SetBboxChanged()),s.PushOutSolid(this._inst,this._dx/n,this._dy/n,Math.max(2.5*n*t,30))||s.PushOutSolidNearest(this._inst,100)}}}GetPropertyValueByIndex(t){switch(t){case j:return this._GetSpeed();case k:return this._GetAcceleration();case l:return this._GetGravity();case n:return this._setAngle;case o:return this._isStepping;case p:return this._IsEnabled()}}SetPropertyValueByIndex(t,e){switch(t){case j:this._SetSpeed(e);break;case k:this._acc=e;break;case l:this._g=e;break;case n:this._setAngle=!!e;break;case o:this._isStepping=!!e;break;case p:this._SetEnabled(!!e)}}_SetSpeed(t){const e=g.angleTo(0,0,this._dx,this._dy);this._dx=Math.cos(e)*t,this._dy=Math.sin(e)*t}_GetSpeed(){return g.roundToDp(g.distanceTo(0,0,this._dx,this._dy),6)}_SetAcceleration(t){this._acc=t}_GetAcceleration(){return this._acc}_SetGravity(t){this._g=t}_GetGravity(){return this._g}_SetAngleOfMotion(t){const e=g.distanceTo(0,0,this._dx,this._dy);this._dx=Math.cos(t)*e,this._dy=Math.sin(t)*e}_GetAngleOfMotion(){return g.angleTo(0,0,this._dx,this._dy)}_SetBounceOffSolids(t){this._bounceOffSolid!==(t=!!t)&&(this._bounceOffSolid=t,this._isEnabled)&&(this._bounceOffSolid?this._StartPostTicking():this._StopPostTicking())}_IsBounceOffSolids(){return this._bounceOffSolid}_SetDistanceTravelled(t){this._travelled=t}_GetDistanceTravelled(){return this._travelled}_SetEnabled(t){this._isEnabled=!!t,this._isEnabled?(this._StartTicking(),this._bounceOffSolid&&this._StartPostTicking()):(this._StopTicking(),this._StopPostTicking())}_IsEnabled(){return this._isEnabled}GetDebuggerProperties(){const t="behaviors.bullet";return[{title:"$"+this.GetBehaviorType().GetName(),properties:[{name:t+".debugger.vector-x",value:this._dx,onedit:t=>this._dx=t},{name:t+".debugger.vector-y",value:this._dy,onedit:t=>this._dy=t},{name:t+".properties.speed.name",value:this._GetSpeed(),onedit:t=>this._SetSpeed(t)},{name:t+".debugger.angle-of-motion",value:g.toDegrees(this._GetAngleOfMotion())},{name:t+".properties.gravity.name",value:this._GetGravity(),onedit:t=>this._SetGravity(t)},{name:t+".properties.acceleration.name",value:this._GetAcceleration(),onedit:t=>this._SetAcceleration(t)},{name:t+".debugger.distance-travelled",value:this._GetDistanceTravelled()},{name:t+".properties.enabled.name",value:this._IsEnabled(),onedit:t=>this._SetEnabled(t)}]}]}GetScriptInterfaceClass(){return self.IBulletBehaviorInstance}},new WeakMap);self.IBulletBehaviorInstance=class extends i{constructor(){super(),q.set(this,i._GetInitInst().GetSdkInstance())}get speed(){return q.get(this)._GetSpeed()}set speed(t){h.RequireFiniteNumber(t),q.get(this)._SetSpeed(t)}get acceleration(){return q.get(this)._GetAcceleration()}set acceleration(t){h.RequireFiniteNumber(t),q.get(this)._SetAcceleration(t)}get gravity(){return q.get(this)._GetGravity()}set gravity(t){h.RequireFiniteNumber(t),q.get(this)._SetGravity(t)}get angleOfMotion(){return q.get(this)._GetAngleOfMotion()}set angleOfMotion(t){h.RequireFiniteNumber(t),q.get(this)._SetAngleOfMotion(t)}get bounceOffSolids(){return q.get(this)._IsBounceOffSolids()}set bounceOffSolids(t){q.get(this)._SetBounceOffSolids(!!t)}get distanceTravelled(){return q.get(this)._GetDistanceTravelled()}set distanceTravelled(t){h.RequireFiniteNumber(t),q.get(this)._SetDistanceTravelled(t)}get isEnabled(){return q.get(this)._IsEnabled()}set isEnabled(t){q.get(this)._SetEnabled(t)}}}{const Ca=self.C3;Ca.Behaviors.Bullet.Cnds={CompareSpeed(t,e){const s=Math.hypot(this._dx,this._dy);return Ca.compare(s,t,e)},CompareTravelled(t,e){return Ca.compare(this._GetDistanceTravelled(),t,e)},OnStep(){return!0},IsEnabled(){return this._IsEnabled()}}}{const Ia=self.C3;Ia.Behaviors.Bullet.Acts={SetSpeed(t){this._SetSpeed(t)},SetAcceleration(t){this._SetAcceleration(t)},SetGravity(t){this._SetGravity(t)},SetAngleOfMotion(t){this._SetAngleOfMotion(Ia.toRadians(t))},Bounce(t){if(t){const e=t.GetFirstPicked(this._inst);if(e){const s=this._inst.GetWorldInfo(),i=this._runtime.GetCollisionEngine(),n=this._runtime.GetDt(this._inst),h=Ia.distanceTo(0,0,this._dx,this._dy),a=i.CalculateBounceAngle(this._inst,this._lastX,this._lastY,e);this._dx=Math.cos(a)*h,this._dy=Math.sin(a)*h,s.OffsetXY(this._dx*n,this._dy*n),s.SetBboxChanged(),this._setAngle&&(s.SetAngle(a),this._lastKnownAngle=s.GetAngle(),s.SetBboxChanged()),0!==h&&(this._bounceOffSolid?i.PushOutSolid(this._inst,this._dx/h,this._dy/h,Math.max(2.5*h*n,30))||i.PushOutSolidNearest(this._inst,100):i.PushOut(this._inst,this._dx/h,this._dy/h,Math.max(2.5*h*n,30),e))}}},SetBounceOffSolids(t){this._SetBounceOffSolids(t)},SetDistanceTravelled(t){this._SetDistanceTravelled(t)},SetEnabled(t){this._SetEnabled(t)},StopStepping(){this._stopStepping=!0}}}{const Xa=self.C3;Xa.Behaviors.Bullet.Exps={Speed(){return this._GetSpeed()},Acceleration(){return this._GetAcceleration()},AngleOfMotion(){return Xa.toDegrees(this._GetAngleOfMotion())},DistanceTravelled(){return this._GetDistanceTravelled()},Gravity(){return this._GetGravity()}}}
+}
+
 // scripts/behaviors/Pin/c3runtime/runtime.js
 {
 {const a=self.C3;a.Behaviors.Pin=class extends a.SDKBehaviorBase{constructor(t){super(t)}Release(){super.Release()}}}{const d=self.C3;d.Behaviors.Pin.Type=class extends d.SDKBehaviorTypeBase{constructor(t){super(t)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3;g.Behaviors.Pin.Instance=class extends g.SDKBehaviorInstanceBase{constructor(t,s){super(t),this._pinInst=null,this._pinUid=-1,this._mode="",this._propSet=new Set,this._pinDist=0,this._pinAngle=0,this._pinImagePoint=0,this._dx=0,this._dy=0,this._dWidth=0,this._dHeight=0,this._dAngle=0,this._dz=0,this._lastKnownAngle=0,this._destroy=!1,s&&(this._destroy=s[0]);const e=this._runtime.Dispatcher();this._disposables=new g.CompositeDisposable(g.Disposable.From(e,"instancedestroy",t=>this._OnInstanceDestroyed(t.instance)),g.Disposable.From(e,"afterload",t=>this._OnAfterLoad()))}Release(){this._pinInst=null,super.Release()}_SetPinInst(t){t?(this._pinInst=t,this._StartTicking2()):(this._pinInst=null,this._StopTicking2())}_Pin(t,s,e){if(t){const i=t.GetFirstPicked(this._inst);if(i){this._mode=s,this._SetPinInst(i);const h=this._inst.GetWorldInfo(),n=i.GetWorldInfo();if("properties"===this._mode){const a=this._propSet;a.clear();for(const o of e)a.add(o);this._dx=h.GetX()-n.GetX(),this._dy=h.GetY()-n.GetY(),this._dAngle=h.GetAngle()-n.GetAngle(),this._lastKnownAngle=h.GetAngle(),this._dz=h.GetZElevation()-n.GetZElevation(),a.has("x")&&a.has("y")&&(this._pinAngle=g.angleTo(n.GetX(),n.GetY(),h.GetX(),h.GetY())-n.GetAngle(),this._pinDist=g.distanceTo(n.GetX(),n.GetY(),h.GetX(),h.GetY())),a.has("width-abs")?this._dWidth=h.GetWidth()-n.GetWidth():a.has("width-scale")&&(this._dWidth=h.GetWidth()/n.GetWidth()),a.has("height-abs")?this._dHeight=h.GetHeight()-n.GetHeight():a.has("height-scale")&&(this._dHeight=h.GetHeight()/n.GetHeight())}else this._pinDist=g.distanceTo(n.GetX(),n.GetY(),h.GetX(),h.GetY())}}}SaveToJson(){const t=this._propSet,s=this._mode,e={"uid":this._pinInst&&!this._pinInst.IsDestroyed()?this._pinInst.GetUID():-1,"m":s,"d":this._destroy};return"rope"===s||"bar"===s?e["pd"]=this._pinDist:"properties"===s&&(e["ps"]=[...this._propSet],t.has("imagepoint")?e["ip"]=this._pinImagePoint:t.has("x")&&t.has("y")?(e["pa"]=this._pinAngle,e["pd"]=this._pinDist):(t.has("x")&&(e["dx"]=this._dx),t.has("y")&&(e["dy"]=this._dy)),t.has("angle")&&(e["da"]=this._dAngle,e["lka"]=this._lastKnownAngle),(t.has("width-abs")||t.has("width-scale"))&&(e["dw"]=this._dWidth),(t.has("height-abs")||t.has("height-scale"))&&(e["dh"]=this._dHeight),t.has("z"))&&(e["dz"]=this._dz),e}LoadFromJson(t){const s=t["m"],e=this._propSet;if(e.clear(),this._pinUid=t["uid"],"number"==typeof s)this._LoadFromJson_Legacy(t);else if(this._mode=s,t.hasOwnProperty("d")&&(this._destroy=!!t["d"]),"rope"===s||"bar"===s)this._pinDist=t["pd"];else if("properties"===s){for(const i of t["ps"])e.add(i);e.has("imagepoint")?this._pinImagePoint=t["ip"]:e.has("x")&&e.has("y")?(this._pinAngle=t["pa"],this._pinDist=t["pd"]):(e.has("x")&&(this._dx=t["dx"]),e.has("y")&&(this._dy=t["dy"])),e.has("angle")&&(this._dAngle=t["da"],this._lastKnownAngle=t["lka"]||0),(e.has("width-abs")||e.has("width-scale"))&&(this._dWidth=t["dw"]),(e.has("height-abs")||e.has("height-scale"))&&(this._dHeight=t["dh"]),e.has("z")&&(this._dz=t["dz"])}}_LoadFromJson_Legacy(t){const s=this._propSet,e=t["msa"],i=t["tsa"],h=t["pa"],n=t["pd"],a=t["m"];switch(a){case 0:this._mode="properties",s.add("x").add("y").add("angle"),this._pinAngle=h,this._pinDist=n,this._dAngle=e-i,this._lastKnownAngle=t["lka"];break;case 1:this._mode="properties",s.add("x").add("y"),this._pinAngle=h,this._pinDist=n;break;case 2:this._mode="properties",s.add("angle"),this._dAngle=e-i,this._lastKnownAngle=t["lka"];break;case 3:this._mode="rope",this._pinDist=t["pd"];break;case 4:this._mode="bar",this._pinDist=t["pd"]}}_OnAfterLoad(){-1===this._pinUid?this._SetPinInst(null):(this._SetPinInst(this._runtime.GetInstanceByUID(this._pinUid)),this._pinUid=-1)}_OnInstanceDestroyed(t){this._pinInst===t&&(this._SetPinInst(null),this._destroy)&&this._runtime.DestroyInstance(this._inst)}Tick2(){const e=this._pinInst;if(e&&!e.IsDestroyed()){const i=e.GetWorldInfo(),t=this._inst,h=t.GetWorldInfo(),n=this._mode;let s=!1;if("rope"===n||"bar"===n){const a=g.distanceTo(h.GetX(),h.GetY(),i.GetX(),i.GetY());if(a>this._pinDist||"bar"===n&&a<this._pinDist){const o=g.angleTo(i.GetX(),i.GetY(),h.GetX(),h.GetY());h.SetXY(i.GetX()+Math.cos(o)*this._pinDist,i.GetY()+Math.sin(o)*this._pinDist),s=!0}}else{const d=this._propSet;let t=0;if(d.has("imagepoint")){const[_,p]=e.GetImagePoint(this._pinImagePoint);h.EqualsXY(_,p)||(h.SetXY(_,p),s=!0)}else if(d.has("x")&&d.has("y")){const l=i.GetX()+Math.cos(i.GetAngle()+this._pinAngle)*this._pinDist,r=i.GetY()+Math.sin(i.GetAngle()+this._pinAngle)*this._pinDist;h.EqualsXY(l,r)||(h.SetXY(l,r),s=!0)}else t=i.GetX()+this._dx,d.has("x")&&t!==h.GetX()&&(h.SetX(t),s=!0),t=i.GetY()+this._dy,d.has("y")&&t!==h.GetY()&&(h.SetY(t),s=!0);d.has("angle")&&(this._lastKnownAngle!==h.GetAngle()&&(this._dAngle=g.clampAngle(this._dAngle+(h.GetAngle()-this._lastKnownAngle))),(t=g.clampAngle(i.GetAngle()+this._dAngle))!==h.GetAngle()&&(h.SetAngle(t),s=!0),this._lastKnownAngle=h.GetAngle()),d.has("width-abs")&&(t=i.GetWidth()+this._dWidth)!==h.GetWidth()&&(h.SetWidth(t),s=!0),d.has("width-scale")&&(t=i.GetWidth()*this._dWidth)!==h.GetWidth()&&(h.SetWidth(t),s=!0),d.has("height-abs")&&(t=i.GetHeight()+this._dHeight)!==h.GetHeight()&&(h.SetHeight(t),s=!0),d.has("height-scale")&&(t=i.GetHeight()*this._dHeight)!==h.GetHeight()&&(h.SetHeight(t),s=!0),d.has("z")&&(t=i.GetZElevation()+this._dz)!==h.GetZElevation()&&(h.SetZElevation(t),this._runtime.UpdateRender())}s&&h.SetBboxChanged()}}GetDebuggerProperties(){const t="behaviors.pin.debugger";return[{title:"$"+this.GetBehaviorType().GetName(),properties:[{name:t+".is-pinned",value:!!this._pinInst},{name:t+".pinned-uid",value:this._pinInst?this._pinInst.GetUID():0}]}]}}}{const $=self.C3;$.Behaviors.Pin.Cnds={IsPinned(){return!!this._pinInst},WillDestroy(){return this._destroy}}}{const _=self.C3;_.Behaviors.Pin.Acts={PinByDistance(t,s){this._Pin(t,0===s?"rope":"bar")},PinByProperties(t,s,e,i,h,n,a){const o=[];s&&o.push("x"),e&&o.push("y"),i&&o.push("angle"),a&&o.push("z"),1===h?o.push("width-abs"):2===h&&o.push("width-scale"),1===n?o.push("height-abs"):2===n&&o.push("height-scale"),0!==o.length&&this._Pin(t,"properties",o)},PinByImagePoint(t,s,e,i,h,n){const a=["imagepoint"];e&&a.push("angle"),n&&a.push("z"),1===i?a.push("width-abs"):2===i&&a.push("width-scale"),1===h?a.push("height-abs"):2===h&&a.push("height-scale"),this._pinImagePoint=s,this._Pin(t,"properties",a)},SetPinDistance(t){"rope"!==this._mode&&"bar"!==this._mode||(this._pinDist=Math.max(t,0))},SetDestroy(t){this._destroy=t},Unpin(){this._SetPinInst(null),this._mode="",this._propSet.clear(),this._pinImagePoint=""},Pin(t,s){switch(s){case 0:this._Pin(t,"properties",["x","y","angle"]);break;case 1:this._Pin(t,"properties",["x","y"]);break;case 2:this._Pin(t,"properties",["angle"]);break;case 3:this._Pin(t,"rope");break;case 4:this._Pin(t,"bar")}}}}{const va=self.C3;va.Behaviors.Pin.Exps={PinnedUID(){return this._pinInst?this._pinInst.GetUID():-1}}}
@@ -3749,6 +3820,11 @@ const C3=self.C3,C3X=self.C3X,IBehaviorInstance=self.IBehaviorInstance,Ease=self
 // scripts/behaviors/wrap/c3runtime/runtime.js
 {
 {const a=self.C3;a.Behaviors.wrap=class extends a.SDKBehaviorBase{constructor(e){super(e)}Release(){super.Release()}}}{const d=self.C3;d.Behaviors.wrap.Type=class extends d.SDKBehaviorTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3,h=0,i=new g.Rect;g.Behaviors.wrap.Instance=class extends g.SDKBehaviorInstanceBase{constructor(e,t){super(e),this._mode=0,t&&(this._mode=t[h]),this._StartTicking()}Release(){super.Release()}SaveToJson(){return{"m":this._mode}}LoadFromJson(e){this._mode=e["m"]}Tick(){const e=this._inst.GetWorldInfo(),t=e.GetLayer(),s=t.GetLayout(),o=e.GetBoundingBox();0===this._mode?i.set(0,0,s.GetWidth(),s.GetHeight()):i.copy(t.GetViewport()),o.getRight()<i.getLeft()?(e.SetX(i.getRight()-1+(e.GetX()-o.getLeft())),e.SetBboxChanged()):o.getLeft()>i.getRight()?(e.SetX(i.getLeft()+1-(o.getRight()-e.GetX())),e.SetBboxChanged()):o.getBottom()<i.getTop()?(e.SetY(i.getBottom()-1+(e.GetY()-o.getTop())),e.SetBboxChanged()):o.getTop()>i.getBottom()&&(e.SetY(i.getTop()+1-(o.getBottom()-e.GetY())),e.SetBboxChanged())}GetPropertyValueByIndex(e){if(e===h)return this._mode}SetPropertyValueByIndex(e,t){e===h&&(this._mode=t)}}}{const u=self.C3;u.Behaviors.wrap.Cnds={}}{const v=self.C3;v.Behaviors.wrap.Acts={}}{const w=self.C3;w.Behaviors.wrap.Exps={}}
+}
+
+// scripts/behaviors/Rotate/c3runtime/runtime.js
+{
+{const a=self.C3;a.Behaviors.Rotate=class extends a.SDKBehaviorBase{constructor(e){super(e)}Release(){super.Release()}}}{const d=self.C3;d.Behaviors.Rotate.Type=class extends d.SDKBehaviorTypeBase{constructor(e){super(e)}Release(){super.Release()}OnCreate(){}}}{const g=self.C3,h=self.C3X,i=self.IBehaviorInstance,j=0,k=1,l=2,m=(g.Behaviors.Rotate.Instance=class extends g.SDKBehaviorInstanceBase{constructor(e,t){super(e),this._speed=0,this._acceleration=0,this._isEnabled=!0,t&&(this._speed=g.toRadians(t[j]),this._acceleration=g.toRadians(t[k]),this._isEnabled=t[l]),this._isEnabled&&this._StartTicking()}Release(){super.Release()}_SetSpeed(e){this._speed=e}_GetSpeed(){return this._speed}_SetAcceleration(e){this._acceleration=e}_GetAcceleration(){return this._acceleration}SaveToJson(){return{"s":this._speed,"a":this._acceleration,"e":this._isEnabled}}LoadFromJson(e){this._speed=e["s"],this._acceleration=e["a"],this._SetEnabled(e["e"])}Tick(){if(this._isEnabled){const e=this._runtime.GetDt(this._inst);if(0!==e&&(0!==this._acceleration&&(this._speed+=this._acceleration*e),0!==this._speed)){const t=this._inst.GetWorldInfo();t.SetAngle(t.GetAngle()+this._speed*e),t.SetBboxChanged()}}}GetPropertyValueByIndex(e){switch(e){case j:return g.toDegrees(this._GetSpeed());case k:return g.toDegrees(this._GetAcceleration());case l:return this._IsEnabled()}}SetPropertyValueByIndex(e,t){switch(e){case j:this._SetSpeed(g.toRadians(t));break;case k:this._SetAcceleration(g.toRadians(t));break;case l:this._SetEnabled(t)}}_SetEnabled(e){this._isEnabled=!!e,this._isEnabled?this._StartTicking():this._StopTicking()}_IsEnabled(){return this._isEnabled}GetDebuggerProperties(){const e="behaviors.rotate";return[{title:"$"+this.GetBehaviorType().GetName(),properties:[{name:e+".properties.speed.name",value:g.toDegrees(this._GetSpeed()),onedit:e=>this._SetSpeed(g.toRadians(e))},{name:e+".properties.acceleration.name",value:g.toDegrees(this._GetAcceleration()),onedit:e=>this._SetAcceleration(g.toRadians(e))},{name:e+".properties.enabled.name",value:this._IsEnabled(),onedit:e=>this._SetEnabled(e)}]}]}GetScriptInterfaceClass(){return self.IRotateBehaviorInstance}},new WeakMap);self.IRotateBehaviorInstance=class extends i{constructor(){super(),m.set(this,i._GetInitInst().GetSdkInstance())}set speed(e){h.RequireFiniteNumber(e),m.get(this)._SetSpeed(e)}get speed(){return m.get(this)._GetSpeed()}set acceleration(e){h.RequireFiniteNumber(e),m.get(this)._SetAcceleration(e)}get acceleration(){return m.get(this)._GetAcceleration()}get isEnabled(){return m.get(this)._IsEnabled()}set isEnabled(e){m.get(this)._SetEnabled(e)}}}{const H=self.C3;H.Behaviors.Rotate.Cnds={IsEnabled(){return this._IsEnabled()}}}{const I=self.C3;I.Behaviors.Rotate.Acts={SetSpeed(e){this._SetSpeed(I.toRadians(e))},SetAcceleration(e){this._SetAcceleration(I.toRadians(e))},SetEnabled(e){this._SetEnabled(e)}}}{const M=self.C3;M.Behaviors.Rotate.Exps={Speed(){return M.toDegrees(this._GetSpeed())},Acceleration(){return M.toDegrees(this._GetAcceleration())}}}
 }
 
 // scripts/behaviors/bound/c3runtime/runtime.js
@@ -3911,6 +3987,7 @@ self.C3_ExpressionFuncs = [
 		() => "Rusty",
 		() => 100,
 		() => 8,
+		() => "",
 		() => 120,
 		() => 10,
 		() => "[\n'tokenMaxMints','walletMintsOf'\n]",
@@ -3919,7 +3996,11 @@ self.C3_ExpressionFuncs = [
 			return () => (("[\n[1],['" + v0.GetValue()) + "', 1]\n]");
 		},
 		() => "https://base-sepolia.gateway.tenderly.co",
-		() => 0.2,
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			const v1 = p._GetNode(1).GetVar();
+			return () => and((and("Available: ", v0.GetValue()) + " of "), v1.GetValue());
+		},
 		() => 50,
 		() => 140,
 		() => 14,
@@ -4028,7 +4109,6 @@ self.C3_ExpressionFuncs = [
 		},
 		() => "ModalWait",
 		() => "Main",
-		() => "",
 		() => "TotalCoins",
 		() => "initial",
 		() => "userNfts",
@@ -4042,6 +4122,17 @@ self.C3_ExpressionFuncs = [
 			const v6 = p._GetNode(6).GetVar();
 			return () => (((((((((((((("[['" + v0.GetValue()) + "', '") + v1.GetValue()) + "', '") + v2.GetValue()) + "', '") + v3.GetValue()) + "', '") + v4.GetValue()) + "', '") + v5.GetValue()) + "', '") + v6.GetValue()) + "' ], [1,2,3,4,5,6,7]]");
 		},
+		() => "[\n'tokenMaxMints','walletMintsOf',\n'tokenMaxMints','walletMintsOf',\n'tokenMaxMints','walletMintsOf',\n'tokenMaxMints','walletMintsOf',\n'tokenMaxMints','walletMintsOf',\n'tokenMaxMints','walletMintsOf',\n'tokenMaxMints','walletMintsOf'\n]",
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			const v1 = p._GetNode(1).GetVar();
+			const v2 = p._GetNode(2).GetVar();
+			const v3 = p._GetNode(3).GetVar();
+			const v4 = p._GetNode(4).GetVar();
+			const v5 = p._GetNode(5).GetVar();
+			const v6 = p._GetNode(6).GetVar();
+			return () => (((((((((((((("[\n[1],['" + v0.GetValue()) + "', 1], \n[2],['") + v1.GetValue()) + "', 2], \n[3],['") + v2.GetValue()) + "', 3],\n[4],['") + v3.GetValue()) + "', 4], \n[5],['") + v4.GetValue()) + "', 5], \n[6],['") + v5.GetValue()) + "', 6], \n[7],['") + v6.GetValue()) + "', 7]\n]");
+		},
 		() => "error",
 		() => "The minting process failed. Please check your connection or try again later.",
 		() => "Loading",
@@ -4052,11 +4143,7 @@ self.C3_ExpressionFuncs = [
 		() => "UpdateAudio",
 		() => "ReadBalance",
 		() => "Animations",
-		() => -720,
 		() => 0.5,
-		() => 360,
-		() => 0.7,
-		() => 26,
 		() => "Interacions",
 		p => {
 			const n0 = p._GetNode(0);
@@ -4064,12 +4151,8 @@ self.C3_ExpressionFuncs = [
 		},
 		() => 640,
 		() => "Audio",
-		() => "Music ON",
 		() => -5,
-		() => "Music OFF",
 		() => 60,
-		() => "Sounds ON",
-		() => "Sounds OFF",
 		() => "UI",
 		() => "MenuDebug",
 		() => "Token Contract",
@@ -4079,9 +4162,11 @@ self.C3_ExpressionFuncs = [
 		() => "0x39793e4f068c798FdAbeFBACF694272ca8A986Af",
 		() => 84532,
 		() => "GUI",
+		() => 1.4,
+		() => 0.4,
+		() => 0.2,
 		() => "Selected",
 		() => "Initialization",
-		() => 0.4,
 		() => "SummaryCounters",
 		() => 1.5,
 		() => "SaveData",
@@ -4100,10 +4185,6 @@ self.C3_ExpressionFuncs = [
 			return () => (("<img src='" + v0.GetValue()) + "' height=100% width=100% style='border-radius: 50%'></img>");
 		},
 		() => "players",
-		p => {
-			const n0 = p._GetNode(0);
-			return () => and("Total players: ", n0.ExpObject(".players.count"));
-		},
 		() => "players.results",
 		p => {
 			const n0 = p._GetNode(0);
@@ -4113,8 +4194,22 @@ self.C3_ExpressionFuncs = [
 		p => {
 			const n0 = p._GetNode(0);
 			const n1 = p._GetNode(1);
-			const n2 = p._GetNode(2);
-			return () => and(and(and(and(n0.ExpObject(".position"), ". "), n1.ExpObject(".username")), ": "), n2.ExpObject(".bestScore"));
+			return () => and(and(n0.ExpObject(".position"), ". "), n1.ExpObject(".username"));
+		},
+		p => {
+			const n0 = p._GetNode(0);
+			return () => n0.ExpObject(".bestScore");
+		},
+		() => "players.personal",
+		() => "MyPosition",
+		p => {
+			const n0 = p._GetNode(0);
+			const n1 = p._GetNode(1);
+			return () => and(and(n0.ExpObject("players.personal.position"), ". "), n1.ExpObject("players.personal.username"));
+		},
+		p => {
+			const n0 = p._GetNode(0);
+			return () => n0.ExpObject("players.personal.bestScore");
 		},
 		() => 530,
 		p => {
@@ -4203,6 +4298,7 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => (v0.GetValue() * 10);
 		},
+		() => 0.7,
 		() => 0.08,
 		() => "Segments",
 		() => 2660,
@@ -4210,6 +4306,7 @@ self.C3_ExpressionFuncs = [
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => Math.round(f0(0, 25));
 		},
+		() => 360,
 		() => 13,
 		() => 15,
 		() => 17,

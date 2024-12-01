@@ -55,7 +55,7 @@ functionMapping.forEach((fn, index) => {
 		runtime.callFunction("onCarHasMinted", processedCarName)
 	},
 
-	async Ecarshop_Event82_Act1(runtime, localVars)
+	async Ecarshop_Event83_Act1(runtime, localVars)
 	{
 // Define ship mappings for better maintainability
 const shipMappings = [
