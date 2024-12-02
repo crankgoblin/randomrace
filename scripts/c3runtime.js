@@ -4169,12 +4169,10 @@ self.C3_ExpressionFuncs = [
 		() => "Initialization",
 		() => "SummaryCounters",
 		() => 1.5,
-		() => "SaveData",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (and("{'coins':", v0.GetValue()) + "}");
 		},
-		() => 0.04,
 		() => "54a15c84-372e-4348-a3b5-4382cee2083b",
 		() => "'coins'",
 		() => "avatar-default.png",
