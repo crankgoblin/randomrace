@@ -3990,6 +3990,7 @@ self.C3_ExpressionFuncs = [
 		() => "",
 		() => 120,
 		() => 10,
+		() => 50,
 		() => "[\n'tokenMaxMints','walletMintsOf'\n]",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
@@ -4001,7 +4002,6 @@ self.C3_ExpressionFuncs = [
 			const v1 = p._GetNode(1).GetVar();
 			return () => and((and("Available: ", v0.GetValue()) + " of "), v1.GetValue());
 		},
-		() => 50,
 		() => 140,
 		() => 14,
 		p => {
@@ -4012,45 +4012,45 @@ self.C3_ExpressionFuncs = [
 		() => 16,
 		() => 9,
 		() => 150,
+		() => 250,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (("[\n[3],['" + v0.GetValue()) + "', 3]\n]");
 		},
-		() => 250,
 		() => "R-Cdes",
 		() => 175,
 		() => 20,
+		() => 500,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (("[\n[4],['" + v0.GetValue()) + "', 4]\n]");
 		},
-		() => 500,
 		() => 200,
 		() => 25,
 		() => 11,
 		() => 170,
+		() => 1000,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (("[\n[5],['" + v0.GetValue()) + "', 5]\n]");
 		},
-		() => 1000,
 		() => 225,
 		() => 30,
 		() => 12,
 		() => 180,
+		() => 2000,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (("[\n[6],['" + v0.GetValue()) + "', 6]\n]");
 		},
-		() => 2000,
 		() => 275,
 		() => 40,
 		() => 190,
+		() => 3000,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (("[\n[7],['" + v0.GetValue()) + "', 7]\n]");
 		},
-		() => 3000,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
@@ -4067,37 +4067,37 @@ self.C3_ExpressionFuncs = [
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => and((and("C1:", v0.GetValue()) + " / "), v1.GetValue());
+			return () => and((and("C1: ", v0.GetValue()) + " / "), v1.GetValue());
 		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => and((and("C2:", v0.GetValue()) + " / "), v1.GetValue());
+			return () => and((and("C2: ", v0.GetValue()) + " / "), v1.GetValue());
 		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => and((and("C3:", v0.GetValue()) + " / "), v1.GetValue());
+			return () => and((and("C3: ", v0.GetValue()) + " / "), v1.GetValue());
 		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => and((and("C4:", v0.GetValue()) + " / "), v1.GetValue());
+			return () => and((and("C4: ", v0.GetValue()) + " / "), v1.GetValue());
 		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => and((and("C5:", v0.GetValue()) + " / "), v1.GetValue());
+			return () => and((and("C5: ", v0.GetValue()) + " / "), v1.GetValue());
 		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => and((and("C6:", v0.GetValue()) + " / "), v1.GetValue());
+			return () => and((and("C6: ", v0.GetValue()) + " / "), v1.GetValue());
 		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => and((and("C7:", v0.GetValue()) + " / "), v1.GetValue());
+			return () => and((and("C7: ", v0.GetValue()) + " / "), v1.GetValue());
 		},
 		() => "Contract",
 		() => "mint",
@@ -4133,6 +4133,7 @@ self.C3_ExpressionFuncs = [
 			const v6 = p._GetNode(6).GetVar();
 			return () => (((((((((((((("[\n[1],['" + v0.GetValue()) + "', 1], \n[2],['") + v1.GetValue()) + "', 2], \n[3],['") + v2.GetValue()) + "', 3],\n[4],['") + v3.GetValue()) + "', 4], \n[5],['") + v4.GetValue()) + "', 5], \n[6],['") + v5.GetValue()) + "', 6], \n[7],['") + v6.GetValue()) + "', 7]\n]");
 		},
+		() => "getting token max mints ",
 		() => "error",
 		() => "The minting process failed. Please check your connection or try again later.",
 		() => "Loading",

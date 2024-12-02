@@ -3,7 +3,7 @@
 
 const scriptsInEvents = {
 
-	async Ecarshop_Event70_Act2(runtime, localVars)
+	async Ecarshop_Event77_Act2(runtime, localVars)
 	{
 // Define function mappings for better maintainability
 const functionMapping = [{name: 'tokenMaxMints'}, {name: 'walletMintsOf'}]
@@ -48,14 +48,14 @@ functionMapping.forEach((fn, index) => {
 })
 	},
 
-	async Ecarshop_Event74_Act1(runtime, localVars)
+	async Ecarshop_Event81_Act1(runtime, localVars)
 	{
 		const processedCarName = runtime.globalVars.processedCarName
 		
 		runtime.callFunction("onCarHasMinted", processedCarName)
 	},
 
-	async Ecarshop_Event83_Act1(runtime, localVars)
+	async Ecarshop_Event90_Act1(runtime, localVars)
 	{
 // Define ship mappings for better maintainability
 const shipMappings = [
