@@ -4109,6 +4109,10 @@ self.C3_ExpressionFuncs = [
 		},
 		() => "ModalWait",
 		() => "Main",
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("car cost: ", v0.GetValue());
+		},
 		() => "TotalCoins",
 		() => "initial",
 		() => "userNfts",
@@ -4168,8 +4172,6 @@ self.C3_ExpressionFuncs = [
 		() => 0.2,
 		() => "Selected",
 		() => "Initialization",
-		() => "SummaryCounters",
-		() => 1.5,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (and("{'coins':", v0.GetValue()) + "}");
@@ -4290,7 +4292,6 @@ self.C3_ExpressionFuncs = [
 		},
 		() => "Booster",
 		() => 0.25,
-		() => 999,
 		() => 0.07,
 		() => "Collisions",
 		p => {
