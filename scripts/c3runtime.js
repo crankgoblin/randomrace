@@ -4140,6 +4140,34 @@ self.C3_ExpressionFuncs = [
 		() => "getting token max mints ",
 		() => "error",
 		() => "The minting process failed. Please check your connection or try again later.",
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("UnlockedCar1: ", v0.GetValue());
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("UnlockedCar2: ", v0.GetValue());
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("UnlockedCar3: ", v0.GetValue());
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("UnlockedCar4: ", v0.GetValue());
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("UnlockedCar5: ", v0.GetValue());
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("UnlockedCar6: ", v0.GetValue());
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("UnlockedCar7: ", v0.GetValue());
+		},
 		() => "Loading",
 		() => "OptionsMusic",
 		() => "OptionsSounds",
@@ -4171,6 +4199,8 @@ self.C3_ExpressionFuncs = [
 		() => 0.4,
 		() => 0.2,
 		() => "Selected",
+		() => "Returned error: MetaMask Tx Signature: User denied transaction signature.",
+		() => "Transaction rejected",
 		() => "Initialization",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
