@@ -1,7 +1,7 @@
 {
 	"name": "RandomRace",
 	"short_name": "RandomRace",
-	"description": "",
+	"description": "Speed through chaos in Random Race, a blockchain racing game on Base.",
 	"start_url": "index.html",
 	"display": "fullscreen",
 	"orientation": "portrait",
