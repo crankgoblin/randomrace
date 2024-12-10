@@ -460,6 +460,966 @@ const C3=self.C3;C3.Gfx.WebGLQueryResultBuffer=class{constructor(e,r=1e3){this._
 const C3=self.C3,assert=self.assert,glMatrix=self.glMatrix,vec3=glMatrix.vec3,vec4=glMatrix.vec4,mat4=glMatrix.mat4,DEFAULT_WEBGLRENDERER_OPTS={powerPreference:"default",enableGpuProfiling:!0,alpha:!1,depth:!1,canSampleDepth:!1,maxWebGLVersion:2,failIfMajorPerformanceCaveat:!1},VALID_POWER_PREFERENCES=new Set(["default","low-power","high-performance"]),MAX_VERTICES=8e3,MAX_INDICES=MAX_VERTICES/2*3,MAX_POINTS=8e3,LAST_POINT=MAX_POINTS-4,PARTIAL_TEXTURE_UPLOAD_CHUNK_SIZE=262144,defaultTexCoordsQuad=new C3.Quad(0,0,1,0,1,1,0,1),tmpProjection=mat4.create(),tmpModelView=mat4.create(),tmpQuad=new C3.Quad,tmpRect=new C3.Rect;let loseContextExtension=null;C3.isDebug&&(self.debug_lose_webgl_context=function(){loseContextExtension?loseContextExtension.loseContext():console.warn("WEBGL_lose_context not supported")},self.debug_restore_webgl_context=function(){loseContextExtension?loseContextExtension.restoreContext():console.warn("WEBGL_lose_context not supported")});const pendingPolls=new Set;let pollRafId=-1;function CheckPendingPolls(){pollRafId=-1;for(const t of pendingPolls)t.checkFunc()&&(t.resolve(),pendingPolls.delete(t));0<pendingPolls.size&&(pollRafId=self.requestAnimationFrame(CheckPendingPolls))}C3.Gfx.WebGLRenderer=class extends C3.Gfx.RendererBase{constructor(t,e){if(super(e),e=Object.assign({},DEFAULT_WEBGLRENDERER_OPTS,e),!VALID_POWER_PREFERENCES.has(e.powerPreference))throw new Error("invalid power preference");const r={"alpha":!!e.alpha,"depth":!1,"antialias":!1,"powerPreference":e.powerPreference,"failIfMajorPerformanceCaveat":!!e.failIfMajorPerformanceCaveat};let i=null,s=0;if(2<=e.maxWebGLVersion&&(i=t.getContext("webgl2",r),s=2),i||(i=t.getContext("webgl",r),s=1),!i)throw new Error("renderer-unavailable (could not get WebGL context)");this._gl=i,this._attribs=i.getContextAttributes(),this._versionString=i.getParameter(i.VERSION),this._version=s,this._viewport=vec4.create(),this._didChangeTransform=!1,this._bbProjectionMatrix=mat4.create(),this._usesDepthBuffer=!!e.depth,this._canSampleDepth=!(!e.depth||!e.canSampleDepth),this._isDepthEnabled=this._usesDepthBuffer,this._isDepthSamplingEnabled=!1,this._depthBuffer=null,this._isAutoSizeDepthBuffer=!0,this._depthBufferWidth=0,this._depthBufferHeight=0,this._vertexBuffer=null,this._texcoordBuffer=null,this._indexBuffer=null,this._pointBuffer=null,this._vertexData=new Float32Array(MAX_VERTICES*this.GetNumVertexComponents()),this._indexData=new Uint16Array(MAX_INDICES),this._texcoordData=new Float32Array(2*MAX_VERTICES),this._pointData=new Float32Array(4*MAX_POINTS),this._vertexPtr=0,this._texPtr=0,this._pointPtr=0,this._lastVertexPtr=0,this._lastProgram=null,this._spDeviceTransformTextureFill=null,this._batch=[],this._batchPtr=0,this._topOfBatch=0,this._currentRenderTarget=null,this._lastPointZ=0,this._batchState=C3.New(C3.Gfx.BatchState,this),this._lastColor=C3.New(C3.Color,1,1,1,1),this._lastTexture0=null,this._lastTexture1=null,this._lastSrcBlend=0,this._lastDestBlend=0,this._lastPointTexCoords=new C3.Rect,this._lastScissorRect=C3.New(C3.Rect,0,0,-1,-1),this._coplanarMode=0,this._maxTextureSize=-1,this._minPointSize=0,this._maxPointSize=0,this._highpPrecision=0,this._unmaskedVendor="(unavailable)",this._unmaskedRenderer="(unavailable)",this._extensions=[],this._isInitialisingAfterContextRestored=!1,this._parallelShaderCompileExt=null,this._anisotropicExt=null,this._depthTextureExt=null,this._fragDepthExt=null,this._stdDerivativesExt=null,this._textureLodExt=null,this._maxAnisotropy=0,this._isGpuProfilingEnabled=!!e.enableGpuProfiling,this._timerExt=null,this._allQueryResultBuffers=new Set,this._timeQueryStack=[],this.FillIndexBufferData(this._indexData)}IsWebGL(){return!0}async InitState(){super.InitState();const t=this._gl,e=this.GetNumVertexComponents(),r=(this._lastColor.setRgba(1,1,1,1),this._lastTexture0=null,this._lastTexture1=null,this._vertexPtr=0,this._pointPtr=0,this._lastVertexPtr=MAX_VERTICES*e-4*e,C3.clearArray(this._batch),this._batchPtr=0,this._topOfBatch=0,this._lastProgram=null,this._currentRenderTarget=null,this._lastPointTexCoords.set(0,0,1,1),this._lastPointZ=0,this._batchState),i=(r.currentShader=null,r.currentFramebuffer=null,r.currentFramebufferNoDepth=null,vec4.set(r.currentColor,1,1,1,1),r.clearColor.setRgba(0,0,0,0),r.pointTexCoords.set(0,0,1,1),t.clearColor(0,0,0,0),t.clear(t.COLOR_BUFFER_BIT),t.enable(t.BLEND),t.blendFunc(t.ONE,t.ONE_MINUS_SRC_ALPHA),this._lastSrcBlend=t.ONE,this._lastDestBlend=t.ONE_MINUS_SRC_ALPHA,this._InitBlendModes(t),t.disable(t.CULL_FACE),t.disable(t.STENCIL_TEST),t.disable(t.DITHER),this._usesDepthBuffer?(t.enable(t.DEPTH_TEST),t.depthMask(!0),t.depthFunc(t.LEQUAL)):(t.disable(t.DEPTH_TEST),t.depthMask(!1)),this._isDepthEnabled=this._usesDepthBuffer,this._isDepthSamplingEnabled=!1,this._pointBuffer=t.createBuffer(),t.bindBuffer(t.ARRAY_BUFFER,this._pointBuffer),t.bufferData(t.ARRAY_BUFFER,this._pointData.byteLength,t.DYNAMIC_DRAW),this._vertexBuffer=t.createBuffer(),t.bindBuffer(t.ARRAY_BUFFER,this._vertexBuffer),t.bufferData(t.ARRAY_BUFFER,this._vertexData.byteLength,t.DYNAMIC_DRAW),this._texcoordBuffer=t.createBuffer(),t.bindBuffer(t.ARRAY_BUFFER,this._texcoordBuffer),t.bufferData(t.ARRAY_BUFFER,this._texcoordData.byteLength,t.DYNAMIC_DRAW),this._indexBuffer=t.createBuffer(),t.bindBuffer(t.ELEMENT_ARRAY_BUFFER,this._indexBuffer),t.bufferData(t.ELEMENT_ARRAY_BUFFER,this._indexData,t.STATIC_DRAW),t.activeTexture(t.TEXTURE0),t.bindTexture(t.TEXTURE_2D,null),this._maxTextureSize=t.getParameter(t.MAX_TEXTURE_SIZE),t.getParameter(t.ALIASED_POINT_SIZE_RANGE)),s=(this._minPointSize=i[0],this._maxPointSize=i[1],t.getShaderPrecisionFormat(t.VERTEX_SHADER,t.HIGH_FLOAT)),a=t.getShaderPrecisionFormat(t.FRAGMENT_SHADER,t.HIGH_FLOAT),h=(this._highpPrecision=s&&a?Math.min(s["precision"],a["precision"]):0,2048<this._maxPointSize&&(this._maxPointSize=2048),this._extensions=t.getSupportedExtensions(),t.getExtension("WEBGL_debug_renderer_info"));if(h&&(this._unmaskedVendor=t.getParameter(h["UNMASKED_VENDOR_WEBGL"]),this._unmaskedRenderer=t.getParameter(h["UNMASKED_RENDERER_WEBGL"])),this._parallelShaderCompileExt=t.getExtension("KHR_parallel_shader_compile"),C3.isDebug&&(loseContextExtension=t.getExtension("WEBGL_lose_context")),this._isGpuProfilingEnabled&&(1===this.GetWebGLVersionNumber()?this._timerExt=t.getExtension("EXT_disjoint_timer_query"):this._timerExt=t.getExtension("EXT_disjoint_timer_query_webgl2")||t.getExtension("EXT_disjoint_timer_query")),this._anisotropicExt=t.getExtension("EXT_texture_filter_anisotropic"),this._anisotropicExt?this._maxAnisotropy=t.getParameter(this._anisotropicExt["MAX_TEXTURE_MAX_ANISOTROPY_EXT"]):this._maxAnisotropy=0,this.GetWebGLVersionNumber()<2&&this._usesDepthBuffer&&this._canSampleDepth&&(this._depthTextureExt=t.getExtension("WEBGL_depth_texture"),!this._depthTextureExt))throw new Error("no depth texture support");this.GetWebGLVersionNumber()<2&&(this._fragDepthExt=t.getExtension("EXT_frag_depth"),this._stdDerivativesExt=t.getExtension("OES_standard_derivatives"),this._textureLodExt=t.getExtension("EXT_shader_texture_lod"));const n=C3.Gfx.WebGLShaderProgram,o=n.GetDefaultVertexShaderSource(!1);let l=n.GetTextureFillFragmentShaderSource_WebGL1_NoFragDepth(),_=o,u=n.GetPointFragmentShaderSource_WebGL1_NoFragDepth(),d=n.GetPointVertexShaderSource_WebGL1(),c=n.GetTilemapFragmentShaderSource_WebGL1_NoFragDepth(),f=n.GetDefaultVertexShaderSource(!0),p=!1;this._usesDepthBuffer&&(this.GetWebGLVersionNumber()<2?this._fragDepthExt&&(l=n.GetTextureFillFragmentShaderSource_WebGL1_FragDepthEXT(),u=n.GetPointFragmentShaderSource_WebGL1_FragDepthEXT(),c=n.GetTilemapFragmentShaderSource_WebGL1_FragDepthEXT(),p=!0):(_=n.GetDefaultVertexShaderSource_WebGL2(),l=n.GetTextureFillFragmentShaderSource_WebGL2(),u=n.GetPointFragmentShaderSource_WebGL2(),d=n.GetPointVertexShaderSource_WebGL2(),c=n.GetTilemapFragmentShaderSource_WebGL2(),f=n.GetDefaultVertexShaderSource_WebGL2(!0)));const x=n.GetTileRandomizationFragmentShaderSource(this.GetWebGLVersionNumber(),p,this._stdDerivativesExt&&this._textureLodExt),E=2<=this.GetWebGLVersionNumber()?n.GetDefaultVertexShaderSource_WebGL2():o,S=[[l,_,"<default>"],[l,_,"<default-device-transform>"],[u,d,"<point>"],[n.GetColorFillFragmentShaderSource(),o,"<fill>"],[n.GetLinearGradientFillFragmentShaderSource(),o,"<lineargradient>"],[n.GetPenumbraFillFragmentShaderSource(),o,"<penumbra>"],[n.GetHardEllipseFillFragmentShaderSource(),o,"<hardellipse>"],[n.GetHardEllipseOutlineFragmentShaderSource(),o,"<hardellipseoutline>"],[n.GetSmoothEllipseFillFragmentShaderSource(),o,"<smoothellipse>"],[n.GetSmoothEllipseOutlineFragmentShaderSource(),o,"<smoothellipseoutline>"],[n.GetSmoothLineFillFragmentShaderSource(),o,"<smoothline>"],[c,f,"<tilemap>"],[x,E,"<tilerandomization>"]],T=await Promise.all(S.map(t=>this.CreateShaderProgram({src:t[0],vertexSrc:t[1],name:t[2]})));this._spTextureFill=T[0],this._spDeviceTransformTextureFill=T[1],this._spPoints=T[2],this._spColorFill=T[3],this._spLinearGradientFill=T[4],this._spPenumbraFill=T[5],this._spHardEllipseFill=T[6],this._spHardEllipseOutline=T[7],this._spSmoothEllipseFill=T[8],this._spSmoothEllipseOutline=T[9],this._spSmoothLineFill=T[10],this._spTilemapFill=T[11],this._spTileRandomization=T[12],this.SetTextureFillMode()}async CreateShaderProgram(t){const e=await C3.Gfx.WebGLShaderProgram.Create(this,t);return this._AddShaderProgram(e),e}ResetLastProgram(){this._lastProgram=null}SetSize(t,e,r){if(this._width!==t||this._height!==e||r){this.EndBatch();const i=this._gl,s=this._batchState;this._width=t,this._height=e,this._SetViewport(0,0,t,e),this.CalculatePerspectiveMatrix(this._bbProjectionMatrix,t/e),this.SetProjectionMatrix(this._bbProjectionMatrix),this._spDeviceTransformTextureFill&&(i.useProgram(this._spDeviceTransformTextureFill.GetShaderProgram()),this._spDeviceTransformTextureFill._UpdateDeviceTransformUniforms(this._matP),this._lastProgram=this._spDeviceTransformTextureFill,this._batchState.currentShader=this._spDeviceTransformTextureFill),i.bindTexture(i.TEXTURE_2D,null),i.activeTexture(i.TEXTURE1),i.bindTexture(i.TEXTURE_2D,null),i.activeTexture(i.TEXTURE0),this._lastTexture0=null,this._lastTexture1=null,this._usesDepthBuffer&&this._isAutoSizeDepthBuffer&&this._SetDepthBufferSize(this._width,this._height),this._currentRenderTarget&&this._currentRenderTarget._Resize(this._width,this._height),i.bindFramebuffer(i.FRAMEBUFFER,null),this._currentRenderTarget=null,s.currentFramebuffer=null,s.currentFramebufferNoDepth=null}}_SetDepthBufferSize(t,e){const r=this._gl;this._depthBuffer&&this._depthBufferWidth===t&&this._depthBufferHeight===e||(this._canSampleDepth?(this._depthBuffer&&r.deleteTexture(this._depthBuffer),this._depthBuffer=r.createTexture(),r.bindTexture(r.TEXTURE_2D,this._depthBuffer),r.texParameteri(r.TEXTURE_2D,r.TEXTURE_MAG_FILTER,r.NEAREST),r.texParameteri(r.TEXTURE_2D,r.TEXTURE_MIN_FILTER,r.NEAREST),r.texParameteri(r.TEXTURE_2D,r.TEXTURE_WRAP_S,r.CLAMP_TO_EDGE),r.texParameteri(r.TEXTURE_2D,r.TEXTURE_WRAP_T,r.CLAMP_TO_EDGE),2<=this.GetWebGLVersionNumber()?r.texImage2D(r.TEXTURE_2D,0,r.DEPTH24_STENCIL8,t,e,0,r.DEPTH_STENCIL,r.UNSIGNED_INT_24_8,null):this._depthTextureExt&&r.texImage2D(r.TEXTURE_2D,0,r.DEPTH_STENCIL,t,e,0,r.DEPTH_STENCIL,this._depthTextureExt["UNSIGNED_INT_24_8_WEBGL"],null),r.bindTexture(r.TEXTURE_2D,null)):(this._depthBuffer&&r.deleteRenderbuffer(this._depthBuffer),this._depthBuffer=r.createRenderbuffer(),r.bindRenderbuffer(r.RENDERBUFFER,this._depthBuffer),r.renderbufferStorage(r.RENDERBUFFER,2<=this._version?r.DEPTH24_STENCIL8:r.DEPTH_STENCIL,t,e),r.bindRenderbuffer(r.RENDERBUFFER,null)),this._depthBufferWidth=t,this._depthBufferHeight=e)}SetFixedSizeDepthBuffer(t,e){this._usesDepthBuffer&&(this._isAutoSizeDepthBuffer=!1,this._SetDepthBufferSize(t,e))}SetAutoSizeDepthBuffer(){this._usesDepthBuffer&&(this._isAutoSizeDepthBuffer=!0,this._SetDepthBufferSize(this._width,this._height))}_SetViewport(t,e,r,i){const s=this._viewport;if(s[0]!==t||s[1]!==e||s[2]!==r||s[3]!==i){const a=this.PushBatch();a.InitSetViewport(t,e,r,i),vec4.set(s,t,e,r,i),this._topOfBatch=0}}SetFovY(t){super.SetFovY(t),this.CalculatePerspectiveMatrix(this._bbProjectionMatrix,this._width/this._height)}SetNearZ(t){super.SetNearZ(t),this.CalculatePerspectiveMatrix(this._bbProjectionMatrix,this._width/this._height)}SetFarZ(t){super.SetFarZ(t),this.CalculatePerspectiveMatrix(this._bbProjectionMatrix,this._width/this._height)}SetProjectionMatrix(t){if(!mat4.exactEquals(this._matP,t)){const e=this.PushBatch();e.InitSetProjection(t),mat4.copy(this._matP,t),this._topOfBatch=0,this._didChangeTransform=!0}}SetDefaultRenderTargetProjectionState(){let t,e,r;const i=this._currentRenderTarget;r=(null===i?(t=this._bbProjectionMatrix,e=this.GetWidth(),this):(t=i.GetProjectionMatrix(),e=i.GetWidth(),i)).GetHeight(),this.SetProjectionMatrix(t),this._SetViewport(0,0,e,r)}SetModelViewMatrix(t){if(!mat4.exactEquals(this._matMV,t)){const e=this.PushBatch();e.InitSetModelView(t),mat4.copy(this._matMV,t),this._topOfBatch=0,this._didChangeTransform=!0}}ResetDidChangeTransformFlag(){this._didChangeTransform=!1}DidChangeTransform(){return this._didChangeTransform}GetBatchState(){return this._batchState}PushBatch(){const t=this._batch;return this._batchPtr===t.length&&t.push(new C3.Gfx.WebGLBatchJob(this._batchState)),t[this._batchPtr++]}EndBatch(){0===this._batchPtr||this.IsContextLost()||(this._WriteBuffers(),this._ExecuteBatch(),this._batchPtr=0,this._vertexPtr=0,this._texPtr=0,this._pointPtr=0,this._topOfBatch=0)}_WriteBuffers(){const t=this._gl;0<this._pointPtr&&(t.bindBuffer(t.ARRAY_BUFFER,this._pointBuffer),t.bufferSubData(t.ARRAY_BUFFER,0,this._pointData.subarray(0,this._pointPtr))),0<this._vertexPtr&&(t.bindBuffer(t.ARRAY_BUFFER,this._vertexBuffer),t.bufferSubData(t.ARRAY_BUFFER,0,this._vertexData.subarray(0,this._vertexPtr)),t.bindBuffer(t.ARRAY_BUFFER,this._texcoordBuffer),t.bufferSubData(t.ARRAY_BUFFER,0,this._texcoordData.subarray(0,this._texPtr)))}_ExecuteBatch(){const r=this._batch;for(let t=0,e=this._batchPtr;t<e;++t)r[t].Run()}GetOpacity(){return this._lastColor.getA()}SetColorRgba(t,e,r,i){const s=this._lastColor;if(!s.equalsRgba(t,e,r,i)){s.setRgba(t,e,r,i);const a=this.PushBatch();a.InitSetColor(s),this._topOfBatch=0,this._currentStateGroup=null}}SetOpacity(t){const e=this._lastColor;if(e.getA()!==t){e.setA(t);const r=this.PushBatch();r.InitSetColor(e),this._topOfBatch=0,this._currentStateGroup=null}}SetColor(t){const e=this._lastColor;if(!e.equals(t)){e.set(t);const r=this.PushBatch();r.InitSetColor(e),this._topOfBatch=0,this._currentStateGroup=null}}ResetColor(){this.SetColorRgba(1,1,1,1)}GetColor(){return this._lastColor}SetTexture(t){if(t!==this._lastTexture0){const e=this.PushBatch();e.InitSetTexture(t),this._lastTexture0=t,this._topOfBatch=0}}_ResetLastTexture(){this._lastTexture0=null}SetBlendMode(t){const e=this._GetBlendByIndex(t);this._SetBlend(e[0],e[1])}SetNamedBlendMode(t){const e=this.GetNamedBlend(t);this._SetBlend(e.srcBlend,e.destBlend)}_SetBlend(t,e){if(t!==this._lastSrcBlend||e!==this._lastDestBlend){const r=this.PushBatch();r.InitSetBlend(t,e),this._lastSrcBlend=t,this._lastDestBlend=e,this._topOfBatch=0,this._currentStateGroup=null}}IsPremultipliedAlphaBlend(){return this._lastSrcBlend===this._gl.ONE&&this._lastDestBlend===this._gl.ONE_MINUS_SRC_ALPHA}SetAlphaBlend(){this._SetBlend(this._gl.ONE,this._gl.ONE_MINUS_SRC_ALPHA)}SetNoPremultiplyAlphaBlend(){this._SetBlend(this._gl.SRC_ALPHA,this._gl.ONE_MINUS_SRC_ALPHA)}SetCopyBlend(){this._SetBlend(this._gl.ONE,this._gl.ZERO)}Rect(t){this.Rect2(t.getLeft(),t.getTop(),t.getRight(),t.getBottom())}Rect2(t,e,r,i){this.Quad2(t,e,r,e,r,i,t,i)}_ExtendQuadBatch(){let t=this._vertexPtr;if(t>=this._lastVertexPtr&&(this.EndBatch(),t=0),1===this._topOfBatch)this._batch[this._batchPtr-1]._indexCount+=6;else{const e=this.PushBatch();e.InitQuad(t,6),this._topOfBatch=1}}_WriteQuadToVertexBuffer(t){t.writeToTypedArray3D(this._vertexData,this._vertexPtr,this._baseZ+this._currentZ),this._vertexPtr+=12}Quad(t){this._ExtendQuadBatch(),this._WriteQuadToVertexBuffer(t),defaultTexCoordsQuad.writeToTypedArray(this._texcoordData,this._texPtr),this._texPtr+=8}Quad2(t,e,r,i,s,a,h,n){this._ExtendQuadBatch();const o=this._vertexData;let l=this._vertexPtr;const _=this._baseZ+this._currentZ;o[l++]=t,o[l++]=e,o[l++]=_,o[l++]=r,o[l++]=i,o[l++]=_,o[l++]=s,o[l++]=a,o[l++]=_,o[l++]=h,o[l++]=n,o[l++]=_,this._vertexPtr=l,defaultTexCoordsQuad.writeToTypedArray(this._texcoordData,this._texPtr),this._texPtr+=8}Quad3(t,e){this._ExtendQuadBatch(),this._WriteQuadToVertexBuffer(t),e.writeAsQuadToTypedArray(this._texcoordData,this._texPtr),this._texPtr+=8}Quad4(t,e){this._ExtendQuadBatch(),this._WriteQuadToVertexBuffer(t),e.writeToTypedArray(this._texcoordData,this._texPtr),this._texPtr+=8}Quad3D(t,e,r,i,s,a,h,n,o,l,_,u,d){this._ExtendQuadBatch();const c=this._vertexData;let f=this._vertexPtr;const p=this._baseZ+this._currentZ;c[f++]=t,c[f++]=e,c[f++]=p+r,c[f++]=i,c[f++]=s,c[f++]=p+a,c[f++]=h,c[f++]=n,c[f++]=p+o,c[f++]=l,c[f++]=_,c[f++]=p+u,this._vertexPtr=f,d.writeAsQuadToTypedArray(this._texcoordData,this._texPtr),this._texPtr+=8}Quad3D2(t,e,r,i,s,a,h,n,o,l,_,u,d){this._ExtendQuadBatch();const c=this._vertexData;let f=this._vertexPtr;const p=this._baseZ+this._currentZ;c[f++]=t,c[f++]=e,c[f++]=p+r,c[f++]=i,c[f++]=s,c[f++]=p+a,c[f++]=h,c[f++]=n,c[f++]=p+o,c[f++]=l,c[f++]=_,c[f++]=p+u,this._vertexPtr=f,d.writeToTypedArray(this._texcoordData,this._texPtr),this._texPtr+=8}DrawMesh(i,s,a){const h=this._vertexData,n=this._texcoordData;if(a.length%3!=0)throw new Error("invalid index buffer length");for(let r=0,t=a.length;r<t;){const o=a[r++],l=a[r++],_=a[r++],u=3*o,d=3*l,c=3*_,f=2*o,p=2*l,x=2*_;this._ExtendQuadBatch();let t=this._vertexPtr,e=this._texPtr;h[t++]=i[0+u],h[t++]=i[1+u],h[t++]=i[2+u],h[t++]=i[0+d],h[t++]=i[1+d],h[t++]=i[2+d],h[t++]=i[0+c],h[t++]=i[1+c],h[t++]=i[2+c],h[t++]=i[0+c],h[t++]=i[1+c],h[t++]=i[2+c],n[e++]=s[0+f],n[e++]=s[1+f],n[e++]=s[0+p],n[e++]=s[1+p],n[e++]=s[0+x],n[e++]=s[1+x],n[e++]=s[0+x],n[e++]=s[1+x],this._vertexPtr=t,this._texPtr=e}}FullscreenQuad(t,e){this.SetCurrentZ(0),mat4.copy(tmpProjection,this._matP),mat4.copy(tmpModelView,this._matMV),this.SetDefaultRenderTargetProjectionState();const[r,i]=this.GetRenderTargetSize(this._currentRenderTarget),s=this.CalculateLookAtModelView2(0,0,this.GetDefaultCameraZ(i),0,0,0,i);if(this.SetModelViewMatrix(s),"crop"===t&&this._currentRenderTarget&&e){const a=this._width/2,h=this._height/2,n=e.GetWidth(),o=e.GetHeight(),l=this._currentRenderTarget.GetWidth(),_=this._currentRenderTarget.GetHeight(),u=Math.min(l,n),d=Math.min(_,o),c=Math.max(o-_,0),f=Math.max(_-o,0);tmpRect.set(-a,h-f,-a+u,h-d-f),tmpQuad.setFromRect(tmpRect),tmpRect.set(0,c,u,d+c),tmpRect.divide(n,o),this.Quad3(tmpQuad,tmpRect)}else{const p=r/2,x=i/2;this.Rect2(-p,x,p,-x)}this.SetProjectionMatrix(tmpProjection),this.SetModelViewMatrix(tmpModelView)}StartRenderingPoints(t){if(!this._lastPointTexCoords.equals(t)){this._lastPointTexCoords.copy(t);const e=this.PushBatch();e.InitSetPointTexCoords(t),this._topOfBatch=0}}FinishRenderingPoints(){}Point(t,e,r,i){this._pointPtr>=LAST_POINT&&this.EndBatch();let s=this._pointPtr;const a=this._baseZ+this._currentZ;if(2===this._topOfBatch&&this._lastPointZ===a)this._batch[this._batchPtr-1]._indexCount++;else{const n=this.PushBatch();n.InitPoints(s,a),this._topOfBatch=2,this._lastPointZ=a}const h=this._pointData;h[s++]=t,h[s++]=e,h[s++]=r,h[s++]=i,this._pointPtr=s}SetProgram(t){if(this._lastProgram!==t){const e=this.PushBatch();e.InitSetProgram(t),this._lastProgram=t,this._topOfBatch=0,this._currentStateGroup=null}}GetProgram(){return this._lastProgram}SetDeviceTransformTextureFillMode(){this.SetProgram(this._spDeviceTransformTextureFill)}SetGradientColor(t){const e=this.PushBatch();e.InitSetGradientColor(t),this._topOfBatch=0}SetEllipseParams(t,e,r=1){const i=this.PushBatch();i.InitSetEllipseParams(t,e,r),this._topOfBatch=0}SetTilemapInfo(t,e,r,i,s,a,h){if(this._lastProgram!==this._spTilemapFill)throw new Error("must set tilemap fill mode first");const n=this.PushBatch();n.InitSetTilemapInfo(t,e,r,i,s,a,h),this._topOfBatch=0}SetTileRandomizationInfo(t,e,r,i,s,a,h){if(this._lastProgram!==this._spTileRandomization)throw new Error("must set tile randomization mode first");const n=this.PushBatch();n.InitSetTileRandomizationInfo(t,e,r,i,s,a,h),this._topOfBatch=0}SetProgramParameters(t,e,r,i,s,a,h,n,o,l,_){const u=this._lastProgram;if(_%=10800,u._hasAnyOptionalUniforms&&!u.AreOptionalUniformsAlreadySetInBatch(e,r,i,s,a,h,n,o,l,_)){const d=this.PushBatch(),c=(d.InitSetProgramParameters(),u.SetOptionalUniformsInBatch(e,r,i,s,a,h,n,o,l,_),d._mat4param),f=(c[0]=a,c[1]=h,e.writeToTypedArray(c,2),c[6]=o,c[7]=l,r.writeToTypedArray(c,12),d._colorParam),p=(s.writeToTypedArray(f,0),f[1]);f[1]=f[3],f[3]=p,i.writeToTypedArray(d._srcOriginRect,0),d._startIndex=_,d._indexCount=n,u._uSamplerBack.IsUsed()?d._texParam=t?t.GetTexture():null:d._texParam=null,this._topOfBatch=0}}SetProgramCustomParameters(t){const e=this._lastProgram;if(0!==t.length&&!e.AreCustomParametersAlreadySetInBatch(t)){const r=this.PushBatch();r.InitSetProgramCustomParameters(),e.SetCustomParametersInBatch(t),C3.shallowAssignArray(r._shaderParams,t),this._topOfBatch=0}}ClearRgba(t,e,r,i){const s=this.PushBatch();s.InitClearSurface2(t,e,r,i),this._topOfBatch=0}Clear(t){const e=this.PushBatch();e.InitClearSurface(t),this._topOfBatch=0}Start(){}Finish(){super.Finish(),this._gl.flush()}ClearDepth(){if(this._usesDepthBuffer&&this._currentRenderTarget&&this._currentRenderTarget.HasDepthBuffer()){const t=this.PushBatch();t.InitClearDepth(this._isDepthEnabled),this._topOfBatch=0}}SetDepthEnabled(t){if(this._isDepthEnabled!==(t=!!t)&&this._usesDepthBuffer){this._isDepthEnabled=t;const e=this.PushBatch();e.InitSetDepthEnabled(t),this._topOfBatch=0}}IsDepthEnabled(){return this._isDepthEnabled}_GetDepthBuffer(){return this._depthBuffer}_CanSampleDepth(){return this._canSampleDepth}SetDepthSamplingEnabled(t){if(t=!!t,this._canSampleDepth&&this._isDepthSamplingEnabled!==t){if(t&&this.IsDepthEnabled())throw new Error("depth still enabled");this._isDepthSamplingEnabled=t;const e=this.PushBatch();e.InitSetDepthSamplingEnabled(t),this._topOfBatch=0}}SetScissorRect(t,e,r,i,s=0){if(t=Math.floor(t),e=Math.floor(e),r=Math.floor(r),i=Math.floor(i),!this._lastScissorRect.equalsWH(t,e,r,i)){this._lastScissorRect.setWH(t,e,r,i);const a=s||this.GetRenderTargetSize(this.GetRenderTarget())[1],h=(e=a-e-i,this.PushBatch());h.InitSetScissor(!0,t,e,r,i),this._topOfBatch=0}}RemoveScissorRect(){if(-1!==this._lastScissorRect.getRight()){this._lastScissorRect.set(0,0,-1,-1);const t=this.PushBatch();t.InitSetScissor(!1,0,0,0,0),this._topOfBatch=0}}CheckForQueryResults(){for(const t of this._allQueryResultBuffers)t.CheckForResults(this._frameNumber)}IsContextLost(){return!this._gl||this._gl.isContextLost()||this._isInitialisingAfterContextRestored}OnContextLost(){super.OnDeviceOrContextLost(),C3.Gfx.WebGLRendererTexture.OnContextLost(),C3.Gfx.WebGLRenderTarget.OnContextLost(),C3.Gfx.RendererText.OnContextLost();for(const t of this._allQueryResultBuffers)t.Clear();this._extensions=[],this._timerExt=null,this._parallelShaderCompileExt=null,this._anisotropicExt=null,this._depthTextureExt=null,this._fragDepthExt=null,this._stdDerivativesExt=null,this._textureLodExt=null,this._maxAnisotropy=0,this._unmaskedVendor="(unavailable)",this._unmaskedRenderer="(unavailable)",this._lastProgram=null,this._spDeviceTransformTextureFill=null,this._depthBuffer=null;for(const e of this._stateGroups.values())e.OnContextLost()}async OnContextRestored(){this._isInitialisingAfterContextRestored=!0,await this.InitState(),this._isInitialisingAfterContextRestored=!1;for(const t of this._stateGroups.values())t.OnContextRestored(this);this.SetSize(this._width,this._height,!0)}CreateStaticTexture(t,e){if(this.IsContextLost())throw new Error("context lost");this.EndBatch();const r=C3.New(C3.Gfx.WebGLRendererTexture,this);return r._CreateStatic(t,e),r}async CreateStaticTextureAsync(e,r){if(this.IsContextLost())throw new Error("context lost");if(r=Object.assign({},r),C3.Supports.ImageBitmapOptions){let t=await createImageBitmap(e,{"premultiplyAlpha":"premultiply"});const i=r.wrapX&&"clamp-to-edge"!==r.wrapX||r.wrapY&&"clamp-to-edge"!==r.wrapY,s=C3.isPOT(t.width)&&C3.isPOT(t.height);return this.SupportsNPOTTextures()||s||!i?r.premultiplyAlpha=!1:C3.Supports.ImageBitmapOptionsResize?(t=await createImageBitmap(e,{"premultiplyAlpha":"premultiply","resizeWidth":C3.nextHighestPowerOfTwo(t.width),"resizeHeight":C3.nextHighestPowerOfTwo(t.height)}),r.premultiplyAlpha=!1):t=await createImageBitmap(e,{"premultiplyAlpha":"none"}),C3.Asyncify(()=>this.CreateStaticTexture(t,r))}if(e instanceof Blob){if("undefined"==typeof Image)throw new Error("texture upload variant not supported in worker");const t=await C3.BlobToImage(e);e=t}return C3.Asyncify(()=>this.CreateStaticTexture(e,r))}CreateDynamicTexture(t,e,r){this.EndBatch();const i=C3.New(C3.Gfx.WebGLRendererTexture,this);return i._CreateDynamic(t,e,r),i}UpdateTexture(t,e,r){this.EndBatch(),e._Update(t,r)}DeleteTexture(t){t&&(t.SubtractReference(),0<t.GetReferenceCount()||(this.EndBatch(),t===this._lastTexture0&&(this._gl.bindTexture(this._gl.TEXTURE_2D,null),this._lastTexture0=null),t===this._lastTexture1&&(this._gl.activeTexture(this._gl.TEXTURE1),this._gl.bindTexture(this._gl.TEXTURE_2D,null),this._gl.activeTexture(this._gl.TEXTURE0),this._lastTexture1=null),t._Delete()))}CreateRenderTarget(t){let e=this._width,r=this._height,i=!0;if(t&&("number"==typeof t.width&&(e=Math.floor(t.width),i=!1),"number"==typeof t.height)&&(r=Math.floor(t.height),i=!1),e<=0||r<=0)throw new Error("invalid size");this.EndBatch();const s=C3.New(C3.Gfx.WebGLRenderTarget,this);return s._Create(e,r,Object.assign({isDefaultSize:i},t)),this._currentRenderTarget=null,this._batchState.currentFramebuffer=null,this._batchState.currentFramebufferNoDepth=null,s}SetRenderTarget(t,e=!0){if(t!==this._currentRenderTarget){t&&t.IsDefaultSize()&&t._Resize(this._width,this._height);const r=this.PushBatch();r.InitSetRenderTarget(t),this._currentRenderTarget=t,this._topOfBatch=0,e&&this.SetDefaultRenderTargetProjectionState()}}GetRenderTarget(){return this._currentRenderTarget}GetRenderTargetSize(t){return t?[t.GetWidth(),t.GetHeight()]:[this._width,this._height]}CopyRenderTarget(t,e="stretch"){if(this._version<2||this._currentRenderTarget&&0<this._currentRenderTarget.GetMultisampling())this.SetCopyBlend(),this.ResetColor(),this.DrawRenderTarget(t,e);else{const r=this.PushBatch();r.InitBlitFramebuffer(t,this._currentRenderTarget,e),this._topOfBatch=0}}DrawRenderTarget(t,e="stretch"){const r=t.GetTexture();if(!r)throw new Error("not a texture-backed render target");this.SetTexture(r),this.FullscreenQuad(e,r)}InvalidateRenderTarget(t){if(!(this._version<2)){const e=this.PushBatch();e.InitInvalidateFramebuffer(t._GetFramebuffer()),this._topOfBatch=0}}DeleteRenderTarget(t){this.SetRenderTarget(null),this.EndBatch();const e=t.GetTexture();e===this._lastTexture0&&(this._gl.bindTexture(this._gl.TEXTURE_2D,null),this._lastTexture0=null),e===this._lastTexture1&&(this._gl.activeTexture(this._gl.TEXTURE1),this._gl.bindTexture(this._gl.TEXTURE_2D,null),this._gl.activeTexture(this._gl.TEXTURE0),this._lastTexture1=null),t._Delete()}async ReadBackRenderTargetToImageData(t,e,r){this.EndBatch();const i=this._currentRenderTarget;let s,a,h,n=(h=t?(s=t.GetWidth(),a=t.GetHeight(),t._GetFramebuffer()):(s=this.GetWidth(),a=this.GetHeight(),null),0),o=0,l=s,_=a;if(r){n=C3.clamp(Math.floor(r.getLeft()),0,s-1),o=C3.clamp(Math.floor(r.getTop()),0,a-1);let t=r.width(),e=(t=0===t?s-n:C3.clamp(Math.floor(t),0,s-n),r.height());e=0===e?a-o:C3.clamp(Math.floor(e),0,a-o),l=t,_=e,o=a-(o+_)}const u=this._gl,d=(u.bindFramebuffer(u.FRAMEBUFFER,h),()=>{u.bindFramebuffer(u.FRAMEBUFFER,null),this._currentRenderTarget=null,this._batchState.currentFramebuffer=null,this._batchState.currentFramebufferNoDepth=null,this.SetRenderTarget(i)});let c;if(!e&&2<=this.GetWebGLVersionNumber()){u.bindFramebuffer(u.READ_FRAMEBUFFER,h);const f=u.createBuffer(),p=l*_*4,x=u["PIXEL_PACK_BUFFER"],E=(u.bindBuffer(x,f),u.bufferData(x,p,u["STREAM_READ"]),u.readPixels(n,o,l,_,u.RGBA,u.UNSIGNED_BYTE,0),u.bindFramebuffer(u.READ_FRAMEBUFFER,null),u.bindBuffer(x,null),d(),u["fenceSync"](u["SYNC_GPU_COMMANDS_COMPLETE"],0));await this._WaitForObjectReady(()=>u["getSyncParameter"](E,u["SYNC_STATUS"])===u["SIGNALED"]),u["deleteSync"](E),c=new ImageData(l,_),u.bindBuffer(x,f),u["getBufferSubData"](x,0,new Uint8Array(c.data.buffer),0,p),u.bindBuffer(x,null),u.deleteBuffer(f)}else c=new ImageData(l,_),u.readPixels(n,o,l,_,u.RGBA,u.UNSIGNED_BYTE,new Uint8Array(c.data.buffer)),d();return c}CoplanarStartStencilPass(){this.SetDepthEnabled(!0);const t=this.PushBatch();t.InitCoplanarStartStencilPass(),this._topOfBatch=0,this._coplanarMode=1}CoplanarStartColorPass(){this.SetDepthEnabled(!1);const t=this.PushBatch();t.InitCoplanarStartColorPass(),this._topOfBatch=0,this._coplanarMode=2}IsCoplanarColorPass(){return 2===this._coplanarMode}CoplanarRestoreStandardRendering(){this.SetDepthEnabled(!0);const t=this.PushBatch();t.InitCoplanarRestore(),this._topOfBatch=0,this._coplanarMode=0}StartQuery(t){if(this.SupportsGPUProfiling()){const e=this.PushBatch();e.InitStartQuery(t),this._topOfBatch=0}}EndQuery(t){if(this.SupportsGPUProfiling()){const e=this.PushBatch();e.InitEndQuery(t),this._topOfBatch=0}}_WaitForObjectReady(e){const t=new Promise(t=>pendingPolls.add({resolve:t,checkFunc:e}));return-1===pollRafId&&(pollRafId=self.requestAnimationFrame(CheckPendingPolls)),t}GetEstimatedBackBufferMemoryUsage(){return this._width*this._height*(this._attribs["alpha"]?4:3)}GetEstimatedRenderBufferMemoryUsage(){let t=0;for(const e of C3.Gfx.WebGLRenderTarget.allRenderTargets())e.GetTexture()||(t+=e.GetEstimatedMemoryUsage());return t}GetEstimatedTextureMemoryUsage(){let t=0;for(const e of C3.Gfx.WebGLRendererTexture.allTextures())t+=e.GetEstimatedMemoryUsage();return t}GetWebGLVersionString(){return this._versionString}GetWebGLVersionNumber(){return this._version}GetDisplayName(){return"webgl"+this.GetWebGLVersionNumber()}SupportsNPOTTextures(){return 2<=this.GetWebGLVersionNumber()}GetMaxTextureSize(){return this._maxTextureSize}GetMinPointSize(){return this._minPointSize}GetMaxPointSize(){return this._maxPointSize}SupportsHighP(){return 0!==this._highpPrecision}GetHighPPrecision(){return this._highpPrecision}GetUnmaskedVendor(){return this._unmaskedVendor}GetUnmaskedRenderer(){return this._unmaskedRenderer}GetWebGLExtensionsAnalyticsString(){if(2<=this.GetWebGLVersionNumber())return"webgl2";{const t=[];return this._fragDepthExt&&t.push("EXT_frag_depth"),this._stdDerivativesExt&&t.push("OES_standard_derivatives"),this._textureLodExt&&t.push("EXT_shader_texture_lod"),0<t.length?"webgl1:"+t.join(","):"webgl1:none"}}GetExtensions(){return this._extensions}SupportsGPUProfiling(){return!!this._timerExt}_GetDisjointTimerQueryExtension(){return this._timerExt}_GetParallelShaderCompileExtension(){return this._parallelShaderCompileExt}_GetAnisotropicExtension(){return this._anisotropicExt}_GetMaxAnisotropy(){return this._maxAnisotropy}_AddQueryResultBuffer(t){this._allQueryResultBuffers.add(t)}_RemoveQueryResultBuffer(t){this._allQueryResultBuffers.delete(t)}_GetTimeQueryStack(){return this._timeQueryStack}GetContext(){return this._gl}_InitBlendModes(t){this._InitBlendModeData([["normal",t.ONE,t.ONE_MINUS_SRC_ALPHA],["additive",t.ONE,t.ONE],["xor",t.ONE,t.ONE_MINUS_SRC_ALPHA],["copy",t.ONE,t.ZERO],["destination-over",t.ONE_MINUS_DST_ALPHA,t.ONE],["source-in",t.DST_ALPHA,t.ZERO],["destination-in",t.ZERO,t.SRC_ALPHA],["source-out",t.ONE_MINUS_DST_ALPHA,t.ZERO],["destination-out",t.ZERO,t.ONE_MINUS_SRC_ALPHA],["source-atop",t.DST_ALPHA,t.ONE_MINUS_SRC_ALPHA],["destination-atop",t.ONE_MINUS_DST_ALPHA,t.SRC_ALPHA]])}CreateWebGLText(){return this.CreateRendererText()}};
 }
 
+// ../lib/gfx/webgpu/webgpuRenderer.js
+{
+const C3=self.C3,glMatrix=self.glMatrix,vec3=glMatrix.vec3,mat4=glMatrix.mat4,assert=self.assert,GPUBufferUsage=self["GPUBufferUsage"],GPUShaderStage=self["GPUShaderStage"],GPUMapMode=self["GPUMapMode"],GPUTextureUsage=self["GPUTextureUsage"],DEFAULT_WEBGPURENDERER_OPTS={powerPreference:"default",depth:!1,failIfMajorPerformanceCaveat:!1,canSampleBackbuffer:!1,usesBackgroundBlending:!1,canSampleDepth:!1},MAX_VERTICES=42e3,MAX_INDICES=MAX_VERTICES/2*3,NUM_VERTEX_COMPONENTS=3,MAX_POINTS=MAX_VERTICES/4,MAX_COLORS=MAX_VERTICES/4,LAST_QUAD_PTR=MAX_VERTICES/4-1,LAST_POINT_PTR=4*MAX_POINTS-16,FLAG_IN_DRAW=1,FLAG_DRAWING_POINTS=2,FLAG_SCISSOR_ENABLED=4,FLAG_SCISSOR_CHANGED=8,FLAG_DRAW_STATE_CHANGED=16,FLAG_PIPELINE_CHANGED=32,FLAG_TEX_BINDGROUP_CHANGED=64,FLAG_BACKTEX_BINDGROUP_CHANGED=128,FLAG_DEPTHTEX_BINDGROUP_CHANGED=256,FLAG_TRANSFORM_CHANGED=512,FLAG_VERTEX_UNIFORM_CHANGED=1024,FLAG_FRAG_UNIFORM_CHANGED=2048,FLAG_FRAG_C3PARAMS_CHANGED=4096,FLAG_BUFFER_BINDGROUP_CHANGED=8192,FLAG_DID_ADD_COMMAND=16384,FLAG_CONTEXT_LOST=32768,FLAG_MULTITEXTURE_ENABLED=65536,FLAG_USE_DEPTH_BUFFER=1<<17,FLAG_DEPTH_ENABLED=1<<18,FLAG_RENDERTARGET_HAS_DEPTH=1<<19,FLAG_CLEAR_DEPTH=1<<20,FLAG_COPLANAR_STENCIL_PASS=1<<21,FLAG_COPLANAR_COLOR_PASS=1<<22,FLAG_CLEAR_STENCIL=1<<23,FLAG_AUTOSIZE_DEPTH_BUFFER=1<<24,FLAG_SUPPORTS_TIMESTAMP_QUERY=1<<25,FLAG_SUPPORTS_F16=1<<26,FLAG_USE_NORMALIZED_COORDS=1<<27,FLAG_DID_CHANGE_TRANSFORM=1<<28,CHANGED_FLAGS_MASK=FLAG_DRAW_STATE_CHANGED|FLAG_PIPELINE_CHANGED|FLAG_BUFFER_BINDGROUP_CHANGED|FLAG_TEX_BINDGROUP_CHANGED|FLAG_BACKTEX_BINDGROUP_CHANGED|FLAG_DEPTHTEX_BINDGROUP_CHANGED,END_DRAW_FLAGS_MASK=CHANGED_FLAGS_MASK|FLAG_SCISSOR_CHANGED|FLAG_IN_DRAW,NEW_RENDERPASS_FLAGS=CHANGED_FLAGS_MASK|FLAG_DID_ADD_COMMAND,CHANGED_UNIFORM_BUFFER_MASK=FLAG_TRANSFORM_CHANGED|FLAG_VERTEX_UNIFORM_CHANGED|FLAG_FRAG_UNIFORM_CHANGED|FLAG_FRAG_C3PARAMS_CHANGED,SIZEOF_F32=4,defaultTexCoordsQuad=new C3.Quad(0,0,1,0,1,1,0,1),tempVec2=C3.New(C3.Vector2),tempRect=C3.New(C3.Rect),tempRect2=C3.New(C3.Rect),tempQuad=C3.New(C3.Quad);let DEBUG=!1;function DebugLog(e){console.log("[WebGPU] "+e)}C3.Gfx.WebGPURenderer=class extends C3.Gfx.RendererBase{constructor(e){super(e),this._adapterOpts=null,this._adapter=null,this._adapterInfo=null,this._device=null,this._canvas=null,this._presentCtx=null,this._swapChainFormat="",this._swapChainTexture=null,this._swapChainTexView=null,this._viewportWidth=0,this._viewportHeight=0,this._matTransform=mat4.create(),this._depthBuffer=null,this._nullDepthBuffer=null,this._depthBufferView=null,this._nullDepthBufferView=null,this._depthBufferBindGroup=null,this._nullDepthBufferBindGroup=null,this._depthBufferWidth=0,this._depthBufferHeight=0,this._vertexUniformBuffer=null,this._fragmentUniformBuffer=null,this._fragmentC3ParamsBuffer=null,this._fragmentDefaultCustomParamsBuffer=null,this._vertexBuffer=null,this._texcoordBuffer=null,this._colorBuffer=null,this._indexBuffer=null,this._pointBuffer=null,this._vertexUniformBufferLayout=C3.Gfx.WebGPUShaderProgram.GetVertexUniformBufferLayout(),this._vertexUniformBufferSize=C3.Gfx.WebGPUShaderProgram.GetVertexUniformBufferSize(),this._vertexUniformArrayBuffer=null,this._vertexUniformf32=null,this._fragUniformBufferLayout=C3.Gfx.WebGPUShaderProgram.GetFragmentUniformBufferLayout(),this._fragUniformBufferSize=C3.Gfx.WebGPUShaderProgram.GetFragmentUniformBufferSize(),this._fragUniformArrayBuffer=null,this._fragUniformf32=null,this._fragC3ParamsLayout=C3.Gfx.WebGPUShaderProgram.GetFragmentC3ParamsBufferLayout(),this._fragC3ParamsSize=C3.Gfx.WebGPUShaderProgram.GetFragmentC3ParamsBufferSize(),this._fragC3ParamsArrayBuffer=null,this._fragC3Paramsf32=null,this._fragC3Paramsu32=null,this._vertexData=new Float32Array(MAX_VERTICES*NUM_VERTEX_COMPONENTS),this._texcoordData=new Float32Array(3*MAX_VERTICES),this._colorData=new Float32Array(4*MAX_COLORS),this._indexData=new Uint16Array(MAX_INDICES),this._pointData=new Float32Array(4*MAX_POINTS),this._quadPtr=0,this._currentMultiTextureIndex=0,this._currentColor=C3.New(C3.Color,1,1,1,1),this._pointPtr=0,this._bufferManager=C3.New(C3.Gfx.WebGPUBufferManager,this),this._flags=FLAG_CONTEXT_LOST,this._drawFirstIndex=0,this._drawIndexCount=0,this._vertexUniformUpdateStart=0,this._vertexUniformUpdateEnd=0,this._fragUniformUpdateStart=0,this._fragUniformUpdateEnd=0,this._fragC3ParamsUpdateStart=0,this._fragC3ParamsUpdateEnd=0,this._scissorRect=C3.New(C3.Rect,0,0,0,0),this._currentColor2=C3.New(C3.Color,1,1,1,1),this._currentPointColor=C3.New(C3.Color,1,1,1,1),this._currentPointTexCoords=C3.New(C3.Rect,0,0,0,0),this._currentVertexZElevation=0,this._textureFormat="",this._bufferBindGroupLayout=null,this._defaultBufferBindGroup=null,this._textureBindGroupLayout=null,this._backTextureBindGroupLayout=null,this._depthTextureBindGroupLayout=null,this._nullTexture=null,this._currentTexture=null,this._currentTextureBindGroup=null,this._currentBackTexture=null,this._currentBackTextureBindGroup=null,this._currentDepthTextureBindGroup=null,this._currentBufferBindGroup=null,this._mipmapGeneratorPipeline=null,this._availableMultiTextures=new Set,this._nonFullMultiTexGroups=new Set,this._maxTextureSize=8192,this._pipelineLayout=null,this._defaultVertexModule=null,this._normVertexModule=null,this._currentProgram=null,this._currentBlendMode=0,this._currentMultisampleCount=0,this._mipmapGeneratorProgram=null,this._samplerMap=new Map,this._commandEncoder=null,this._currentRenderPass=null,this._commandBuffers=[],this._backbufferRenderTarget=null,this._currentRenderTarget=null,this._canSampleBackbuffer=!1,this._usesBackgroundBlending=!1,this._canSampleDepth=!1,this._frameTimeQuerySet=null,this._timestampIsMeasuring=!1,this._timestampStartIndex=-1,this._timestampEndIndex=-1,this._timestampStartedIndices=new Set,this.ondevicelost=null,this.ondevicerestored=null,this._InitBlendModes()}IsWebGPU(){return!0}_SetFlag(e,t){t?this._flags|=e:this._flags&=~e}_IsFlagSet(e){return 0!=(this._flags&e)}async Create(e,t){if(t=Object.assign({},DEFAULT_WEBGPURENDERER_OPTS,t),!navigator["gpu"])throw new Error("renderer-unavailable (WebGPU not supported)");t.depth&&(this._flags|=FLAG_USE_DEPTH_BUFFER),this._canSampleBackbuffer=!!t.canSampleBackbuffer,this._usesBackgroundBlending=!!t.usesBackgroundBlending,this._adapterOpts={},this._canSampleDepth=!(!t.depth||!t.canSampleDepth),"default"!==t.powerPreference&&(this._adapterOpts["powerPreference"]=t.powerPreference),this._canvas=e,this.FillIndexBufferData(this._indexData),await this._InitDevice(t.failIfMajorPerformanceCaveat)}async _InitDevice(e){for(this._device=null,await this._TryGetDeviceOnCurrentAdapter(e);!this._device;)this._adapter=null,await this._TryGetDeviceOnCurrentAdapter(e);await this.InitState()}async _TryGetDeviceOnCurrentAdapter(e){if(!this._adapter){if(this._adapter=await navigator["gpu"]["requestAdapter"](this._adapterOpts),!this._adapter)throw new Error("renderer-unavailable (no WebGPU adapter available)");if(e&&this._adapter["isFallbackAdapter"])throw new Error("renderer-unavailable (WebGPU provided fallback adapter)")}const t=[];if(this._adapter["features"].has("timestamp-query")&&t.push("timestamp-query"),this._adapter["features"].has("shader-f16")&&t.push("shader-f16"),this._device=await this._adapter["requestDevice"]({"requiredFeatures":t}),!this._device)return null;this._maxTextureSize=this._device["limits"]["maxTextureDimension2D"],this._SetFlag(FLAG_SUPPORTS_TIMESTAMP_QUERY,this._device["features"].has("timestamp-query")),this._SetFlag(FLAG_SUPPORTS_F16,this._device["features"].has("shader-f16")),this._device["lost"].then(e=>this._OnDeviceLost(e)),this._SetFlag(FLAG_CONTEXT_LOST,!1)}async _OnDeviceLost(e){console.log("[WebGPU] Device lost: ",e),super.OnDeviceOrContextLost(),this._bufferManager.OnContextLost(),C3.Gfx.WebGPURendererTexture.OnContextLost(),C3.Gfx.WebGPURenderTarget.OnContextLost(),C3.Gfx.RendererText.OnContextLost(),this._swapChainFormat="",this._swapChainTexture=null,this._swapChainTexView=null,this._depthBuffer=null,this._depthBufferView=null,this._nullDepthBuffer=null,this._nullDepthBufferView=null,this._depthBufferBindGroup=null,this._nullDepthBufferBindGroup=null,this._vertexBuffer=null,this._texcoordBuffer=null,this._colorBuffer=null,this._indexBuffer=null,this._pointBuffer=null,this._vertexUniformBuffer=null,this._fragmentUniformBuffer=null,this._fragmentC3ParamsBuffer=null,this._fragmentDefaultCustomParamsBuffer=null,this._defaultBufferBindGroup=null,this._bufferBindGroupLayout=null,this._currentBufferBindGroup=null,this._textureBindGroupLayout=null,this._backTextureBindGroupLayout=null,this._depthTextureBindGroupLayout=null,this._pipelineLayout=null,this._currentProgram=null,this._nullTexture=null,this._currentTexture=null,this._currentTextureBindGroup=null,this._currentBackTexture=null,this._currentBackTextureBindGroup=null,this._currentDepthTextureBindGroup=null,this._defaultVertexModule=null,this._normVertexModule=null,this._backbufferRenderTarget=null,this._currentRenderTarget=null,this._mipmapGeneratorPipeline=null,this._frameTimeQuerySet=null,this._availableMultiTextures.clear(),this._nonFullMultiTexGroups.clear(),this._samplerMap.clear();for(const t of this._stateGroups.values())t.OnContextLost();this._device=null,this._adapter=null,this._adapterInfo=null,this._flags|=FLAG_CONTEXT_LOST,this.ondevicelost&&this.ondevicelost(),await this._InitDevice();for(const r of this._stateGroups.values())r.OnContextRestored(this);this.SetSize(this._width,this._height,!0),this.ondevicerestored&&this.ondevicerestored()}async InitState(){super.InitState();const e=this._device;this._swapChainFormat=navigator["gpu"]["getPreferredCanvasFormat"](),this._swapChainTexture=null,this._swapChainTexView=null;let t=GPUTextureUsage["RENDER_ATTACHMENT"];this._canSampleBackbuffer&&(t|=GPUTextureUsage["TEXTURE_BINDING"]),this._usesBackgroundBlending&&(t|=GPUTextureUsage["COPY_SRC"]),this._swapChainFormat.startsWith("rgba8")||this._swapChainFormat.startsWith("bgra8")?this._textureFormat=this._swapChainFormat:this._textureFormat="rgba8unorm",this._flags&=FLAG_USE_DEPTH_BUFFER|FLAG_SUPPORTS_TIMESTAMP_QUERY|FLAG_SUPPORTS_F16,this._flags|=CHANGED_UNIFORM_BUFFER_MASK,this._IsFlagSet(FLAG_USE_DEPTH_BUFFER)&&(this._flags|=FLAG_DEPTH_ENABLED|FLAG_RENDERTARGET_HAS_DEPTH|FLAG_AUTOSIZE_DEPTH_BUFFER),this._quadPtr=0,this._currentBlendMode=0,this._currentMultisampleCount=0,this._currentColor.setRgba(1,1,1,1),this._currentColor2.setRgba(1,1,1,1),this._currentPointColor.setRgba(1,1,1,1),this._vertexUniformArrayBuffer=new ArrayBuffer(this._vertexUniformBufferSize),this._vertexUniformf32=new Float32Array(this._vertexUniformArrayBuffer),this._fragUniformArrayBuffer=new ArrayBuffer(this._fragUniformBufferSize),this._fragUniformf32=new Float32Array(this._fragUniformArrayBuffer),this._fragC3ParamsArrayBuffer=new ArrayBuffer(this._fragC3ParamsSize),this._fragC3Paramsf32=new Float32Array(this._fragC3ParamsArrayBuffer),this._fragC3Paramsu32=new Uint32Array(this._fragC3ParamsArrayBuffer),this._vertexBuffer=e["createBuffer"]({"label":"vertexbuffer","size":this._vertexData.byteLength,"usage":GPUBufferUsage["VERTEX"]|GPUBufferUsage["COPY_DST"]}),this._texcoordBuffer=e["createBuffer"]({"label":"texcoordbuffer","size":this._texcoordData.byteLength,"usage":GPUBufferUsage["VERTEX"]|GPUBufferUsage["COPY_DST"]}),this._colorBuffer=e["createBuffer"]({"label":"colorbuffer","size":this._colorData.byteLength,"usage":GPUBufferUsage["VERTEX"]|GPUBufferUsage["STORAGE"]|GPUBufferUsage["COPY_DST"]}),this._indexBuffer=e["createBuffer"]({"label":"indexbuffer","mappedAtCreation":!0,"size":this._indexData.byteLength,"usage":GPUBufferUsage["INDEX"]});const r=this._indexBuffer["getMappedRange"](),a=(new Uint16Array(r).set(this._indexData),this._indexBuffer["unmap"](),this._pointBuffer=e["createBuffer"]({"label":"pointbuffer","size":this._pointData.byteLength,"usage":GPUBufferUsage["VERTEX"]|GPUBufferUsage["STORAGE"]|GPUBufferUsage["COPY_DST"]}),this._bufferBindGroupLayout=e["createBindGroupLayout"]({"label":"bufferbindgrouplayout","entries":[{"binding":0,"visibility":GPUShaderStage["VERTEX"],"buffer":{"type":"uniform","minBindingSize":this._vertexUniformBufferSize}},{"binding":1,"visibility":GPUShaderStage["FRAGMENT"],"buffer":{"type":"uniform","minBindingSize":this._fragUniformBufferSize}},{"binding":2,"visibility":GPUShaderStage["VERTEX"],"buffer":{"type":"read-only-storage","minBindingSize":this._colorData.byteLength}},{"binding":3,"visibility":GPUShaderStage["VERTEX"],"buffer":{"type":"read-only-storage","minBindingSize":this._pointData.byteLength}},{"binding":4,"visibility":GPUShaderStage["FRAGMENT"],"buffer":{"type":"uniform","minBindingSize":this._fragC3ParamsSize}},{"binding":5,"visibility":GPUShaderStage["FRAGMENT"],"buffer":{"type":"uniform"}}]}),[]),i=C3.Gfx.WebGPUMultiTextureGroup.GetMultiTextureLimit();for(let e=0;e<i;++e)a.push({"binding":2*e,"visibility":GPUShaderStage["FRAGMENT"],"sampler":{"type":"filtering"}},{"binding":2*e+1,"visibility":GPUShaderStage["FRAGMENT"],"texture":{"sampleType":"float","viewDimension":"2d"}});this._textureBindGroupLayout=e["createBindGroupLayout"]({"label":"texturebindgrouplayout","entries":a}),this._backTextureBindGroupLayout=e["createBindGroupLayout"]({"label":"backtexturebindgrouplayout","entries":[{"binding":0,"visibility":GPUShaderStage["FRAGMENT"],"sampler":{"type":"non-filtering"}},{"binding":1,"visibility":GPUShaderStage["FRAGMENT"],"texture":{"sampleType":"float","viewDimension":"2d"}}]}),this._depthTextureBindGroupLayout=e["createBindGroupLayout"]({"label":"depthtexturebindgrouplayout","entries":[{"binding":0,"visibility":GPUShaderStage["FRAGMENT"],"sampler":{"type":"non-filtering"}},{"binding":1,"visibility":GPUShaderStage["FRAGMENT"],"texture":{"sampleType":"depth","viewDimension":"2d"}}]}),this._pipelineLayout=e["createPipelineLayout"]({"bindGroupLayouts":[this._bufferBindGroupLayout,this._textureBindGroupLayout,this._backTextureBindGroupLayout,this._depthTextureBindGroupLayout]});const s=C3.Gfx.WebGPUShaderProgram,n=this.SupportsF16(),_=(this._defaultVertexModule=e["createShaderModule"]({"label":"<default vertex module>","code":s._PreprocessVertexShaderCode(s.GetDefaultVertexShaderSource(),n)}),this._defaultVertexModule["getCompilationInfo"]().then(e=>s.ReportShaderCompilationInfo("<default>","vertex",e)),this._normVertexModule=e["createShaderModule"]({"label":"<normalized vertex module>","code":s._PreprocessVertexShaderCode(s.GetNormalizedVertexShaderSource(),n)}),this._normVertexModule["getCompilationInfo"]().then(e=>s.ReportShaderCompilationInfo("<normalized>","vertex",e)),await Promise.all([s.Create(this,{name:"<default>",src:s.GetTextureFillFragmentShaderSource(!1),srcFragDepth:s.GetTextureFillFragmentShaderSource(!0),vertexSrc:s.GetTextureFillVertexShaderSource(),normVertexSrc:s.GetNormalizedTextureFillVertexShaderSource()}),s.Create(this,{name:"<generate-mipmap>",src:s._GetMipmapGeneratorFragmentSource(),vertexSrc:s._GetMipmapGeneratorVertexSource()}),s.Create(this,{name:"<point>",src:s._GetPointFragmentSource(!1),srcFragDepth:s._GetPointFragmentSource(!0),vertexSrc:s._GetPointVertexSource()}),s.Create(this,{name:"<tilemap>",src:s._GetTilemapFragmentShaderSource(!1),srcFragDepth:s._GetTilemapFragmentShaderSource(!0)}),s.Create(this,{name:"<fill>",src:s._GetColorFillFragmentShaderSource()}),s.Create(this,{name:"<lineargradient>",src:s._GetLinearGradientFillFragmentShaderSource()}),s.Create(this,{name:"<penumbra>",src:s._GetPenumbraFillFragmentShaderSource()}),s.Create(this,{name:"<hardellipse>",src:s._GetHardEllipseFillFragmentShaderSource()}),s.Create(this,{name:"<hardellipseoutline>",src:s._GetHardEllipseOutlineFragmentShaderSource()}),s.Create(this,{name:"<smoothellipse>",src:s._GetSmoothEllipseFillFragmentShaderSource()}),s.Create(this,{name:"<smoothellipseoutline>",src:s._GetSmoothEllipseOutlineFragmentShaderSource()}),s.Create(this,{name:"<tilerandomization>",src:s.GetTileRandomizationFragmentShaderSource(!1),srcFragDepth:s.GetTileRandomizationFragmentShaderSource(!0)}),s.Create(this,{name:"<smoothline>",src:s._GetSmoothLineFillFragmentShaderSource()})]));this._spTextureFill=_[0],this._mipmapGeneratorProgram=_[1],this._spPoints=_[2],this._spTilemapFill=_[3],this._spColorFill=_[4],this._spLinearGradientFill=_[5],this._spPenumbraFill=_[6],this._spHardEllipseFill=_[7],this._spHardEllipseOutline=_[8],this._spSmoothEllipseFill=_[9],this._spSmoothEllipseOutline=_[10],this._spTileRandomization=_[11],this._spSmoothLineFill=_[12];for(const o of _)this._AddShaderProgram(o);this._currentProgram=this._spTextureFill,this._flags|=FLAG_MULTITEXTURE_ENABLED,this._mipmapGeneratorPipeline=this._mipmapGeneratorProgram._GetMipmapGeneratorPipeline(),this._vertexUniformBuffer=e["createBuffer"]({"label":"vertexuniformbuffer","size":this._vertexUniformBufferSize,"usage":GPUBufferUsage["UNIFORM"]|GPUBufferUsage["COPY_DST"]}),this._fragmentUniformBuffer=e["createBuffer"]({"label":"fragmentuniformbuffer","size":this._fragUniformBufferSize,"usage":GPUBufferUsage["UNIFORM"]|GPUBufferUsage["COPY_DST"]}),this._fragmentC3ParamsBuffer=e["createBuffer"]({"label":"fragmentc3paramsuniformbuffer","size":this._fragC3ParamsSize,"usage":GPUBufferUsage["UNIFORM"]|GPUBufferUsage["COPY_DST"]}),this._fragmentDefaultCustomParamsBuffer=e["createBuffer"]({"label":"fragmentdefaultcustomparamsbuffer","size":16,"usage":GPUBufferUsage["UNIFORM"]|GPUBufferUsage["COPY_DST"]}),this._vertexUniformUpdateStart=0,this._vertexUniformUpdateEnd=this._vertexUniformBufferSize,this._UpdateTransformUniform(),this._UpdatePointTexCoordsUniform(),this._UpdateZElevationUniform(),this._fragUniformUpdateStart=0,this._fragUniformUpdateEnd=this._fragUniformBufferSize,this._UpdateColor2Uniform(),this._UpdatePointColorUniform(),this._defaultBufferBindGroup=this._CreateBufferBindGroup(this._fragmentDefaultCustomParamsBuffer),this._currentBufferBindGroup=this._defaultBufferBindGroup;const u=C3.CreateCanvas(32,32);u.getContext("2d"),this._nullTexture=await this.CreateStaticTextureAsync(u),this._currentTexture=null,this._currentTextureBindGroup=this._nullTexture._GetOwnTextureBindGroup(),this._currentMultiTextureIndex=0,this._currentBackTexture=null,this._currentBackTextureBindGroup=this._nullTexture._GetBackTextureBindGroup(),this._nullTexture._DisableMultiTexture(),this._nullDepthBuffer=this._device["createTexture"]({"label":"nulldepthbuffer","size":[8,8,1],"format":this._GetDepthBufferFormat(),"usage":GPUTextureUsage["TEXTURE_BINDING"]}),this._nullDepthBufferView=this._nullDepthBuffer["createView"]({"label":"nulldepthbufferview","aspect":"depth-only"}),this._nullDepthBufferBindGroup=this._device["createBindGroup"]({"label":"nulldepthbufferbindgroup","layout":this._depthTextureBindGroupLayout,"entries":[{"binding":0,"resource":this._GetSampler({sampling:"nearest"})},{"binding":1,"resource":this._nullDepthBufferView}]}),this._currentDepthTextureBindGroup=this._nullDepthBufferBindGroup,this._backbufferRenderTarget=C3.New(C3.Gfx.WebGPURenderTarget,this,!0),this._backbufferRenderTarget.GetTexture()._BackbufferTextureSetProperties(t,this._swapChainFormat),this._currentRenderTarget=this._backbufferRenderTarget,this._CreateCommandEncoder(),this._adapterInfo=this._adapter["info"],this._presentCtx||(this._presentCtx=this._canvas.getContext("webgpu")),this._presentCtx["configure"]({"device":e,"format":this._swapChainFormat,"usage":t,"alphaMode":"premultiplied"}),DEBUG&&DebugLog("Initialised state")}_CreateBufferBindGroup(e){return this._device["createBindGroup"]({"layout":this._bufferBindGroupLayout,"entries":[{"binding":0,"resource":{"buffer":this._vertexUniformBuffer}},{"binding":1,"resource":{"buffer":this._fragmentUniformBuffer}},{"binding":2,"resource":{"buffer":this._colorBuffer}},{"binding":3,"resource":{"buffer":this._pointBuffer}},{"binding":4,"resource":{"buffer":this._fragmentC3ParamsBuffer}},{"binding":5,"resource":{"buffer":e}}]})}_GetDevice(){return this._device}_GetDefaultVertexModule(){return this._defaultVertexModule}_GetNormalizedVertexModule(){return this._normVertexModule}async CreateShaderProgram(e){DEBUG&&DebugLog(`Creating shader program '${e.name}'`);const t=await C3.Gfx.WebGPUShaderProgram.Create(this,e);return this._AddShaderProgram(t),t}GetDisplayName(){return"webgpu"}GetSwapChainFormat(){return this._swapChainFormat}_GetDepthBufferFormat(){return"depth24plus-stencil8"}_GetSwapChainTexture(){return this._swapChainTexture}_GetSwapChainTexView(){return this._swapChainTexView}_CanSampleBackbuffer(){return this._canSampleBackbuffer}UsesBackgroundBlending(){return this._usesBackgroundBlending}_GetPipelineLayout(){return this._pipelineLayout}_GetTextureBindGroupLayout(){return this._textureBindGroupLayout}_GetBackTextureBindGroupLayout(){return this._backTextureBindGroupLayout}GetTextureFormat(){return this._textureFormat}GetMaxTextureSize(){return this._maxTextureSize}IsContextLost(){return this._IsFlagSet(FLAG_CONTEXT_LOST)}SupportsGPUProfiling(){return this._IsFlagSet(FLAG_SUPPORTS_TIMESTAMP_QUERY)}SupportsF16(){return this._IsFlagSet(FLAG_SUPPORTS_F16)}GetEstimatedBackBufferMemoryUsage(){const e=this.GetWidth()*this.GetHeight();let t=e*C3.Gfx.WebGPURendererTexture.GetFormatByteSize(this._swapChainFormat);return this.UsesDepthBuffer()&&(t+=e*C3.Gfx.WebGPURendererTexture.GetFormatByteSize(this._GetDepthBufferFormat())),t}GetEstimatedRenderBufferMemoryUsage(){let e=0;for(const t of C3.Gfx.WebGPURenderTarget.allRenderTargets())t.IsBackBuffer()||(e+=t.GetTexture().GetEstimatedMemoryUsage());return e}GetEstimatedTextureMemoryUsage(){let e=0;for(const t of C3.Gfx.WebGPURendererTexture.allTextures())t.IsRenderTarget()||(e+=t.GetEstimatedMemoryUsage());return e}SupportsNPOTTextures(){return!0}GetBufferManager(){return this._bufferManager}SetSize(e,t,r){(this._width!==e||this._height!==t||r)&&(DEBUG&&DebugLog(`Setting size to ${e} x `+t),this.EndBatch(),this._width=e,this._height=t,this._viewportWidth=e,this._viewportHeight=t,this._backbufferRenderTarget._CalculateProjection(),this.SetProjectionMatrix(this._backbufferRenderTarget.GetProjectionMatrix()),this._currentRenderTarget&&this._currentRenderTarget._Resize(this._width,this._height),this._IsFlagSet(FLAG_USE_DEPTH_BUFFER))&&this._IsFlagSet(FLAG_AUTOSIZE_DEPTH_BUFFER)&&this._SetDepthBufferSize(e,t)}_SetDepthBufferSize(e,t){if(this._depthBuffer){if(this._depthBufferWidth===e&&this._depthBufferHeight===t)return;this._depthBuffer["destroy"]()}let r=GPUTextureUsage["RENDER_ATTACHMENT"];this._canSampleDepth&&(r|=GPUTextureUsage["TEXTURE_BINDING"]),this._depthBuffer=this._device["createTexture"]({"label":"depthbuffer","size":[e,t,1],"format":this._GetDepthBufferFormat(),"usage":r}),this._depthBufferView=this._depthBuffer["createView"]({"label":"depthbufferview"}),this._canSampleDepth&&(this._depthBufferBindGroup=this._device["createBindGroup"]({"label":"depthbufferbindgroup","layout":this._depthTextureBindGroupLayout,"entries":[{"binding":0,"resource":this._GetSampler({sampling:"nearest"})},{"binding":1,"resource":this._depthBuffer["createView"]({"label":"depthbufferview","aspect":"depth-only"})}]})),this._depthBufferWidth=e,this._depthBufferHeight=t}SetFixedSizeDepthBuffer(e,t){this.UsesDepthBuffer()&&(this._SetFlag(FLAG_AUTOSIZE_DEPTH_BUFFER,!1),this._SetDepthBufferSize(e,t))}SetAutoSizeDepthBuffer(){this.UsesDepthBuffer()&&(this._SetFlag(FLAG_AUTOSIZE_DEPTH_BUFFER,!0),this._SetDepthBufferSize(this._width,this._height))}SetProjectionMatrix(e){mat4.exactEquals(this._matP,e)||(mat4.copy(this._matP,e),this._UpdateTransformUniform())}SetDefaultRenderTargetProjectionState(){this.SetProjectionMatrix(this._currentRenderTarget.GetProjectionMatrix())}SetModelViewMatrix(e){mat4.exactEquals(this._matMV,e)||(mat4.copy(this._matMV,e),this._UpdateTransformUniform())}ResetDidChangeTransformFlag(){this._SetFlag(FLAG_DID_CHANGE_TRANSFORM,!1)}DidChangeTransform(){return this._IsFlagSet(FLAG_DID_CHANGE_TRANSFORM)}CreateStaticTexture(e,t){if(e&&!C3.Gfx.WebGPURendererTexture.IsGPUImageCopyExternalImageSource(e)){const a=e.width||e.videoWidth,i=e.height||e.videoHeight,s=C3.CreateCanvas(a,i),n=s.getContext("2d");n.drawImage(e,0,0,a,i),e=s}this.EndBatch(),DEBUG&&DebugLog(`Creating texture ${(e||t).width} x `+(e||t).height);const r=C3.New(C3.Gfx.WebGPURendererTexture,this);return r._Create(e,t),r}async CreateStaticTextureAsync(e,t){if(C3.Gfx.WebGPURendererTexture.IsGPUImageCopyExternalImageSource(e))return this.CreateStaticTexture(e,t);{if(!C3.Supports.ImageBitmapOptions)throw new Error("no support for ImageBitmapOptions");const r=await createImageBitmap(e,{"premultiplyAlpha":"premultiply"});return this.CreateStaticTexture(r,t)}}_GetSampler(e){const t=e.wrapX||"clamp-to-edge",r=e.wrapY||"clamp-to-edge",a=e.sampling;let i=e.anisotropy||0;const s=t+`,${r},${a},`+(i="trilinear"!==a?0:i);let n=this._samplerMap.get(s);if(!n){const _={"addressModeU":t,"addressModeV":r,"magFilter":"nearest","minFilter":"nearest","mipmapFilter":"nearest"};"bilinear"!==a&&"trilinear"!==a||(_["magFilter"]="linear",_["minFilter"]="linear"),"trilinear"===a&&(_["mipmapFilter"]="linear",1<i)&&(_["maxAnisotropy"]=i),n=this._device["createSampler"](_),this._samplerMap.set(s,n)}return n}_GetMipmapGeneratorPipeline(){return this._mipmapGeneratorPipeline}CreateDynamicTexture(e,t,r){this.EndBatch();const a=C3.New(C3.Gfx.WebGPURendererTexture,this);return a._CreateDynamic(e,t,r),a}UpdateTexture(e,t,r){return t._Update(e,r)}DeleteTexture(e){e&&(e.SubtractReference(),0<e.GetReferenceCount()||(this.IsContextLost()||(this.EndBatch(),this._currentTexture===e&&this.SetTexture(null),this._currentBackTexture===e&&this.SetBackTexture(null)),e._Delete()))}_SetMultiTextureAvailable(e,t){this.IsContextLost()||(t?this._availableMultiTextures.add(e):this._availableMultiTextures.delete(e))}_SetMultiTextureGroupNonFull(e,t){t?this._nonFullMultiTexGroups.add(e):this._nonFullMultiTexGroups.delete(e)}_TryCreateMultiTextureGroup(e){const t=[e],r=C3.Gfx.WebGPUMultiTextureGroup.GetMultiTextureLimit();for(const a of this._nonFullMultiTexGroups)a.Release();for(const i of this._availableMultiTextures){if(r<=t.length)break;i!==e&&t.push(i)}t.length<2||C3.New(C3.Gfx.WebGPUMultiTextureGroup,this,t)}Start(){DEBUG&&DebugLog("================== START FRAME ==================="),this._UpdateSwapChainTexture()}Restart(){this._UpdateSwapChainTexture()}_UpdateSwapChainTexture(){this._swapChainTexture=this._presentCtx["getCurrentTexture"](),this._swapChainTexView=this._swapChainTexture["createView"]({"label":"swapchaintextureview"}),this._backbufferRenderTarget.GetTexture()._BackbufferTextureStartFrame()}Finish(){null===this._currentRenderPass&&this._backbufferRenderTarget._IsAwaitingClear()&&this._BeginRenderPass(),super.Finish(),this._bufferManager.MaybeCollectUnusedBuffers(this._frameNumber),this._backbufferRenderTarget.GetTexture()._BackbufferTextureEndFrame(),this._swapChainTexture=null,this._swapChainTexView=null,DEBUG&&DebugLog("End of frame"),10<=this._frameNumber&&(DEBUG=!1)}_CreateCommandEncoder(){this._commandEncoder=this._device["createCommandEncoder"](),this._flags&=~FLAG_DID_ADD_COMMAND}StartFrameTiming(e){if(!this.SupportsGPUProfiling())throw new Error("GPU profiling not supported");if(this._frameTimeQuerySet)throw new Error("already started frame timing");return this._timestampIsMeasuring=!1,this._timestampStartedIndices.clear(),this._frameTimeQuerySet=C3.New(C3.Gfx.WebGPUTimeQuerySet,this,e),this._frameTimeQuerySet}StartMeasuringRenderPassTime(e,t){if(this.SupportsGPUProfiling()){if(!this._frameTimeQuerySet)throw new Error("not started frame timing");if(e<0||t<0||e===t)throw new Error("invalid timestamp index");this._MaybeEndRenderPass(),this._timestampIsMeasuring=!0,this._timestampStartIndex=e,this._timestampEndIndex=t}}StopMeasuringRenderPassTime(){this._timestampIsMeasuring&&(this._MaybeEndRenderPass(),this._timestampIsMeasuring=!1)}_AddQuadToDrawBatch(){let e=this._quadPtr;if(e>LAST_QUAD_PTR)this.EndBatch(),e=0;else if(0!=(this._flags&FLAG_IN_DRAW))return void(this._drawIndexCount+=6);null===this._currentRenderPass&&this._BeginRenderPass(),this._flags|=FLAG_IN_DRAW,this._drawFirstIndex=6*e,this._drawIndexCount=6}_MaybeEndDrawBatch(){const t=this._flags;if(0!=(t&FLAG_IN_DRAW)){if(DEBUG){const a=[];t&FLAG_DRAW_STATE_CHANGED&&a.push("draw state"),t&FLAG_PIPELINE_CHANGED&&a.push("pipeline"),t&FLAG_TEX_BINDGROUP_CHANGED&&a.push("texture"),t&FLAG_BACKTEX_BINDGROUP_CHANGED&&a.push("background texture"),t&FLAG_DEPTHTEX_BINDGROUP_CHANGED&&a.push("depth texture"),t&FLAG_BUFFER_BINDGROUP_CHANGED&&a.push("buffer"),t&FLAG_SCISSOR_CHANGED&&a.push("scissor");let e="";0<a.length&&(e+=`(Updated ${a.join(", ")}) `),0!=(t&FLAG_DRAWING_POINTS)?e+=`Drawing ${this._drawIndexCount/6} points`:e+=`Drawing ${this._drawIndexCount/6} quads`,DebugLog(e)}const r=this._currentRenderPass;if(0!=(t&FLAG_DRAW_STATE_CHANGED)){const e=this._currentRenderTarget;r["setViewport"](0,0,e.GetWidth(),e.GetHeight(),0,1),r["setIndexBuffer"](this._indexBuffer,"uint16"),r["setVertexBuffer"](0,this._vertexBuffer),r["setVertexBuffer"](1,this._texcoordBuffer),0!=(t&(FLAG_COPLANAR_STENCIL_PASS|FLAG_COPLANAR_COLOR_PASS))&&r["setStencilReference"](1),0!=(t&FLAG_SCISSOR_ENABLED)&&this._DoSetRenderPassScissorRect(r,this._scissorRect,e)}if(0!=(t&FLAG_PIPELINE_CHANGED)){let e=0;0!=(t&FLAG_USE_NORMALIZED_COORDS)?e=4:0!=(t&FLAG_COPLANAR_STENCIL_PASS)?e=2:0!=(t&FLAG_COPLANAR_COLOR_PASS)?e=3:(t&(FLAG_DEPTH_ENABLED|FLAG_RENDERTARGET_HAS_DEPTH))==(FLAG_DEPTH_ENABLED|FLAG_RENDERTARGET_HAS_DEPTH)&&(e=1),r["setPipeline"](this._currentProgram.GetRenderPipelineForState(this._currentBlendMode,e,this._currentMultisampleCount))}if(0!=(t&FLAG_BUFFER_BINDGROUP_CHANGED)&&r["setBindGroup"](0,this._currentBufferBindGroup),0!=(t&FLAG_TEX_BINDGROUP_CHANGED)&&r["setBindGroup"](1,this._currentTextureBindGroup),0!=(t&FLAG_BACKTEX_BINDGROUP_CHANGED)&&r["setBindGroup"](2,this._currentBackTextureBindGroup),0!=(t&FLAG_DEPTHTEX_BINDGROUP_CHANGED)&&r["setBindGroup"](3,this._currentDepthTextureBindGroup),0!=(t&FLAG_SCISSOR_CHANGED)){const i=this._currentRenderTarget;0!=(t&FLAG_SCISSOR_ENABLED)?this._DoSetRenderPassScissorRect(r,this._scissorRect,i):r["setScissorRect"](0,0,i.GetWidth(),i.GetHeight())}r["drawIndexed"](this._drawIndexCount,1,this._drawFirstIndex,0,0),this._flags&=~END_DRAW_FLAGS_MASK}}_DoSetRenderPassScissorRect(e,t,r){const a=r.GetWidth(),i=r.GetHeight();let s=C3.clamp(t.getLeft(),0,a),n=C3.clamp(t.getTop(),0,i),_=C3.clamp(t.getRight(),s,a),u=C3.clamp(t.getBottom(),n,i);Number.isNaN(s)&&(s=0),Number.isNaN(n)&&(n=0),Number.isNaN(_)&&(_=a),Number.isNaN(u)&&(u=i),e["setScissorRect"](s,n,_-s,u-n)}_BeginRenderPass(){const e=this._flags;0!=(e&CHANGED_UNIFORM_BUFFER_MASK)&&this._WriteUniformBuffers();let t=null;t=0!=(e&FLAG_COPLANAR_STENCIL_PASS)?this._GetCoplanarStencilRenderPassOpts():0!=(e&FLAG_COPLANAR_COLOR_PASS)?this._GetCoplanarColorRenderPassOpts():this._GetStandardRenderPassOpts(),this._currentRenderPass=this._commandEncoder["beginRenderPass"](t),this._flags|=NEW_RENDERPASS_FLAGS}_GetStandardRenderPassOpts(){const e=this._flags,t=this._currentRenderTarget,r={"colorAttachments":[{"view":t._GetTextureView(),"loadOp":t._IsAwaitingClear()?"clear":"load","clearValue":t._GetClearColor().toJSON(),"storeOp":"store"}]};return this._MaybeSetTimestampRenderPassOption(r),t._SetIsAwaitingClear(!1),(e&(FLAG_RENDERTARGET_HAS_DEPTH|FLAG_DEPTH_ENABLED))==(FLAG_RENDERTARGET_HAS_DEPTH|FLAG_DEPTH_ENABLED)&&(r["depthStencilAttachment"]={"view":this._depthBufferView,"depthLoadOp":0!=(e&FLAG_CLEAR_DEPTH)?"clear":"load","depthClearValue":1,"depthStoreOp":"store","stencilLoadOp":"clear","stencilClearValue":0,"stencilStoreOp":"discard"},this._flags&=~FLAG_CLEAR_DEPTH),DEBUG&&DebugLog(`Starting render pass to ${t.IsBackBuffer()?"backbuffer":"texture"}, depth ${r["depthStencilAttachment"]?"enabled":"disabled"}, ${"load"===r["colorAttachments"][0]["loadOp"]?"continue":"clear"} color`+(r["depthStencilAttachment"]&&"load"!==r["depthStencilAttachment"]["depthLoadOp"]?", clear depth":"")),r}_GetCoplanarStencilRenderPassOpts(){const e=this._flags,t={"colorAttachments":[],"depthStencilAttachment":{"view":this._depthBufferView,"depthLoadOp":0!=(e&FLAG_CLEAR_DEPTH)?"clear":"load","depthClearValue":1,"depthStoreOp":"store","stencilLoadOp":0!=(e&FLAG_CLEAR_STENCIL)?"clear":"load","stencilClearValue":0,"stencilStoreOp":"store"}};return this._MaybeSetTimestampRenderPassOption(t),this._flags&=~(FLAG_CLEAR_DEPTH|FLAG_CLEAR_STENCIL),DEBUG&&DebugLog("Starting coplanar stencil renderpass"+("load"===t["depthStencilAttachment"]["depthLoadOp"]?"":", clear depth")+("load"===t["depthStencilAttachment"]["stencilLoadOp"]?"":", clear stencil")),t}_GetCoplanarColorRenderPassOpts(){const e=this._currentRenderTarget,t={"colorAttachments":[{"view":e._GetTextureView(),"loadOp":e._IsAwaitingClear()?"clear":"load","clearValue":e._GetClearColor().toJSON(),"storeOp":"store"}],"depthStencilAttachment":{"view":this._depthBufferView,"depthReadOnly":!0,"stencilReadOnly":!0}};return this._MaybeSetTimestampRenderPassOption(t),e._SetIsAwaitingClear(!1),DEBUG&&DebugLog(`Starting coplanar color renderpass to ${e.IsBackBuffer()?"backbuffer":"texture"}, ${"load"===t["colorAttachments"][0]["loadOp"]?"continue":"clear"} color`),t}_MaybeSetTimestampRenderPassOption(e){if(this._timestampIsMeasuring){const t={"querySet":this._frameTimeQuerySet._GetQuerySet(),"endOfPassWriteIndex":this._timestampEndIndex};this._timestampStartedIndices.has(this._timestampStartIndex)||(t["beginningOfPassWriteIndex"]=this._timestampStartIndex,this._timestampStartedIndices.add(this._timestampStartIndex)),e["timestampWrites"]=t}}_MaybeDoPendingClearRenderPass(e){if(e._IsAwaitingClear()){this._MaybeEndRenderPass();const t=this._commandEncoder["beginRenderPass"]({"colorAttachments":[{"view":e._GetTextureView(),"loadOp":"clear","clearValue":e._GetClearColor().toJSON(),"storeOp":"store"}]});t["end"](),this._flags|=FLAG_DID_ADD_COMMAND,e._SetIsAwaitingClear(!1)}}_MaybeEndRenderPass(){null!==this._currentRenderPass&&(this._MaybeEndDrawBatch(),DEBUG&&DebugLog(`Ending render pass (to ${this._currentRenderTarget.IsBackBuffer()?"backbuffer":"texture"})`),this._currentRenderPass["end"](),this._currentRenderPass=null)}EndBatch(e=!1){this._MaybeEndRenderPass(),this._frameTimeQuerySet&&e&&(this._frameTimeQuerySet.Resolve(this._commandEncoder),this._flags|=FLAG_DID_ADD_COMMAND),0!=(this._flags&FLAG_DID_ADD_COMMAND)&&(this._commandBuffers.push(this._commandEncoder["finish"]()),this._CreateCommandEncoder()),0!==this._commandBuffers.length&&(DEBUG&&DebugLog("Ending batch"),this._WriteBuffers(),DEBUG&&DebugLog(`Submitting ${this._commandBuffers.length} commands`),this._device["queue"]["submit"](this._commandBuffers),C3.clearArray(this._commandBuffers),this._bufferManager.AfterSubmit(),this._frameTimeQuerySet)&&e&&(this._frameTimeQuerySet.ReadResult(),this._frameTimeQuerySet=null)}_WriteBuffers(){const e=this._device["queue"];if(0<this._quadPtr){const t=this._quadPtr;DEBUG&&DebugLog("Writing vertex buffers"),e["writeBuffer"](this._vertexBuffer,0,this._vertexData.buffer,0,12*t*SIZEOF_F32),e["writeBuffer"](this._texcoordBuffer,0,this._texcoordData.buffer,0,12*t*SIZEOF_F32),e["writeBuffer"](this._colorBuffer,0,this._colorData.buffer,0,4*t*SIZEOF_F32),this._quadPtr=0}0<this._pointPtr&&(DEBUG&&DebugLog("Writing point buffer"),e["writeBuffer"](this._pointBuffer,0,this._pointData.buffer,0,this._pointPtr*SIZEOF_F32),this._pointPtr=0)}_UpdateTransformUniform(){this._flags|=FLAG_TRANSFORM_CHANGED|FLAG_DID_CHANGE_TRANSFORM,this._MarkVertexUniformBufferRangeChanged(this._vertexUniformBufferLayout.transform)}_UpdatePointTexCoordsUniform(){const e=this._vertexUniformBufferLayout.pointTex;this._currentPointTexCoords.writeToTypedArray(this._vertexUniformf32,e.offset/4),this._MarkVertexUniformBufferRangeChanged(e)}_UpdateZElevationUniform(){const e=this._vertexUniformBufferLayout.zElevation;this._vertexUniformf32[e.offset/4]=this._currentVertexZElevation,this._MarkVertexUniformBufferRangeChanged(e)}_MarkVertexUniformBufferRangeChanged(e){const t=e.offset,r=e.end;0!=(this._flags&FLAG_VERTEX_UNIFORM_CHANGED)?(this._vertexUniformUpdateStart=Math.min(this._vertexUniformUpdateStart,t),this._vertexUniformUpdateEnd=Math.max(this._vertexUniformUpdateEnd,r)):(this._flags|=FLAG_VERTEX_UNIFORM_CHANGED,this._vertexUniformUpdateStart=t,this._vertexUniformUpdateEnd=r,this._MaybeEndRenderPass())}_UpdateColor2Uniform(){this._UpdateFragmentUniformColor(this._currentColor2,this._fragUniformBufferLayout.color2)}_UpdatePointColorUniform(){this._UpdateFragmentUniformColor(this._currentPointColor,this._fragUniformBufferLayout.pointColor)}_UpdateFragmentUniformColor(e,t){e.writeToTypedArray(this._fragUniformf32,t.offset/4),this._MarkFragUniformBufferRangeChanged(t)}_UpdateFragmentUniformVec2(e,t){e.writeToTypedArray(this._fragUniformf32,t.offset/4),this._MarkFragUniformBufferRangeChanged(t)}_MarkFragUniformBufferRangeChanged(e){const t=e.offset,r=e.end;0!=(this._flags&FLAG_FRAG_UNIFORM_CHANGED)?(this._fragUniformUpdateStart=Math.min(this._fragUniformUpdateStart,t),this._fragUniformUpdateEnd=Math.max(this._fragUniformUpdateEnd,r)):(this._flags|=FLAG_FRAG_UNIFORM_CHANGED,this._fragUniformUpdateStart=t,this._fragUniformUpdateEnd=r,this._MaybeEndRenderPass())}_MaybeUpdateFragmentC3ParamsFloat(e,t){this._fragC3Paramsf32[t.offset/4]!==Math.fround(e)&&(this._fragC3Paramsf32[t.offset/4]=e,this._MarkFragC3ParamsRangeChanged(t))}_MaybeUpdateFragmentC3ParamsUint(e,t){this._fragC3Paramsu32[t.offset/4]!==e&&(this._fragC3Paramsu32[t.offset/4]=e,this._MarkFragC3ParamsRangeChanged(t))}_MaybeUpdateFragmentC3ParamsRect(e,t){e.equalsF32Array(this._fragC3Paramsf32,t.offset/4)||(e.writeToTypedArray(this._fragC3Paramsf32,t.offset/4),this._MarkFragC3ParamsRangeChanged(t))}_MarkFragC3ParamsRangeChanged(e){const t=e.offset,r=e.end;0!=(this._flags&FLAG_FRAG_C3PARAMS_CHANGED)?(this._fragC3ParamsUpdateStart=Math.min(this._fragC3ParamsUpdateStart,t),this._fragC3ParamsUpdateEnd=Math.max(this._fragC3ParamsUpdateEnd,r)):(this._flags|=FLAG_FRAG_C3PARAMS_CHANGED,this._fragC3ParamsUpdateStart=t,this._fragC3ParamsUpdateEnd=r,this._MaybeEndRenderPass())}_WriteUniformBuffers(){const e=this._flags;0!=(e&FLAG_TRANSFORM_CHANGED)&&(DEBUG&&DebugLog("Updating transform"),mat4.multiply(this._matTransform,this._matP,this._matMV),this._vertexUniformf32.set(this._matTransform,this._vertexUniformBufferLayout.transform.offset/4)),0!=(e&FLAG_VERTEX_UNIFORM_CHANGED)&&(DEBUG&&DebugLog("Updating vertex uniform buffer"),this._bufferManager.UpdateBufferSubData(this._commandEncoder,this._vertexUniformBuffer,this._vertexUniformArrayBuffer,this._vertexUniformUpdateStart,this._vertexUniformUpdateEnd-this._vertexUniformUpdateStart)),0!=(e&FLAG_FRAG_UNIFORM_CHANGED)&&(DEBUG&&DebugLog("Updating fragment uniform buffer"),this._bufferManager.UpdateBufferSubData(this._commandEncoder,this._fragmentUniformBuffer,this._fragUniformArrayBuffer,this._fragUniformUpdateStart,this._fragUniformUpdateEnd-this._fragUniformUpdateStart)),0!=(e&FLAG_FRAG_C3PARAMS_CHANGED)&&(DEBUG&&DebugLog("Updating fragment C3Params buffer"),this._bufferManager.UpdateBufferSubData(this._commandEncoder,this._fragmentC3ParamsBuffer,this._fragC3ParamsArrayBuffer,this._fragC3ParamsUpdateStart,this._fragC3ParamsUpdateEnd-this._fragC3ParamsUpdateStart)),this._flags=e&~CHANGED_UNIFORM_BUFFER_MASK|FLAG_DID_ADD_COMMAND}CreateRenderTarget(e){let t=this._width,r=this._height,a=!0;if(e&&("number"==typeof e.width&&(t=Math.floor(e.width),a=!1),"number"==typeof e.height)&&(r=Math.floor(e.height),a=!1),t<=0||r<=0)throw new Error("invalid size");this.EndBatch();const i=C3.New(C3.Gfx.WebGPURenderTarget,this);return i._Create(t,r,Object.assign({isDefaultSize:a},e)),i}SetRenderTarget(e,t=!0){null===e&&(e=this._backbufferRenderTarget),this._currentRenderTarget!==e&&(this._MaybeEndRenderPass(),this._currentRenderTarget=e,this._SetFlag(FLAG_RENDERTARGET_HAS_DEPTH,e.HasDepthBuffer()),e.IsDefaultSize()&&!e.IsBackBuffer()&&e._Resize(this._width,this._height),t)&&this.SetDefaultRenderTargetProjectionState()}InvalidateRenderTarget(e){}GetRenderTarget(){return this._currentRenderTarget===this._backbufferRenderTarget?null:this._currentRenderTarget}GetRenderTargetSize(e){return null===e?[this._width,this._height]:[e.GetWidth(),e.GetHeight()]}GetBackbufferRenderTarget(){return this._backbufferRenderTarget}DeleteRenderTarget(e){this.EndBatch(),this._currentRenderTarget===e&&this.SetRenderTarget(null);const t=e.GetTexture();this._currentTexture===t&&this.SetTexture(null),this._currentBackTexture===t&&this.SetBackTexture(null),e._Delete()}async ReadBackRenderTargetToImageData(e,t,r){this._MaybeDoPendingClearRenderPass(e),this.EndBatch(),null===e&&(e=this._backbufferRenderTarget);const a=this._device,i=e.GetWidth(),s=e.GetHeight();let n=0,_=0,u=i,o=s;if(r){n=C3.clamp(Math.floor(r.getLeft()),0,i-1),_=C3.clamp(Math.floor(r.getTop()),0,s-1);let e=r.width(),t=(e=0===e?i-n:C3.clamp(Math.floor(e),0,i-n),r.height());t=0===t?s-_:C3.clamp(Math.floor(t),0,s-_),u=e,o=t}const h=a["createCommandEncoder"](),l=e.GetTexture();let f=l._GetTexture(),d=null;"rgba8unorm"===l._GetFormat()?l.CanReadPixels()||C3.NotYetImplemented():(d=this._ConvertTextureFormat(l,"rgba8unorm",h),f=d);const p=4*u,c=256*Math.ceil(p/256),m=a["createBuffer"]({"size":c*o,"usage":GPUBufferUsage["MAP_READ"]|GPUBufferUsage["COPY_DST"]}),g=(h["copyTextureToBuffer"]({"texture":f,"origin":[n,_,0]},{"buffer":m,"bytesPerRow":c},[u,o,1]),h["finish"]()),G=(a["queue"]["submit"]([g]),d&&d["destroy"](),await m["mapAsync"](self["GPUMapMode"]["READ"]),m["getMappedRange"]().slice(0));let T;if(c==p)T=new ImageData(new Uint8ClampedArray(G),u,o);else{const S=new ArrayBuffer(p*o),A=new Uint8Array(S);for(let e=0;e<o;++e){const C=e*c,E=e*p;A.set(new Uint8Array(G,C,p),E)}T=new ImageData(new Uint8ClampedArray(S),u,o)}return m["destroy"](),T}_ConvertTextureFormat(e,t,r){const a=this._device,i=e.GetWidth(),s=e.GetHeight();if(e._GetFormat()===t)throw new Error("no conversion necessary");e.IsSampled()||C3.NotYetImplemented();const n=a["createTexture"]({"size":[i,s,1],"format":t,"usage":GPUTextureUsage["COPY_SRC"]|GPUTextureUsage["RENDER_ATTACHMENT"]}),_=this._mipmapGeneratorProgram._GetMipmapGeneratorPipeline(t),u=_["getBindGroupLayout"](0),o=this._GetSampler({sampling:"nearest"}),h=e._GetTexture()["createView"]({"baseMipLevel":0,"mipLevelCount":1}),l=n["createView"]({"baseMipLevel":0,"mipLevelCount":1}),f=r["beginRenderPass"]({"colorAttachments":[{"view":l,"loadOp":"clear","clearValue":[0,0,0,0],"storeOp":"store"}]}),d=a["createBindGroup"]({"layout":u,"entries":[{"binding":0,"resource":o},{"binding":1,"resource":h}]});return f["setPipeline"](_),f["setBindGroup"](0,d),f["draw"](4),f["end"](),n}SetDepthEnabled(e){0!=(this._flags&FLAG_USE_DEPTH_BUFFER)&&(e=!!e,0!=(this._flags&FLAG_DEPTH_ENABLED)!==e)&&(0!=(this._flags&FLAG_RENDERTARGET_HAS_DEPTH)&&this._MaybeEndRenderPass(),this._SetFlag(FLAG_DEPTH_ENABLED,e))}IsDepthEnabled(){return this._IsFlagSet(FLAG_DEPTH_ENABLED)}UsesDepthBuffer(){return this._IsFlagSet(FLAG_USE_DEPTH_BUFFER)}SetDepthSamplingEnabled(e){if(this._canSampleDepth){if(e&&this.IsDepthEnabled())throw new Error("depth still enabled");const t=e?this._depthBufferBindGroup:this._nullDepthBufferBindGroup;this._currentDepthTextureBindGroup!==t&&(this._MaybeEndDrawBatch(),this._currentDepthTextureBindGroup=t,this._flags|=FLAG_DEPTHTEX_BINDGROUP_CHANGED)}}Clear(e){this._MaybeEndRenderPass(),this._currentRenderTarget._SetIsAwaitingClear(!0),this._currentRenderTarget._GetClearColor().set(e)}ClearRgba(e,t,r,a){this._MaybeEndRenderPass(),this._currentRenderTarget._SetIsAwaitingClear(!0),this._currentRenderTarget._GetClearColor().setRgba(e,t,r,a)}ClearDepth(){(this._flags&(FLAG_USE_DEPTH_BUFFER|FLAG_RENDERTARGET_HAS_DEPTH))==(FLAG_USE_DEPTH_BUFFER|FLAG_RENDERTARGET_HAS_DEPTH)&&(this._MaybeEndRenderPass(),this._flags|=FLAG_CLEAR_DEPTH)}SetScissorRect(e,t,r,a){e=Math.floor(e),t=Math.floor(t),r=Math.floor(r),a=Math.floor(a),0!=(this._flags&FLAG_SCISSOR_ENABLED)&&this._scissorRect.equalsWH(e,t,r,a)||(this._MaybeEndDrawBatch(),this._flags|=FLAG_SCISSOR_ENABLED|FLAG_SCISSOR_CHANGED,this._scissorRect.setWH(e,t,r,a))}RemoveScissorRect(){0!=(this._flags&FLAG_SCISSOR_ENABLED)&&(this._MaybeEndDrawBatch(),this._flags&=~FLAG_SCISSOR_ENABLED,this._flags|=FLAG_SCISSOR_CHANGED)}SetProgram(e){this._currentProgram!==e&&(this._MaybeEndDrawBatch(),this._currentProgram=e,this._currentStateGroup=null,this._flags|=FLAG_PIPELINE_CHANGED,this._SetMultiTexturingEnabled(e===this._spTextureFill))}GetProgram(){return this._currentProgram}_SetMultiTexturingEnabled(e){if(e=!!e,0!=(this._flags&FLAG_MULTITEXTURE_ENABLED)!==e){this._SetFlag(FLAG_MULTITEXTURE_ENABLED,e);const t=null===this._currentTexture?this._nullTexture:this._currentTexture;this._ApplyTextureBindGroup(t)}}SetNormalizedCoordsProgramVariant(e){e=!!e,0!=(this._flags&FLAG_USE_NORMALIZED_COORDS)!==e&&(this._MaybeEndDrawBatch(),this._SetFlag(FLAG_USE_NORMALIZED_COORDS,e),this._flags|=FLAG_PIPELINE_CHANGED)}IsNormalizedCoordsProgramVariant(){return this._IsFlagSet(FLAG_USE_NORMALIZED_COORDS)}SetTexture(e){e!==this._currentTexture&&(null===(this._currentTexture=e)&&(e=this._nullTexture),this._ApplyTextureBindGroup(e))}_ApplyTextureBindGroup(e){0!=(this._flags&FLAG_MULTITEXTURE_ENABLED)?(this._SetTextureBindGroup(e._GetMultiTextureBindGroup()),this._currentMultiTextureIndex=e._GetMultiTextureIndex()):(this._SetTextureBindGroup(e._GetOwnTextureBindGroup()),this._currentMultiTextureIndex=0)}_SetTextureBindGroup(e){e!==this._currentTextureBindGroup&&(this._MaybeEndDrawBatch(),this._currentTextureBindGroup=e,this._flags|=FLAG_TEX_BINDGROUP_CHANGED)}_OnTextureBindGroupChanged(e){this._currentTexture===e&&(this._MaybeEndDrawBatch(),this._currentTextureBindGroup=e._GetOwnTextureBindGroup(),this._flags|=FLAG_TEX_BINDGROUP_CHANGED)}_OnMultiTextureBindGroupReleased(e){if(this._currentTextureBindGroup===e){this._MaybeEndDrawBatch();const t=null===this._currentTexture?this._nullTexture:this._currentTexture;this._currentTextureBindGroup=t._GetOwnTextureBindGroup(),this._currentMultiTextureIndex=0,this._flags|=FLAG_TEX_BINDGROUP_CHANGED}}SetBackTexture(e){e!==this._currentBackTexture&&(null===(this._currentBackTexture=e)&&(e=this._nullTexture),this._MaybeEndDrawBatch(),this._currentBackTextureBindGroup=e._GetBackTextureBindGroup(),this._flags|=FLAG_BACKTEX_BINDGROUP_CHANGED)}CopyTextureToTexture(e,t,r,a,i,s){const n=e._GetUsage(),_=t._GetUsage();if(0==(n&GPUTextureUsage["COPY_SRC"]))throw new Error("source texture missing COPY_SRC usage");if(0==(_&GPUTextureUsage["COPY_DST"]))throw new Error("destination texture missing COPY_DST usage");if(e===t)throw new Error("invalid destination");const u=Math.min(e.GetWidth(),t.GetWidth()),o=Math.min(e.GetHeight(),t.GetHeight());i=Math.min(i,u-r),s=Math.min(s,o-a),i<=0||s<=0||(this._MaybeEndRenderPass(),DEBUG&&DebugLog(`Copying texture to texture, from (${r}, ${a}), size ${i} x `+s),this._commandEncoder["copyTextureToTexture"]({"texture":e._GetTexture(),"origin":[r,a]},{"texture":t._GetTexture(),"origin":[r,a]},[i,s]),this._flags|=FLAG_DID_ADD_COMMAND)}_ClampToSupportedMultisampleValues(e){return 2<=e?4:1}SetRenderingToMultisampleCount(e){e=this._ClampToSupportedMultisampleValues(e),this._currentMultisampleCount!==e&&(this._MaybeEndDrawBatch(),this._currentMultisampleCount=e,this._flags|=FLAG_PIPELINE_CHANGED)}SetBlendMode(e){e!==this._currentBlendMode&&(this._MaybeEndDrawBatch(),this._currentBlendMode=e,this._currentStateGroup=null,this._flags|=FLAG_PIPELINE_CHANGED)}SetNamedBlendMode(e){this.SetBlendMode(this.NamedBlendToNumber(e))}SetAlphaBlend(){this.SetBlendMode(0)}SetCopyBlend(){this.SetBlendMode(3)}SetColorRgba(e,t,r,a){const i=this._currentColor;i.equalsRgba(e,t,r,a)||(i.setRgba(e,t,r,a),this._currentStateGroup=null)}SetOpacity(e){const t=this._currentColor;t.getA()!==e&&(t.setA(e),this._currentStateGroup=null)}GetOpacity(){return this._currentColor.getA()}SetColor(e){const t=this._currentColor;t.equals(e)||(t.set(e),this._currentStateGroup=null)}ResetColor(){this.SetColorRgba(1,1,1,1)}GetColor(){return this._currentColor}Rect(e){this.Rect2(e.getLeft(),e.getTop(),e.getRight(),e.getBottom())}Rect2(e,t,r,a){this.Quad2(e,t,r,t,r,a,e,a)}Quad(e){this.Quad4(e,defaultTexCoordsQuad)}Quad2(e,t,r,a,i,s,n,_){this._AddQuadToDrawBatch();const u=this._vertexData,o=this._quadPtr++;let h=12*o;const l=this._baseZ+this._currentZ;u[h++]=e,u[h++]=t,u[h++]=l,u[h++]=r,u[h++]=a,u[h++]=l,u[h++]=i,u[h++]=s,u[h++]=l,u[h++]=n,u[h++]=_,u[h]=l,defaultTexCoordsQuad.writeToTypedArray3D(this._texcoordData,12*o,this._currentMultiTextureIndex),this._currentColor.writeToTypedArray(this._colorData,4*o)}Quad3(e,t){this._AddQuadToDrawBatch();const r=this._quadPtr++;e.writeToTypedArray3D(this._vertexData,12*r,this._baseZ+this._currentZ),t.writeAsQuadToTypedArray3D(this._texcoordData,12*r,this._currentMultiTextureIndex),this._currentColor.writeToTypedArray(this._colorData,4*r)}Quad4(e,t){this._AddQuadToDrawBatch();const r=this._quadPtr++;e.writeToTypedArray3D(this._vertexData,12*r,this._baseZ+this._currentZ),t.writeToTypedArray3D(this._texcoordData,12*r,this._currentMultiTextureIndex),this._currentColor.writeToTypedArray(this._colorData,4*r)}Quad3D(e,t,r,a,i,s,n,_,u,o,h,l,f){this._AddQuadToDrawBatch();const d=this._vertexData,p=this._quadPtr++;let c=12*p;const m=this._baseZ+this._currentZ;d[c++]=e,d[c++]=t,d[c++]=m+r,d[c++]=a,d[c++]=i,d[c++]=m+s,d[c++]=n,d[c++]=_,d[c++]=m+u,d[c++]=o,d[c++]=h,d[c]=m+l,f.writeAsQuadToTypedArray3D(this._texcoordData,12*p,this._currentMultiTextureIndex),this._currentColor.writeToTypedArray(this._colorData,4*p)}Quad3D2(e,t,r,a,i,s,n,_,u,o,h,l,f){this._AddQuadToDrawBatch();const d=this._vertexData,p=this._quadPtr++;let c=12*p;const m=this._baseZ+this._currentZ;d[c++]=e,d[c++]=t,d[c++]=m+r,d[c++]=a,d[c++]=i,d[c++]=m+s,d[c++]=n,d[c++]=_,d[c++]=m+u,d[c++]=o,d[c++]=h,d[c]=m+l,f.writeToTypedArray3D(this._texcoordData,12*p,this._currentMultiTextureIndex),this._currentColor.writeToTypedArray(this._colorData,4*p)}DrawMesh(i,s,n){const _=this._vertexData,u=this._texcoordData,o=this._colorData;if(n.length%3!=0)throw new Error("invalid index buffer length");const h=this._currentMultiTextureIndex,e=this._currentColor,l=e.getR(),f=e.getG(),d=e.getB(),p=e.getA();for(let a=0,e=n.length;a<e;){const c=n[a++],m=n[a++],g=n[a++],G=3*c,T=3*m,S=3*g,A=2*c,C=2*m,E=2*g,B=(this._AddQuadToDrawBatch(),this._quadPtr++);let e=12*B,t=12*B,r=4*B;_[e++]=i[0+G],_[e++]=i[1+G],_[e++]=i[2+G],_[e++]=i[0+T],_[e++]=i[1+T],_[e++]=i[2+T],_[e++]=i[0+S],_[e++]=i[1+S],_[e++]=i[2+S],_[e++]=i[0+S],_[e++]=i[1+S],_[+e]=i[2+S],u[t++]=s[0+A],u[t++]=s[1+A],u[t++]=h,u[t++]=s[0+C],u[t++]=s[1+C],u[t++]=h,u[t++]=s[0+E],u[t++]=s[1+E],u[t++]=h,u[t++]=s[0+E],u[t++]=s[1+E],u[+t]=h,o[r++]=l,o[r++]=f,o[r++]=d,o[+r]=p}}StartRenderingPoints(e){this._currentPointTexCoords.equals(e)||(this._currentPointTexCoords.copy(e),this._UpdatePointTexCoordsUniform());const t=this._baseZ+this._currentZ;this._currentVertexZElevation!==t&&(this._currentVertexZElevation=t,this._UpdateZElevationUniform()),this._currentPointColor.equalsIgnoringAlpha(this._currentColor)||(this._currentPointColor.copyRgb(this._currentColor),this._UpdatePointColorUniform()),this.SetProgram(this.GetPointsRenderingProgram()),this._drawIndexCount=0,this._flags|=FLAG_DRAWING_POINTS}FinishRenderingPoints(){0<this._drawIndexCount&&this._MaybeEndDrawBatch(),this._flags&=~FLAG_DRAWING_POINTS}Point(e,t,r,a){let i=this._pointPtr;i>LAST_POINT_PTR&&(this.EndBatch(),i=0),0!=(this._flags&FLAG_IN_DRAW)?this._drawIndexCount+=6:(null===this._currentRenderPass&&this._BeginRenderPass(),this._flags|=FLAG_IN_DRAW,this._drawFirstIndex=i/4*6,this._drawIndexCount=6);const s=this._pointData;s[i++]=e,s[i++]=t,s[i++]=r,s[i++]=a,this._pointPtr=i}SetGradientColor(e){this._currentColor2.equals(e)||(this._currentColor2.copy(e),this._UpdateColor2Uniform())}SetEllipseParams(e,t,r=1){const a=this._fragUniformBufferLayout,i=this._fragUniformf32;tempVec2.set(e,t),tempVec2.equalsF32Array(i,a.pixelSize.offset/4)||this._UpdateFragmentUniformVec2(tempVec2,a.pixelSize),i[a.outlineThickness.offset/4]!==Math.fround(r)&&(i[a.outlineThickness.offset/4]=r,this._MarkFragUniformBufferRangeChanged(a.outlineThickness))}SetTilemapInfo(e,t,r,a,i,s,n){const _=this._fragUniformBufferLayout,u=this._fragUniformf32;e.equalsF32Array(u,_.srcRect.offset/4)||(e.writeToTypedArray(u,_.srcRect.offset/4),this._MarkFragUniformBufferRangeChanged(_.srcRect)),tempVec2.set(a/t,i/r),tempVec2.equalsF32Array(u,_.tileSize.offset/4)||this._UpdateFragmentUniformVec2(tempVec2,_.tileSize),tempVec2.set(s/t,n/r),tempVec2.equalsF32Array(u,_.tileSpacing.offset/4)||this._UpdateFragmentUniformVec2(tempVec2,_.tileSpacing)}SetTileRandomizationInfo(e,t,r,a,i,s,n){const _=this._fragUniformBufferLayout,u=this._fragUniformf32;tempVec2.set(r,a),tempVec2.equalsF32Array(u,_.tileSize.offset/4)||this._UpdateFragmentUniformVec2(tempVec2,_.tileSize),u[_.outlineThickness.offset/4]!==Math.fround(i)&&(u[_.outlineThickness.offset/4]=i,this._MarkFragUniformBufferRangeChanged(_.outlineThickness)),tempVec2.set(s,n),tempVec2.equalsF32Array(u,_.tileSpacing.offset/4)||this._UpdateFragmentUniformVec2(tempVec2,_.tileSpacing)}SetProgramParameters(e,t,r,a,i,s,n,_,u,o,h){const l=this._fragC3ParamsLayout,f=this._currentProgram;h%=10800,f.BlendsBackground()&&this.SetBackTexture(e),f.UsesAnyC3ParamRect()&&(this._MaybeUpdateFragmentC3ParamsRect(t,l.destRect),this._MaybeUpdateFragmentC3ParamsRect(r,l.srcRect),this._MaybeUpdateFragmentC3ParamsRect(a,l.srcOriginRect),this._MaybeUpdateFragmentC3ParamsRect(i,l.layoutRect)),this._MaybeUpdateFragmentC3ParamsFloat(_,l.devicePixelRatio),this._MaybeUpdateFragmentC3ParamsFloat(u,l.layerScale),this._MaybeUpdateFragmentC3ParamsFloat(o,l.layerAngle),this._MaybeUpdateFragmentC3ParamsFloat(h,l.seconds),this._MaybeUpdateFragmentC3ParamsFloat(this.GetNearZ(),l.zNear),this._MaybeUpdateFragmentC3ParamsFloat(this.GetFarZ(),l.zFar)}SetProgramCustomParameters(e){e&&(e.IsChanged()&&(this._MaybeEndRenderPass(),e.UpdateBuffer(this._commandEncoder)),this._SetBufferBindGroup(e.GetBufferBindGroup()))}SetProgramParameter_IsSrcTexRotated(e){this._MaybeUpdateFragmentC3ParamsUint(e?1:0,this._fragC3ParamsLayout.isSrcTexRotated)}_SetBufferBindGroup(e){e!==this._currentBufferBindGroup&&(this._MaybeEndDrawBatch(),this._currentBufferBindGroup=e,this._flags|=FLAG_BUFFER_BINDGROUP_CHANGED)}_OnBufferBindGroupDestroyed(e){this._currentBufferBindGroup===e&&this._SetBufferBindGroup(this._defaultBufferBindGroup)}CopyRenderTarget(e){e._IsAwaitingClear()?(this._currentRenderTarget._SetIsAwaitingClear(!0),this._currentRenderTarget._GetClearColor().set(e._GetClearColor())):2<=e.GetMultisampling()&&this._currentRenderTarget.GetMultisampling()<2?this._ResolveMultisampledRenderTarget(e):(this.ClearRgba(0,0,0,0),this.SetCopyBlend(),this.ResetColor(),this.DrawRenderTarget(e))}DrawRenderTarget(e){this._MaybeDoPendingClearRenderPass(e);const t=e.GetTexture();this.SetTexture(t),this.FullscreenQuad()}FullscreenQuad(){const e=this.IsNormalizedCoordsProgramVariant(),t=(e||this.SetNormalizedCoordsProgramVariant(!0),this.SetCurrentZ(0),tempQuad),r=tempRect;t.set(0,-1,0,-1,2,1,0,1),r.set(0,-1,2,1),this.Quad3(t,r),e||this.SetNormalizedCoordsProgramVariant(!1)}_ResolveMultisampledRenderTarget(e){this._MaybeDoPendingClearRenderPass(e),this._MaybeEndRenderPass();const t=this._commandEncoder["beginRenderPass"]({"colorAttachments":[{"view":e.GetTexture()._GetTextureView(),"resolveTarget":this._currentRenderTarget.GetTexture()._GetTextureView(),"loadOp":"load","storeOp":"store"}]});t["end"](),this._flags|=FLAG_DID_ADD_COMMAND}CoplanarStartStencilPass(){this._MaybeEndRenderPass(),this.SetDepthEnabled(!0),this._flags|=FLAG_COPLANAR_STENCIL_PASS|FLAG_CLEAR_STENCIL}CoplanarStartColorPass(){this._MaybeEndRenderPass(),this.SetDepthEnabled(!1),this._flags&=~FLAG_COPLANAR_STENCIL_PASS,this._flags|=FLAG_COPLANAR_COLOR_PASS}IsCoplanarColorPass(){return this._IsFlagSet(FLAG_COPLANAR_COLOR_PASS)}CoplanarRestoreStandardRendering(){this._MaybeEndRenderPass(),this.SetDepthEnabled(!0),this._flags&=~FLAG_COPLANAR_COLOR_PASS}_InitBlendModes(){this._InitBlendModeData([["normal","one","one-minus-src-alpha"],["additive","one","one"],["xor","one","one-minus-src-alpha"],["copy","one","zero"],["destination-over","one-minus-dst-alpha","one"],["source-in","dst-alpha","zero"],["destination-in","zero","src-alpha"],["source-out","one-minus-dst-alpha","zero"],["destination-out","zero","one-minus-src-alpha"],["source-atop","dst-alpha","one-minus-src-alpha"],["destination-atop","one-minus-dst-alpha","src-alpha"]])}GetAvailableAdapterFeatures(){return this._adapter?[...this._adapter["features"]]:[]}GetAdapterInfo(){return this._adapterInfo}GetAdapterInfoString(){const e=this._adapterInfo;if(!e)return"unknown/unknown";const t=e["vendor"]||"unknown",r=e["architecture"]||"unknown",a=[],i=(e["device"]&&a.push(e["device"]),e["description"]&&a.push(e["description"]),e["type"]&&a.push(e["type"]),e["backend"]&&a.push(e["backend"]),0<a.length?` (${a.join(", ")})`:"");return t+"/"+r+i}};
+}
+
+// ../lib/gfx/webgpu/bufferManager.js
+{
+const C3=self.C3,ENABLE_RECYCLING=!0;C3.Gfx.WebGPUBufferManager=class{constructor(e){this._renderer=e,this._buffers=new Map,this._recycleAfterSubmit=[],this._releaseAfterSubmit=[],this._destroyAfterSubmit=[],this._totalBufferCount=0,this._totalBufferSize=0,this._totalCreated=0,this._totalReleased=0,this._totalReturned=0,this._totalRecycled=0}GetRenderer(){return this._renderer}OnContextLost(){this._buffers.clear(),C3.clearArray(this._recycleAfterSubmit),C3.clearArray(this._releaseAfterSubmit),C3.clearArray(this._destroyAfterSubmit)}_RoundBufferSizeClass(e){return Math.max(C3.nextHighestPowerOfTwo(e),16)}GetRecyclableBuffer(e){this._totalReturned++;const t=this._RoundBufferSizeClass(e);if(ENABLE_RECYCLING){const r=this._buffers.get(t);if(void 0!==r&&0<r.length){const s=r.pop();return s.MarkInUse(),0===r.length&&this._buffers.delete(t),s}}return this._totalBufferCount++,this._totalBufferSize+=t,this._totalCreated++,C3.New(C3.Gfx.WebGPURecyclableBuffer,this,t)}_AddRecycledBuffer(e){this._totalRecycled++;const t=e.GetSize(),r=this._buffers.get(t);void 0===r?this._buffers.set(t,[e]):r.push(e)}_DestroyAfterSubmit(e){this._destroyAfterSubmit.push(e)}AfterSubmit(){for(const e of this._recycleAfterSubmit)e.Recycle();C3.clearArray(this._recycleAfterSubmit);for(const t of this._releaseAfterSubmit)this._totalBufferCount--,this._totalBufferSize-=t.GetSize(),t.Release();C3.clearArray(this._releaseAfterSubmit);for(const r of this._destroyAfterSubmit)r["destroy"]();C3.clearArray(this._destroyAfterSubmit)}MaybeCollectUnusedBuffers(e){e%30==0&&this._CollectUnusedBuffers(e)}_CollectUnusedBuffers(s){for(const[e,f]of this._buffers.entries()){let r=0;for(let e=0,t=f.length;e<t;++e){const i=f[e];i._ShouldCollect(s)?(this._totalBufferCount--,this._totalBufferSize-=i.GetSize(),i.Release(),this._totalReleased++):(f[r]=i,++r)}0===r?this._buffers.delete(e):C3.truncateArray(f,r)}this._DebugLogBufferMap()}UpdateBufferSubData(e,t,r,s,f){const i=this.GetRecyclableBuffer(f),u=i.GetBuffer(),l=u["getMappedRange"](0,f);new Uint8Array(l).set(new Uint8Array(r,s,f)),u["unmap"](),e["copyBufferToBuffer"](u,0,t,s,f),(ENABLE_RECYCLING?this._recycleAfterSubmit:(i.Discard(),this._releaseAfterSubmit)).push(i)}_DebugLogBufferMap(){this._totalCreated=0,this._totalReleased=0,this._totalReturned=0,this._totalRecycled=0}};
+}
+
+// ../lib/gfx/webgpu/recyclableBuffer.js
+{
+const C3=self.C3,GPUBufferUsage=self["GPUBufferUsage"],GPUMapMode=self["GPUMapMode"],assert=self.assert,STATE_AVAILABLE=0,STATE_IN_USE=1,STATE_RECYCLING=2;C3.Gfx.WebGPURecyclableBuffer=class{constructor(e,t){this._bufferManager=e,this._state=STATE_IN_USE,this._size=t,this._buffer=this.GetRenderer()._GetDevice()["createBuffer"]({"mappedAtCreation":!0,"size":t,"usage":GPUBufferUsage["COPY_SRC"]|GPUBufferUsage["MAP_WRITE"]}),this._recycledFrameNumber=0}GetRenderer(){return this._bufferManager.GetRenderer()}GetState(){return this._state}GetSize(){return this._size}GetBuffer(){return this._buffer}MarkInUse(){this._state=STATE_IN_USE}async Recycle(){this._state=STATE_RECYCLING;try{await this._buffer["mapAsync"](GPUMapMode["WRITE"])}catch(e){return void console.warn("[WebGPU] Error recycling buffer, assuming device was lost: ",e)}this.GetRenderer().IsContextLost()||(this._state=STATE_AVAILABLE,this._recycledFrameNumber=this.GetRenderer().GetFrameNumber(),this._bufferManager._AddRecycledBuffer(this))}Discard(){this._state=STATE_AVAILABLE}_ShouldCollect(e){return this._recycledFrameNumber<=e-25}Release(){this._buffer["destroy"](),this._buffer=null,this._bufferManager=null}};
+}
+
+// ../lib/gfx/webgpu/customParamsBuffer.js
+{
+const C3=self.C3,assert=self.assert,GPUBufferUsage=self["GPUBufferUsage"];C3.Gfx.WebGPUEffectCustomParamsBuffer=class{constructor(e){const r=e.GetRenderer();this._shaderProgram=e,this._byteSize=e.GetCustomParametersByteSize(),this._arrayBuffer=new ArrayBuffer(this._byteSize),this._f32arr=new Float32Array(this._arrayBuffer),this._isChanged=!1,this._buffer=r._GetDevice()["createBuffer"]({"size":this._byteSize,"usage":GPUBufferUsage["UNIFORM"]|GPUBufferUsage["COPY_DST"]}),this._bufferBindGroup=r._CreateBufferBindGroup(this._buffer)}Release(){const e=this.GetRenderer();e._OnBufferBindGroupDestroyed(this._bufferBindGroup),this.GetRenderer().GetBufferManager()._DestroyAfterSubmit(this._buffer),this._buffer=null,this._shaderProgram=null,this._arrayBuffer=null,this._f32arr=null,this._bufferBindGroup=null}GetRenderer(){return this._shaderProgram.GetRenderer()}GetShaderProgram(){return this._shaderProgram}GetBufferBindGroup(){return this._bufferBindGroup}SetParameterValue(e,r){const t=this._shaderProgram._GetCustomParameterInfo(e),s=t.type,f=t.offset/4,a=this._f32arr;if("color"===s)r.equalsRGBF32Array(a,f)||(r.writeRGBToTypedArray(a,f),this._isChanged=!0);else{if("float"!==s&&"percent"!==s)throw new Error(`unexpected shader param type '${s}'`);a[f]!==Math.fround(r)&&(a[f]=r,this._isChanged=!0)}}IsChanged(){return this._isChanged}UpdateBuffer(e){this.GetRenderer().GetBufferManager().UpdateBufferSubData(e,this._buffer,this._arrayBuffer,0,this._byteSize),this._isChanged=!1}};
+}
+
+// ../lib/gfx/webgpu/shaderProgram.js
+{
+const C3=self.C3,SIZEOF_F32=4,SIZEOF_U32=4,SIZEOF_VEC2_F32=2*SIZEOF_F32,SIZEOF_VEC4_F32=4*SIZEOF_F32,SIZEOF_MAT4_F32=16*SIZEOF_F32;function UpdateLayoutEndValues(e){for(const t of Object.values(e))t.end=t.offset+t.size}function makeNullFilledArray(t){const r=[];for(let e=0;e<t;++e)r.push(null);return r}const vertexUniformBufferDeclaration=`
+struct Uniforms {
+	transform		: mat4x4<f32>,
+	pointTexStart	: vec2<f32>,
+	pointTexEnd		: vec2<f32>,
+	zElevation		: f32
+};
+@binding(0) @group(0) var<uniform> uniforms : Uniforms;
+`,vubLayout={transform:{offset:0,size:SIZEOF_MAT4_F32,end:0},pointTex:{offset:64,size:SIZEOF_VEC4_F32,end:0},pointTexStart:{offset:64,size:SIZEOF_VEC2_F32,end:0},pointTexEnd:{offset:72,size:SIZEOF_VEC2_F32,end:0},zElevation:{offset:80,size:SIZEOF_F32,end:0}},vubSize=(UpdateLayoutEndValues(vubLayout),vubLayout.zElevation.end),fragmentUniformBufferDeclaration=`
+struct Uniforms {
+	color2				: vec4<f32>,
+	pointColor 			: vec4<f32>,
+	tileSize			: vec2<f32>,
+	tileSpacing			: vec2<f32>,
+	srcRectStart		: vec2<f32>,
+	srcRectEnd			: vec2<f32>,
+	pixelSize			: vec2<f32>,
+	outlineThickness	: f32
+};
+@binding(1) @group(0) var<uniform> uniforms : Uniforms;
+`,fubLayout={color2:{offset:0,size:SIZEOF_VEC4_F32,end:0},pointColor:{offset:16,size:SIZEOF_VEC4_F32,end:0},tileSize:{offset:32,size:SIZEOF_VEC2_F32,end:0},tileSpacing:{offset:40,size:SIZEOF_VEC2_F32,end:0},srcRect:{offset:48,size:SIZEOF_VEC4_F32,end:0},srcRectStart:{offset:48,size:SIZEOF_VEC2_F32,end:0},srcRectEnd:{offset:56,size:SIZEOF_VEC2_F32,end:0},pixelSize:{offset:64,size:SIZEOF_VEC2_F32,end:0},outlineThickness:{offset:72,size:SIZEOF_F32,end:0}},fubSize=(UpdateLayoutEndValues(fubLayout),fubLayout.outlineThickness.end),c3ParamsUniformBufferDeclaration=`
+struct C3Params {
+	srcStart			: vec2<f32>,
+	srcEnd				: vec2<f32>,
+	srcOriginStart		: vec2<f32>,
+	srcOriginEnd		: vec2<f32>,
+	layoutStart			: vec2<f32>,
+	layoutEnd			: vec2<f32>,
+	destStart			: vec2<f32>,
+	destEnd				: vec2<f32>,
+	devicePixelRatio	: f32,
+	layerScale			: f32,
+	layerAngle			: f32,
+	seconds				: f32,
+	zNear				: f32,
+	zFar				: f32,
+	isSrcTexRotated		: u32
+};
+@binding(4) @group(0) var<uniform> c3Params : C3Params;
+
+fn c3_srcToNorm(p : vec2<f32>) -> vec2<f32>
+{
+	return (p - c3Params.srcStart) / (c3Params.srcEnd - c3Params.srcStart);
+}
+
+fn c3_normToSrc(p : vec2<f32>) -> vec2<f32>
+{
+	return fma(p, c3Params.srcEnd - c3Params.srcStart, c3Params.srcStart);
+}
+
+fn c3_clampToSrc(p : vec2<f32>) -> vec2<f32>
+{
+	return clamp(p, min(c3Params.srcStart, c3Params.srcEnd), max(c3Params.srcStart, c3Params.srcEnd));
+}
+
+fn c3_srcOriginToNorm(p : vec2<f32>) -> vec2<f32>
+{
+	return (p - c3Params.srcOriginStart) / (c3Params.srcOriginEnd - c3Params.srcOriginStart);
+}
+
+fn c3_normToSrcOrigin(p : vec2<f32>) -> vec2<f32>
+{
+	return fma(p, c3Params.srcOriginEnd - c3Params.srcOriginStart, c3Params.srcOriginStart);
+}
+
+fn c3_clampToSrcOrigin(p : vec2<f32>) -> vec2<f32>
+{
+	return clamp(p, min(c3Params.srcOriginStart, c3Params.srcOriginEnd), max(c3Params.srcOriginStart, c3Params.srcOriginEnd));
+}
+
+fn c3_getLayoutPos(p : vec2<f32>) -> vec2<f32>
+{
+	return fma(p - c3Params.srcOriginStart, (c3Params.layoutEnd - c3Params.layoutStart) / (c3Params.srcOriginEnd - c3Params.srcOriginStart), c3Params.layoutStart);
+}
+
+fn c3_srcToDest(p : vec2<f32>) -> vec2<f32>
+{
+	return fma(p - c3Params.srcStart, (c3Params.destEnd - c3Params.destStart) / (c3Params.srcEnd - c3Params.srcStart), c3Params.destStart);
+}
+
+fn c3_clampToDest(p : vec2<f32>) -> vec2<f32>
+{
+	return clamp(p, min(c3Params.destStart, c3Params.destEnd), max(c3Params.destStart, c3Params.destEnd));
+}
+
+fn c3_linearizeDepth(depthSample : f32) -> f32
+{
+	return c3Params.zNear * c3Params.zFar / (c3Params.zFar + depthSample * (c3Params.zNear - c3Params.zFar));
+}
+`,C3PARAMS_TERMS_REFERENCING_SRC_RECTS=["srcStart","srcEnd","srcOriginStart","srcOriginEnd","c3_srcToNorm","c3_normToSrc","c3_clampToSrc","c3_srcOriginToNorm","c3_normToSrcOrigin","c3_clampToSrcOrigin","c3_getLayoutPos","c3_srcToDest"],C3PARAMS_TERMS_REFERENCING_OTHER_RECTS=["layoutStart","layoutEnd","destStart","destEnd","c3_clampToDest"],c3ParamsLayout={srcRect:{offset:0,size:SIZEOF_VEC4_F32,end:0},srcStart:{offset:0,size:SIZEOF_VEC2_F32,end:0},srcEnd:{offset:8,size:SIZEOF_VEC2_F32,end:0},srcOriginRect:{offset:16,size:SIZEOF_VEC4_F32,end:0},srcOriginStart:{offset:16,size:SIZEOF_VEC2_F32,end:0},srcOriginEnd:{offset:24,size:SIZEOF_VEC2_F32,end:0},layoutRect:{offset:32,size:SIZEOF_VEC4_F32,end:0},layoutStart:{offset:32,size:SIZEOF_VEC2_F32,end:0},layoutEnd:{offset:40,size:SIZEOF_VEC2_F32,end:0},destRect:{offset:48,size:SIZEOF_VEC4_F32,end:0},destStart:{offset:48,size:SIZEOF_VEC2_F32,end:0},destEnd:{offset:56,size:SIZEOF_VEC2_F32,end:0},devicePixelRatio:{offset:64,size:SIZEOF_F32,end:0},layerScale:{offset:68,size:SIZEOF_F32,end:0},layerAngle:{offset:72,size:SIZEOF_F32,end:0},seconds:{offset:76,size:SIZEOF_F32,end:0},zNear:{offset:80,size:SIZEOF_F32,end:0},zFar:{offset:84,size:SIZEOF_F32,end:0},isSrcTexRotated:{offset:88,size:SIZEOF_U32,end:0}},c3ParamsSize=(UpdateLayoutEndValues(c3ParamsLayout),c3ParamsLayout.isSrcTexRotated.end),fragmentInputStructDeclaration=`
+struct FragmentInput {
+	@location(0) fragUV : vec2<f32>,
+	@location(1) fragColor : vec4<f32>,
+	@builtin(position) fragPos : vec4<f32>
+};
+
+fn c3_getBackUV(fragPos : vec2<f32>, texBack : texture_2d<f32>) -> vec2<f32>
+{
+	return fragPos / vec2<f32>(textureDimensions(texBack));
+}
+
+fn c3_getDepthUV(fragPos : vec2<f32>, texDepth : texture_depth_2d) -> vec2<f32>
+{
+	return fragPos / vec2<f32>(textureDimensions(texDepth));
+}
+`,fragmentOutputStructDeclaration=`
+struct FragmentOutput {
+	@location(0) color : vec4<f32>
+};
+`,shaderCustomParamSizes=new Map([["float",4],["percent",4],["color",12]]),shaderCustomParamAlignSizes=new Map([["float",4],["percent",4],["color",16]]),c3WGSLUtilityFunctionsLib=`
+fn c3_premultiply(c : vec4<f32>) -> vec4<f32>
+{
+	return vec4<f32>(c.rgb * c.a, c.a);
+}
+
+fn c3_unpremultiply(c : vec4<f32>) -> vec4<f32>
+{
+	if (c.a == 0.0)
+	{
+		return vec4<f32>(0.0);
+	}
+	
+	return vec4<f32>(c.rgb / c.a, c.a);
+}
+
+fn c3_grayscale(rgb : vec3<f32>) -> f32
+{
+	return dot(rgb, vec3<f32>(0.299, 0.587, 0.114));
+}
+
+fn c3_getPixelSize(t : texture_2d<f32>) -> vec2<f32>
+{
+	return vec2<f32>(1.0) / vec2<f32>(textureDimensions(t));
+}
+
+fn c3_clamp2(v : vec2<f32>, l : f32, u : f32) -> vec2<f32>
+{
+	return clamp(v, vec2<f32>(l), vec2<f32>(u));
+}
+
+fn c3_mod(x : f32, y : f32) -> f32
+{
+	return x - y * floor(x / y);
+}
+
+fn c3_mod2(x : vec2<f32>, y : vec2<f32>) -> vec2<f32>
+{
+	return x - y * floor(x / y);
+}
+
+fn c3_RGBtoHSL(color : vec3<f32>) -> vec3<f32>
+{
+	var hsl : vec3<f32> = vec3<f32>(0.0);
+	
+	var fmin : f32 = min(min(color.r, color.g), color.b);
+	var fmax : f32 = max(max(color.r, color.g), color.b);
+	var delta : f32 = fmax - fmin;
+
+	hsl.z = (fmax + fmin) / 2.0;
+
+	if (delta == 0.0)
+	{
+		hsl.x = 0.0;
+		hsl.y = 0.0;
+	}
+	else 
+	{
+		if (hsl.z < 0.5)
+		{
+			hsl.y = delta / (fmax + fmin);
+		}
+		else
+		{
+			hsl.y = delta / (2.0 - fmax - fmin);
+		}
+		
+		var dR : f32 = (((fmax - color.r) / 6.0) + (delta / 2.0)) / delta;
+		var dG : f32 = (((fmax - color.g) / 6.0) + (delta / 2.0)) / delta;
+		var dB : f32 = (((fmax - color.b) / 6.0) + (delta / 2.0)) / delta;
+
+		if (color.r == fmax)
+		{
+			hsl.x = dB - dG;
+		}
+		else if (color.g == fmax)
+		{
+			hsl.x = (1.0 / 3.0) + dR - dB;
+		}
+		else if (color.b == fmax)
+		{
+			hsl.x = (2.0 / 3.0) + dG - dR;
+		}
+
+		if (hsl.x < 0.0)
+		{
+			hsl.x = hsl.x + 1.0;
+		}
+		else if (hsl.x > 1.0)
+		{
+			hsl.x = hsl.x - 1.0;
+		}
+	}
+
+	return hsl;
+}
+
+fn c3_hueToRGB(f1 : f32, f2 : f32, hue_ : f32) -> f32
+{
+	var hue : f32 = hue_;
+	if (hue < 0.0)
+	{
+		hue = hue + 1.0;
+	}
+	else if (hue > 1.0)
+	{
+		hue = hue - 1.0;
+	}
+		
+	var ret : f32;
+	
+	if ((6.0 * hue) < 1.0)
+	{
+		ret = f1 + (f2 - f1) * 6.0 * hue;
+	}
+	else if ((2.0 * hue) < 1.0)
+	{
+		ret = f2;
+	}
+	else if ((3.0 * hue) < 2.0)
+	{
+		ret = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;
+	}
+	else
+	{
+		ret = f1;
+	}
+	
+	return ret;
+}
+
+fn c3_HSLtoRGB(hsl : vec3<f32>) -> vec3<f32>
+{
+	var rgb : vec3<f32> = vec3<f32>(hsl.z);
+	
+	if (hsl.y != 0.0)
+	{
+		var f2 : f32;
+		
+		if (hsl.z < 0.5)
+		{
+			f2 = hsl.z * (1.0 + hsl.y);
+		}
+		else
+		{
+			f2 = (hsl.z + hsl.y) - (hsl.y * hsl.z);
+		}
+			
+		var f1 : f32 = 2.0 * hsl.z - f2;
+		
+		rgb.r = c3_hueToRGB(f1, f2, hsl.x + (1.0 / 3.0));
+		rgb.g = c3_hueToRGB(f1, f2, hsl.x);
+		rgb.b = c3_hueToRGB(f1, f2, hsl.x - (1.0 / 3.0));
+	}
+	
+	return rgb;
+}
+`;C3.Gfx.WebGPUShaderProgram=class extends C3.Gfx.ShaderProgramBase{constructor(e,t){if(super(e,t),this._fragmentModule=t.fragmentModule,this._fragmentModuleFragDepth=t.fragmentModuleFragDepth,this._vertexModule=t.vertexModule,this._normVertexModule=t.normVertexModule,this._renderPipelines=makeNullFilledArray(55),this._multisampleRenderPipelines=new Map,this._mipmapPipelineCache=new Map,this._usesAnyC3ParamRect=!1,this._usesIsSrcTexRotated=!1,this._parameters=[],this._customParamsByteSize=0,t.parameters){let e=0;for(const r of t.parameters){const a=r[2];if(!shaderCustomParamSizes.has(a))throw new Error(`unrecognized effect param type '${a}'`);const n=shaderCustomParamSizes.get(a),i=shaderCustomParamAlignSizes.get(a),o=e%i;0!=o&&(e+=i-o),this._parameters.push({type:a,offset:e,size:n,end:e+n}),e+=n}this._customParamsByteSize=16*Math.ceil(e/16)}}static async Create(t,e){const r=t._GetDevice(),a=e.name,n=t.SupportsF16(),i=e.src,o=C3.Gfx.WebGPUShaderProgram._PreprocessFragmentShaderCode(i,n),u=r["createShaderModule"]({"label":a,"code":o});let f=null;if(e.srcFragDepth){const m=C3.Gfx.WebGPUShaderProgram._PreprocessFragmentShaderCode(e.srcFragDepth,n);f=r["createShaderModule"]({"label":a,"code":m})}u["getCompilationInfo"]().then(e=>C3.Gfx.WebGPUShaderProgram.ReportShaderCompilationInfo(a,"fragment",e));let s;const c=C3.Gfx.WebGPUShaderProgram._PreprocessVertexShaderCode(e.vertexSrc,n);c?(s=r["createShaderModule"]({"label":a,"code":c}))["getCompilationInfo"]().then(e=>C3.Gfx.WebGPUShaderProgram.ReportShaderCompilationInfo(a,"vertex",e)):s=t._GetDefaultVertexModule();let l;const p=C3.Gfx.WebGPUShaderProgram._PreprocessVertexShaderCode(e.normVertexSrc,n),d=(p?(l=r["createShaderModule"]({"label":a,"code":p}))["getCompilationInfo"]().then(e=>C3.Gfx.WebGPUShaderProgram.ReportShaderCompilationInfo(a,"vertex (norm)",e)):l=t._GetNormalizedVertexModule(),C3.New(C3.Gfx.WebGPUShaderProgram,t,Object.assign({fragmentModule:u,fragmentModuleFragDepth:f,vertexModule:s,normVertexModule:l},e)));if(d._usesAnySrcRectOrPixelSize=i.includes("%%C3PARAMS_STRUCT%%")&&C3PARAMS_TERMS_REFERENCING_SRC_RECTS.some(e=>i.includes(e)),d._usesAnyC3ParamRect=d._usesAnySrcRectOrPixelSize||i.includes("%%C3PARAMS_STRUCT%%")&&C3PARAMS_TERMS_REFERENCING_OTHER_RECTS.some(e=>i.includes(e)),d._usesIsSrcTexRotated=i.includes("%%C3PARAMS_STRUCT%%")&&i.includes("isSrcTexRotated"),"<generate-mipmap>"!==a){const g=d._CreateRenderPipelineAsync(0,0,0);let e=null;t.UsesDepthBuffer()&&(e=d._CreateRenderPipelineAsync(0,1,0));const[v,x]=await Promise.all([g,e]);d._renderPipelines[0]=v,x&&(d._renderPipelines[1]=x)}return d}static _PreprocessShaderCode(e,t){if(!e)return e;let r="";return(r=t?`enable f16;
+alias f16or32 = f16;
+`:"alias f16or32 = f32;\n")+e}static _PreprocessFragmentShaderCode(e,t){return e=C3.Gfx.WebGPUShaderProgram._PreprocessShaderCode(e,t),C3.StringSubstituteMap(e,{"%%SAMPLERFRONT_BINDING%%":"@binding(0) @group(1)","%%TEXTUREFRONT_BINDING%%":"@binding(1) @group(1)","%%SAMPLERBACK_BINDING%%":"@binding(0) @group(2)","%%TEXTUREBACK_BINDING%%":"@binding(1) @group(2)","%%SAMPLERDEPTH_BINDING%%":"@binding(0) @group(3)","%%TEXTUREDEPTH_BINDING%%":"@binding(1) @group(3)","%%SHADERPARAMS_BINDING%%":"@binding(5) @group(0)","%%FRAGMENTINPUT_STRUCT%%":fragmentInputStructDeclaration,"%%FRAGMENTOUTPUT_STRUCT%%":fragmentOutputStructDeclaration,"%%C3PARAMS_STRUCT%%":c3ParamsUniformBufferDeclaration,"%%C3_UTILITY_FUNCTIONS%%":c3WGSLUtilityFunctionsLib})}static _PreprocessVertexShaderCode(e,t){return C3.Gfx.WebGPUShaderProgram._PreprocessShaderCode(e,t)}static ReportShaderCompilationInfo(e,t,r){for(const a of r["messages"]){const n=`[WebGPU] Message (${a["type"]}) compiling ${t} shader '${e}': ${a["message"]} (line ${a["lineNum"]}, pos ${a["linePos"]})`;"error"===a.type?console.error(n):"warning"===a.type?console.warn(n):console.log(n)}}Release(){this._fragmentModule=null,this._fragmentModuleFragDepth=null,this._vertexModule=null,this._normVertexModule=null;for(let e=0,t=this._renderPipelines.length;e<t;++e)this._renderPipelines[e]=null;this._multisampleRenderPipelines.clear(),this._mipmapPipelineCache.clear(),super.Release()}_GetDevice(){return this._renderer._GetDevice()}_GetPipelineLayout(){return this._renderer._GetPipelineLayout()}GetRenderer(){return this._renderer}UsesAnyC3ParamRect(){return this._usesAnyC3ParamRect}UsesIsSrcTexRotated(){return this._usesIsSrcTexRotated}GetParameterCount(){return this._parameters.length}GetParameterType(e){return e<0||e>=this._parameters.length?null:this._parameters[e].type}GetCustomParametersByteSize(){return this._customParamsByteSize}_GetCustomParameterInfo(e){return this._parameters[e]}_GetRenderPipelineDescriptor(e,t,r){const[a,n]=this._renderer._GetBlendByIndex(e),i={"label":this.GetName()+` blendMode ${e} variant ${t} multisampleCount `+r,"layout":this._GetPipelineLayout(),"vertex":{"module":4===t?this._normVertexModule:this._vertexModule,"entryPoint":"main","buffers":[{"arrayStride":3*SIZEOF_F32,"attributes":[{"shaderLocation":0,"offset":0,"format":"float32x3"}]},{"arrayStride":3*SIZEOF_F32,"attributes":[{"shaderLocation":1,"offset":0,"format":"float32x3"}]}]},"fragment":{"module":this._fragmentModule,"entryPoint":"main","targets":[{"format":this._renderer.GetSwapChainFormat(),"blend":{"color":{"srcFactor":a,"dstFactor":n},"alpha":{"srcFactor":a,"dstFactor":n}}}]}};if(2<=r&&(i["multisample"]={"count":r}),1===t)i["fragment"]["module"]=this._fragmentModuleFragDepth||this._fragmentModule,i["depthStencil"]={"format":this._renderer._GetDepthBufferFormat(),"depthWriteEnabled":!0,"depthCompare":"less-equal"};else if(2===t){i["fragment"]["module"]=this._fragmentModuleFragDepth||this._fragmentModule,i["fragment"]["targets"]=[];const o={"compare":"always","failOp":"keep","depthFailOp":"keep","passOp":"replace"};i["depthStencil"]={"format":this._renderer._GetDepthBufferFormat(),"depthWriteEnabled":!0,"depthCompare":"less-equal","stencilFront":o,"stencilBack":o,"stencilReadMask":1,"stencilWriteMask":1}}else if(3===t){i["fragment"]["module"]=this._fragmentModuleFragDepth||this._fragmentModule;const u={"compare":"equal","failOp":"keep","depthFailOp":"keep","passOp":"keep"};i["depthStencil"]={"format":this._renderer._GetDepthBufferFormat(),"depthWriteEnabled":!1,"depthCompare":"always","stencilFront":u,"stencilBack":u,"stencilReadMask":1,"stencilWriteMask":0}}return i}_CreateRenderPipeline(e,t,r){return this._GetDevice()["createRenderPipeline"](this._GetRenderPipelineDescriptor(e,t,r))}_CreateRenderPipelineAsync(e,t,r){return this._GetDevice()["createRenderPipelineAsync"](this._GetRenderPipelineDescriptor(e,t,r))}GetRenderPipelineForState(r,a,n){const i=5*r+a;if(n<2){let e=this._renderPipelines[i];return null===e&&(e=this._CreateRenderPipeline(r,a,n),this._renderPipelines[i]=e),e}{let e=this._multisampleRenderPipelines.get(n),t=(Array.isArray(e)||(e=makeNullFilledArray(55),this._multisampleRenderPipelines.set(n,e)),e[i]);return null===t&&(t=this._CreateRenderPipeline(r,a,n),e[i]=t),t}}static GetVertexUniformBufferLayout(){return vubLayout}static GetVertexUniformBufferSize(){return 16*Math.ceil(vubSize/16)}static GetFragmentUniformBufferLayout(){return fubLayout}static GetFragmentUniformBufferSize(){return 16*Math.ceil(fubSize/16)}static GetFragmentC3ParamsBufferLayout(){return c3ParamsLayout}static GetFragmentC3ParamsBufferSize(){return 16*Math.ceil(c3ParamsSize/16)}static GetDefaultVertexShaderSource(){return`
+		${vertexUniformBufferDeclaration}
+
+		struct ColorData {
+			data : array<vec4<f32>>
+		};
+		@binding(2) @group(0) var<storage> colorBuffer : ColorData;
+
+		struct VertexInput {
+			@builtin(vertex_index) VertexIndex : u32,
+			@location(0) position : vec3<f32>,
+			@location(1) uv : vec3<f32>
+		};
+
+		struct VertexOutput {
+			@builtin(position) Position : vec4<f32>,
+			@location(0) fragUV : vec2<f32>,
+			@location(1) fragColor : vec4<f32>
+		};
+
+		@vertex
+		fn main(input : VertexInput) -> VertexOutput {
+			var output : VertexOutput;
+			output.Position = uniforms.transform * vec4<f32>(input.position, 1.0);
+			output.fragUV = input.uv.xy;
+			output.fragColor = colorBuffer.data[input.VertexIndex / u32(4)];
+			return output;
+		}`}static GetNormalizedVertexShaderSource(){return`
+		struct ColorData {
+			data : array<vec4<f32>>
+		};
+		@binding(2) @group(0) var<storage> colorBuffer : ColorData;
+
+		struct VertexInput {
+			@builtin(vertex_index) VertexIndex : u32,
+			@location(0) position : vec3<f32>,
+			@location(1) uv : vec3<f32>
+		};
+
+		struct VertexOutput {
+			@builtin(position) Position : vec4<f32>,
+			@location(0) fragUV : vec2<f32>,
+			@location(1) fragColor : vec4<f32>
+		};
+
+		@vertex
+		fn main(input : VertexInput) -> VertexOutput {
+			var output : VertexOutput;
+			var p = input.position;
+			p.y = 1.0 - p.y;
+			output.Position = vec4<f32>(p.xy * 2.0 - 1.0, p.z, 1.0);
+			output.fragUV = input.uv.xy;
+			output.fragColor = colorBuffer.data[input.VertexIndex / u32(4)];
+			return output;
+		}`}static GetTextureFillVertexShaderSource(){return`
+		${vertexUniformBufferDeclaration}
+
+		struct ColorData {
+			data : array<vec4<f32>>
+		};
+		@binding(2) @group(0) var<storage> colorBuffer : ColorData;
+
+		struct VertexInput {
+			@builtin(vertex_index) VertexIndex : u32,
+			@location(0) position : vec3<f32>,
+			@location(1) uv : vec3<f32>
+		};
+
+		struct VertexOutput {
+			@builtin(position) Position : vec4<f32>,
+			@location(0) fragUV : vec3<f32>,
+			@location(1) fragColor : vec4<f32>
+		};
+
+		@vertex
+		fn main(input : VertexInput) -> VertexOutput {
+			var output : VertexOutput;
+			output.Position = uniforms.transform * vec4<f32>(input.position, 1.0);
+			output.fragUV = input.uv;
+			output.fragColor = colorBuffer.data[input.VertexIndex / u32(4)];
+			return output;
+		}`}static GetNormalizedTextureFillVertexShaderSource(){return`
+		struct ColorData {
+			data : array<vec4<f32>>
+		};
+		@binding(2) @group(0) var<storage> colorBuffer : ColorData;
+
+		struct VertexInput {
+			@builtin(vertex_index) VertexIndex : u32,
+			@location(0) position : vec3<f32>,
+			@location(1) uv : vec3<f32>
+		};
+
+		struct VertexOutput {
+			@builtin(position) Position : vec4<f32>,
+			@location(0) fragUV : vec3<f32>,
+			@location(1) fragColor : vec4<f32>
+		};
+
+		@vertex
+		fn main(input : VertexInput) -> VertexOutput {
+			var output : VertexOutput;
+			var p = input.position;
+			p.y = 1.0 - p.y;
+			output.Position = vec4<f32>(p.xy * 2.0 - 1.0, p.z, 1.0);
+			output.fragUV = input.uv;
+			output.fragColor = colorBuffer.data[input.VertexIndex / u32(4)];
+			return output;
+		}`}static GetTextureFillFragmentShaderSource(e){return`
+		@binding(0) @group(1) var sampler0 : sampler;
+		@binding(1) @group(1) var texture0 : texture_2d<f32>;
+		@binding(2) @group(1) var sampler1 : sampler;
+		@binding(3) @group(1) var texture1 : texture_2d<f32>;
+		@binding(4) @group(1) var sampler2 : sampler;
+		@binding(5) @group(1) var texture2 : texture_2d<f32>;
+		@binding(6) @group(1) var sampler3 : sampler;
+		@binding(7) @group(1) var texture3 : texture_2d<f32>;
+		@binding(8) @group(1) var sampler4 : sampler;
+		@binding(9) @group(1) var texture4 : texture_2d<f32>;
+		@binding(10) @group(1) var sampler5 : sampler;
+		@binding(11) @group(1) var texture5 : texture_2d<f32>;
+		@binding(12) @group(1) var sampler6 : sampler;
+		@binding(13) @group(1) var texture6 : texture_2d<f32>;
+		@binding(14) @group(1) var sampler7 : sampler;
+		@binding(15) @group(1) var texture7 : texture_2d<f32>;
+		@binding(16) @group(1) var sampler8 : sampler;
+		@binding(17) @group(1) var texture8 : texture_2d<f32>;
+		@binding(18) @group(1) var sampler9 : sampler;
+		@binding(19) @group(1) var texture9 : texture_2d<f32>;
+		@binding(20) @group(1) var sampler10 : sampler;
+		@binding(21) @group(1) var texture10 : texture_2d<f32>;
+		@binding(22) @group(1) var sampler11 : sampler;
+		@binding(23) @group(1) var texture11 : texture_2d<f32>;
+		@binding(24) @group(1) var sampler12 : sampler;
+		@binding(25) @group(1) var texture12 : texture_2d<f32>;
+		@binding(26) @group(1) var sampler13 : sampler;
+		@binding(27) @group(1) var texture13 : texture_2d<f32>;
+
+		struct FragmentInput {
+			@location(0) fragUV : vec3<f32>,
+			@location(1) fragColor : vec4<f32>,
+			${e?"@builtin(position) fragPos: vec4<f32>":""}
+		};
+
+		struct FragmentOutput {
+			@location(0) color : vec4<f32>,
+			${e?"@builtin(frag_depth) fragDepth: f32":""} 
+		};
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var texXy : vec2<f32> = input.fragUV.xy;
+			var texIndex : f32 = input.fragUV.z;
+			var c : vec4<f32>;
+
+			let dx = dpdx(texXy);
+			let dy = dpdy(texXy);
+			
+			if (texIndex < 6.5)
+			{
+				if (texIndex < 2.5)
+				{
+					if (texIndex < 0.5)			{	c = textureSampleGrad(texture0, sampler0, texXy, dx, dy);	}
+					else
+					{
+						if (texIndex < 1.5)		{	c = textureSampleGrad(texture1, sampler1, texXy, dx, dy);	}
+						else					{	c = textureSampleGrad(texture2, sampler2, texXy, dx, dy);	}
+					}						
+				}
+				else
+				{
+					if (texIndex < 4.5)
+					{
+						if (texIndex < 3.5)		{	c = textureSampleGrad(texture3, sampler3, texXy, dx, dy);	}
+						else					{	c = textureSampleGrad(texture4, sampler4, texXy, dx, dy);	}
+					}
+					else
+					{
+						if (texIndex < 5.5)		{	c = textureSampleGrad(texture5, sampler5, texXy, dx, dy);	}
+						else					{	c = textureSampleGrad(texture6, sampler6, texXy, dx, dy);	}
+					}
+				}
+			}
+			else
+			{
+				if (texIndex < 9.5)
+				{
+					if (texIndex < 7.5)			{	c = textureSampleGrad(texture7, sampler7, texXy, dx, dy);	}
+					else
+					{
+						if (texIndex < 8.5)		{	c = textureSampleGrad(texture8, sampler8, texXy, dx, dy);	}
+						else					{	c = textureSampleGrad(texture9, sampler9, texXy, dx, dy);	}
+					}						
+				}
+				else
+				{
+					if (texIndex < 11.5)
+					{
+						if (texIndex < 10.5)	{	c = textureSampleGrad(texture10, sampler10, texXy, dx, dy);	}
+						else					{	c = textureSampleGrad(texture11, sampler11, texXy, dx, dy);	}
+					}
+					else
+					{
+						if (texIndex < 12.5)	{	c = textureSampleGrad(texture12, sampler12, texXy, dx, dy);	}
+						else					{	c = textureSampleGrad(texture13, sampler13, texXy, dx, dy);	}
+					}
+				}
+			}
+
+			output.color = c * input.fragColor;
+			${e?"output.fragDepth = select(input.fragPos.z, 1.0, output.color.a == 0.0);":""}
+			return output;
+		}`}static _GetMipmapGeneratorVertexSource(){return`
+		struct VertexInput {
+			@builtin(vertex_index) VertexIndex : u32
+		};
+		
+		struct VertexOutput {
+			@builtin(position) Position : vec4<f32>,
+			@location(0) fragUV : vec2<f32>
+		};
+
+		@vertex
+		fn main(input : VertexInput) -> VertexOutput {
+
+			var pos : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+				vec2<f32>(-1.0, 1.0),
+				vec2<f32>(1.0, 1.0),
+				vec2<f32>(-1.0, -1.0),
+				vec2<f32>(1.0, -1.0));
+			
+			var output : VertexOutput;
+			var p : vec2<f32> = pos[input.VertexIndex];
+			output.Position = vec4<f32>(p, 0.0, 1.0);
+			output.fragUV = p / 2.0 + 0.5;
+			return output;
+		}`}static _GetMipmapGeneratorFragmentSource(){return`
+		@binding(0) @group(0) var sampler0 : sampler;
+		@binding(1) @group(0) var texture0 : texture_2d<f32>;
+
+		struct FragmentInput {
+			@location(0) fragUV : vec2<f32>
+		};
+
+		struct FragmentOutput {
+			@location(0) color : vec4<f32>
+		};
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			output.color = textureSample(texture0, sampler0, vec2<f32>(input.fragUV.x, 1.0 - input.fragUV.y));
+			return output;
+		}`}_GetMipmapGeneratorPipeline(e){e=e||this._renderer.GetTextureFormat();let t=this._mipmapPipelineCache.get(e);return t||(t=this._GetDevice()["createRenderPipeline"]({"label":"<mipmap generator>","layout":"auto","vertex":{"module":this._vertexModule,"entryPoint":"main"},"primitive":{"topology":"triangle-strip","stripIndexFormat":"uint16"},"fragment":{"module":this._fragmentModule,"entryPoint":"main","targets":[{"format":e,"blend":{"color":{"srcFactor":"one","dstFactor":"zero"},"alpha":{"srcFactor":"one","dstFactor":"zero"}}}]}}),this._mipmapPipelineCache.set(e,t)),t}static _GetPointVertexSource(){return`
+		${vertexUniformBufferDeclaration}
+
+		struct PointData {
+			data : array<vec4<f32>>
+		};
+		@binding(3) @group(0) var<storage> pointBuffer : PointData;
+
+		struct VertexInput {
+			@builtin(vertex_index) VertexIndex : u32
+		};
+
+		struct VertexOutput {
+			@builtin(position) Position : vec4<f32>,
+			@location(0) fragUV : vec2<f32>,
+			@location(1) pointOpacity : f32
+		};
+
+		@vertex
+		fn main(input : VertexInput) -> VertexOutput {
+
+			var normPos : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+				vec2<f32>(-0.5, -0.5),
+				vec2<f32>(0.5, -0.5),
+				vec2<f32>(0.5, 0.5),
+				vec2<f32>(-0.5, 0.5));
+			
+			var output : VertexOutput;
+			var p : vec2<f32> = normPos[input.VertexIndex % u32(4)];
+			var pointData : vec4<f32> = pointBuffer.data[input.VertexIndex / u32(4)];
+
+			var size : f32 = pointData.z;
+			output.Position = uniforms.transform * vec4<f32>(p * size + pointData.xy, uniforms.zElevation, 1.0);
+			output.pointOpacity = pointData.w;
+
+			var pointTexMin : vec2<f32> = min(uniforms.pointTexStart, uniforms.pointTexEnd);
+			var pointTexMax : vec2<f32> = max(uniforms.pointTexStart, uniforms.pointTexEnd);
+			var pn : vec2<f32> = p + vec2<f32>(0.5, 0.5);
+			var pointCoord : vec2<f32> = select(vec2<f32>(1.0 - pn.y, pn.x), pn, uniforms.pointTexEnd.x > uniforms.pointTexStart.x);
+
+			output.fragUV = mix(pointTexMin, pointTexMax, pointCoord);
+			return output;
+		}`}static _GetPointFragmentSource(e){return`
+		${fragmentUniformBufferDeclaration}
+
+		%%SAMPLERFRONT_BINDING%% var sampler0 : sampler;
+		%%TEXTUREFRONT_BINDING%% var texture0 : texture_2d<f32>;
+
+		struct FragmentInput {
+			@location(0) fragUV : vec2<f32>,
+			@location(1) pointOpacity : f32,
+			@builtin(position) fragPos : vec4<f32>
+		};
+		
+		struct FragmentOutput {
+			@location(0) color : vec4<f32>,
+			${e?"@builtin(frag_depth) fragDepth: f32":""} 
+		};
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			output.color = textureSample(texture0, sampler0, input.fragUV) * uniforms.pointColor * input.pointOpacity;
+			${e?"output.fragDepth = select(input.fragPos.z, 1.0, output.color.a == 0.0);":""}
+			return output;
+		}`}static _GetTilemapFragmentShaderSource(e){return`
+		${fragmentUniformBufferDeclaration}
+
+		%%SAMPLERFRONT_BINDING%% var sampler0 : sampler;
+		%%TEXTUREFRONT_BINDING%% var texture0 : texture_2d<f32>;
+
+		%%FRAGMENTINPUT_STRUCT%%
+		
+		struct FragmentOutput {
+			@location(0) color : vec4<f32>,
+			${e?"@builtin(frag_depth) fragDepth: f32":""} 
+		};
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var halfPixelSize : vec2<f32> = vec2<f32>(0.5, 0.5) / vec2<f32>(textureDimensions(texture0));
+
+			var tile : vec2<f32> = floor(input.fragUV);
+			var tex : vec2<f32> = fract(input.fragUV);
+			var tileOrigin : vec2<f32> = uniforms.srcRectStart + tile * (uniforms.tileSize + uniforms.tileSpacing);
+			var lowerBound : vec2<f32> = tileOrigin + halfPixelSize;
+			var upperBound : vec2<f32> = tileOrigin + uniforms.tileSize - halfPixelSize;
+
+			output.color = textureSampleLevel(texture0, sampler0, clamp(tex, lowerBound, upperBound), 0.0) * input.fragColor;
+			${e?"output.fragDepth = select(input.fragPos.z, 1.0, output.color.a == 0.0);":""}
+			return output;
+		}`}static GetTileRandomizationFragmentShaderSource(e){return`
+${fragmentUniformBufferDeclaration}
+
+%%SAMPLERFRONT_BINDING%% var sampler0 : sampler;
+%%TEXTUREFRONT_BINDING%% var texture0 : texture_2d<f32>;
+
+%%FRAGMENTINPUT_STRUCT%%
+
+struct FragmentOutput {
+	@location(0) color : vec4<f32>,
+	${e?"@builtin(frag_depth) fragDepth: f32":""} 
+};
+
+%%C3_UTILITY_FUNCTIONS%%
+
+const PI : f32 = 3.1415926;
+
+fn cospVec4(a : vec4<f32>, b : vec4<f32>, x : f32) -> vec4<f32>
+{
+	return (a + b + (a - b) * cos(x * PI)) / 2.0;
+}
+
+fn randVec3(seed : vec2<f32>) -> vec3<f32>
+{
+	return vec3<f32>(
+		fract(sin(dot(seed.xy, vec2<f32>(12.9898,78.233))) * 43758.5453),
+		fract(sin(dot(seed.yx, vec2<f32>(12.9898,-78.233))) * 43758.5453),
+		fract(sin(dot(seed.xy, vec2<f32>(-12.9898,-78.233))) * 43758.5453));
+}
+
+fn sampleTile(tile : vec2<f32>, uv : vec2<f32>, ddx : vec2<f32>, ddy : vec2<f32>) -> vec4<f32>
+{
+	var posRandom = uniforms.tileSize;
+	var angleRandom = uniforms.outlineThickness;
+	var pixelSize = c3_getPixelSize(texture0);
+	
+	var rand = (randVec3(round(tile)) - 0.5) * 2.0;
+	
+	var angle = angleRandom * rand.z * PI;
+	var sin_a = sin(angle);
+	var cos_a = cos(angle);
+	var aspect = pixelSize.x / pixelSize.y;
+
+	var mid = tile + vec2<f32>(0.5, 0.5);
+	var dp = uv - mid;
+	dp.x /= aspect;
+	var r = vec2<f32>(dp.x * cos_a - dp.y * sin_a,
+					  dp.y * cos_a + dp.x * sin_a);
+	r.x *= aspect;
+
+	var p = mid + r + (posRandom * rand.xy / 2.0);
+	
+	return textureSampleGrad(texture0, sampler0, p, ddx, ddy);
+}
+
+@fragment
+fn main(input : FragmentInput) -> FragmentOutput
+{
+	var output : FragmentOutput;
+	
+	var blendMarginX = uniforms.tileSpacing.x;
+	var blendMarginY = uniforms.tileSpacing.y;
+	
+	var tile = floor(input.fragUV);
+	var tex = fract(input.fragUV);
+	var ddx = dpdx(input.fragUV);
+	var ddy = dpdy(input.fragUV);
+	
+	var curTile = sampleTile(tile, input.fragUV, ddx, ddy);
+	
+	var inLeftMargin = (tex.x < blendMarginX);
+	var inRightMargin = (tex.x > 1.0 - blendMarginX);
+	var inTopMargin = (tex.y < blendMarginY);
+	var inBottomMargin = (tex.y > 1.0 - blendMarginY);
+	
+	if (inLeftMargin)
+	{
+		var leftTile = sampleTile(tile + vec2<f32>(-1.0, 0.0), input.fragUV, ddx, ddy);
+		var leftMix = (tex.x / (blendMarginX * 2.0)) + 0.5;
+		var leftMixedTile = cospVec4(leftTile, curTile, leftMix);
+		
+		if (inTopMargin)
+		{
+			var topTile =     sampleTile(tile + vec2<f32>(0.0,  -1.0), input.fragUV, ddx, ddy);
+			var topLeftTile = sampleTile(tile + vec2<f32>(-1.0, -1.0), input.fragUV, ddx, ddy);
+			var topLeftMixedTile = cospVec4(topLeftTile, topTile, leftMix);
+			
+			output.color = cospVec4(topLeftMixedTile, leftMixedTile, (tex.y / (blendMarginY * 2.0)) + 0.5);
+		}
+		else if (inBottomMargin)
+		{
+			var bottomTile =     sampleTile(tile + vec2<f32>(0.0,  1.0), input.fragUV, ddx, ddy);
+			var bottomLeftTile = sampleTile(tile + vec2<f32>(-1.0, 1.0), input.fragUV, ddx, ddy);
+			var bottomLeftMixedTile = cospVec4(bottomLeftTile, bottomTile, leftMix);
+			
+			output.color = cospVec4(leftMixedTile, bottomLeftMixedTile, (tex.y - (1.0 - blendMarginY)) / (blendMarginY * 2.0));
+		}
+		else
+		{
+			output.color = leftMixedTile;
+		}
+	}
+	else if (inRightMargin)
+	{
+		var rightTile = sampleTile(tile + vec2(1.0, 0.0), input.fragUV, ddx, ddy);
+		var rightMix = (tex.x - (1.0 - blendMarginX)) / (blendMarginX * 2.0);
+		var rightMixedTile = cospVec4(curTile, rightTile, rightMix);
+		
+		if (inTopMargin)
+		{
+			var topTile =      sampleTile(tile + vec2<f32>(0.0, -1.0), input.fragUV, ddx, ddy);
+			var topRightTile = sampleTile(tile + vec2<f32>(1.0, -1.0), input.fragUV, ddx, ddy);
+			var topRightMixedTile = cospVec4(topTile, topRightTile, rightMix);
+			
+			output.color = cospVec4(topRightMixedTile, rightMixedTile, (tex.y / (blendMarginY * 2.0)) + 0.5);
+		}
+		else if (inBottomMargin)
+		{
+			var bottomTile =      sampleTile(tile + vec2<f32>(0.0, 1.0), input.fragUV, ddx, ddy);
+			var bottomRightTile = sampleTile(tile + vec2<f32>(1.0, 1.0), input.fragUV, ddx, ddy);
+			var bottomRightMixedTile = cospVec4(bottomTile, bottomRightTile, rightMix);
+			
+			output.color = cospVec4(rightMixedTile, bottomRightMixedTile, (tex.y - (1.0 - blendMarginY)) / (blendMarginY * 2.0));
+		}
+		else
+		{
+			output.color = rightMixedTile;
+		}
+	}
+	else if (inTopMargin)
+	{
+		var topTile = sampleTile(tile + vec2<f32>(0.0, -1.0), input.fragUV, ddx, ddy);
+		output.color = cospVec4(topTile, curTile, (tex.y / (blendMarginY * 2.0)) + 0.5);
+	}
+	else if (inBottomMargin)
+	{
+		var bottomTile = sampleTile(tile + vec2<f32>(0.0, 1.0), input.fragUV, ddx, ddy);
+		output.color = cospVec4(curTile, bottomTile, (tex.y - (1.0 - blendMarginY)) / (blendMarginY * 2.0));
+	}
+	else
+	{
+		output.color = curTile;
+	}
+	
+	output.color *= input.fragColor;
+	${e?"output.fragDepth = select(input.fragPos.z, 1.0, output.color.a == 0.0);":""}
+	return output;
+}
+`}static _GetColorFillFragmentShaderSource(){return`
+		%%FRAGMENTINPUT_STRUCT%%
+		%%FRAGMENTOUTPUT_STRUCT%%
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			output.color = input.fragColor;
+			return output;
+		}`}static _GetLinearGradientFillFragmentShaderSource(){return`
+		${fragmentUniformBufferDeclaration}
+
+		%%FRAGMENTINPUT_STRUCT%%
+		%%FRAGMENTOUTPUT_STRUCT%%
+
+		fn fromLinear(linearRGB : vec3<f32>) -> vec3<f32>
+		{
+			var cutoff : vec3<bool> = (linearRGB < vec3<f32>(0.0031308));
+			var higher : vec3<f32> = vec3<f32>(1.055) * pow(abs(linearRGB), vec3<f32>(1.0/2.4)) - 0.055;
+			var lower : vec3<f32> = linearRGB * 12.92;
+			return select(higher, lower, cutoff);
+		}
+
+		fn toLinear(sRGB : vec3<f32>) -> vec3<f32>
+		{
+			var cutoff : vec3<bool> = (sRGB < vec3<f32>(0.04045));
+			var higher : vec3<f32> = pow(abs((sRGB + 0.055) / 1.055), vec3<f32>(2.4));
+			var lower : vec3<f32> = sRGB / 12.92;
+			return select(higher, lower, cutoff);
+		}
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var linearGrad : vec3<f32> = mix(toLinear(input.fragColor.rgb), toLinear(uniforms.color2.rgb), vec3<f32>(input.fragUV.x));
+
+			var a : f32 = mix(input.fragColor.a, uniforms.color2.a, input.fragUV.x);
+			output.color = vec4<f32>(fromLinear(linearGrad) * a, a);
+			return output;
+		}
+		`}static _GetPenumbraFillFragmentShaderSource(){return`
+		${fragmentUniformBufferDeclaration}
+
+		%%FRAGMENTINPUT_STRUCT%%
+		%%FRAGMENTOUTPUT_STRUCT%%
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var grad : f32 = input.fragUV.x / (1.0 - input.fragUV.y);
+			output.color = input.fragColor * (1.0 - (cos(grad * 3.141592653589793) + 1.0) / 2.0);
+			return output;
+		}
+		`}static _GetHardEllipseFillFragmentShaderSource(){return`
+		%%FRAGMENTINPUT_STRUCT%%
+		%%FRAGMENTOUTPUT_STRUCT%%
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var diff : vec2<f32> = input.fragUV - 0.5;
+			var diffSq : vec2<f32> = diff * diff;
+
+			var f : f32 = step(diffSq.x + diffSq.y, 0.25);
+
+			output.color = input.fragColor * f;
+			return output;
+		}`}static _GetHardEllipseOutlineFragmentShaderSource(){return`
+		${fragmentUniformBufferDeclaration}
+
+		%%FRAGMENTINPUT_STRUCT%%
+		%%FRAGMENTOUTPUT_STRUCT%%
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var diff : vec2<f32> = input.fragUV - 0.5;
+			var diffSq : vec2<f32> = diff * diff;
+			var distSq : f32 = diffSq.x + diffSq.y;
+			var norm : vec2<f32> = normalize(diff);
+			var halfNorm : vec2<f32> = norm * 0.5;
+
+			var innerF : f32 = step(distSq, 0.25);
+
+			var innerEdge : vec2<f32> = halfNorm - uniforms.pixelSize * norm * uniforms.outlineThickness;
+			var innerEdgeSq : vec2<f32> = innerEdge * innerEdge;
+			var outerF : f32 = step(innerEdgeSq.x + innerEdgeSq.y, distSq);
+			
+			output.color = input.fragColor * innerF * outerF;
+			return output;
+		}`}static _GetSmoothEllipseFillFragmentShaderSource(){return`
+		${fragmentUniformBufferDeclaration}
+
+		%%FRAGMENTINPUT_STRUCT%%
+		%%FRAGMENTOUTPUT_STRUCT%%
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var diff : vec2<f32> = input.fragUV - 0.5;
+			var diffSq : vec2<f32> = diff * diff;
+			var norm : vec2<f32> = normalize(diff);
+			var halfNorm : vec2<f32> = norm * 0.5;
+			var halfNormSq : vec2<f32> = halfNorm * halfNorm;
+
+			var innerEdge : vec2<f32> = halfNorm - uniforms.pixelSize * norm;
+			var innerEdgeSq : vec2<f32> = innerEdge * innerEdge;
+
+			var f : f32 = smoothstep(halfNormSq.x + halfNormSq.y, innerEdgeSq.x + innerEdgeSq.y, diffSq.x + diffSq.y);
+
+			output.color = input.fragColor * f;
+			return output;
+		}`}static _GetSmoothEllipseOutlineFragmentShaderSource(){return`
+		${fragmentUniformBufferDeclaration}
+
+		%%FRAGMENTINPUT_STRUCT%%
+		%%FRAGMENTOUTPUT_STRUCT%%
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var diff : vec2<f32> = input.fragUV - 0.5;
+			var diffSq : vec2<f32> = diff * diff;
+			var distSq : f32 = diffSq.x + diffSq.y;
+			var norm : vec2<f32> = normalize(diff);
+			var halfNorm : vec2<f32> = norm * 0.5;
+			var halfNormSq : vec2<f32> = halfNorm * halfNorm;
+
+			var pxNorm : vec2<f32> = uniforms.pixelSize * norm;
+			var innerEdge1 : vec2<f32> = halfNorm - pxNorm;
+			var innerEdge1Sq : vec2<f32> = innerEdge1 * innerEdge1;
+
+			var innerF : f32 = smoothstep(halfNormSq.x + halfNormSq.y, innerEdge1Sq.x + innerEdge1Sq.y, distSq);
+
+			var innerEdge2 : vec2<f32> = halfNorm - pxNorm * uniforms.outlineThickness;
+			var innerEdge2Sq : vec2<f32> = innerEdge2 * innerEdge2;
+			var innerEdge3 : vec2<f32> = halfNorm - pxNorm * (uniforms.outlineThickness + 1.0);
+			var innerEdge3Sq : vec2<f32> = innerEdge3 * innerEdge3;
+
+			var outerF : f32 = smoothstep(innerEdge3Sq.x + innerEdge3Sq.y, innerEdge2Sq.x + innerEdge2Sq.y, distSq);
+			
+			output.color = input.fragColor * innerF * outerF;
+			return output;
+		}`}static _GetSmoothLineFillFragmentShaderSource(){return`
+		%%FRAGMENTINPUT_STRUCT%%
+		%%FRAGMENTOUTPUT_STRUCT%%
+
+		@fragment
+		fn main(input : FragmentInput) -> FragmentOutput {
+			var output : FragmentOutput;
+			var f : f32 = 1.0 - abs(input.fragUV.y - 0.5) * 2.0;
+			output.color = input.fragColor * f;
+			return output;
+		}`}};
+}
+
+// ../lib/gfx/webgpu/texture.js
+{
+const C3=self.C3,VALID_SAMPLINGS=new Set(["nearest","bilinear","trilinear"]),VALID_WRAP_MODES=new Set(["clamp-to-edge","repeat","mirror-repeat"]),GPUTextureUsage=self["GPUTextureUsage"],DEFAULT_CREATE_OPTIONS={wrapX:"clamp-to-edge",wrapY:"clamp-to-edge",sampling:"trilinear",anisotropy:0,mipMap:!0,isRenderTarget:!1,isSampled:!1,canReadPixels:!1,canUpdate:!1,multisampling:0,width:-1,height:-1},TEXTURE_FORMAT_SIZE_DATA=[[1,["r8unorm","r8snorm","r8uint","r8sint","stencil8"]],[2,["r16uint","r16sint","r16float","rg8unorm","rg8snorm","rg8uint","rg8sint","depth16unorm"]],[3,["depth24plus"]],[4,["r32uint","r32sint","r32float","rg16uint","rg16sint","rg16float","rgba8unorm","rgba8unorm-srgb","rgba8snorm","rgba8uint","rgba8sint","bgra8unorm","bgra8unorm-srgb","rgb9e5ufloat","rgb10a2uint","rgb10a2unorm","rg11b10ufloat","depth24plus-stencil8","depth32float"]],[8,["rg32uint","rg32sint","rg32float","rgba16uint","rgba16sint","rgba16float"]],[16,["rgba32uint","rgba32sint","rgba32float"]],[5,["depth32float-stencil8"]]],TEXTURE_FORMAT_SIZE_MAP=new Map;for(const[a,b]of TEXTURE_FORMAT_SIZE_DATA)for(const c of b)TEXTURE_FORMAT_SIZE_MAP.set(c,a);const allTextures=new Set,UPDATE_DEFAULT_OPTIONS={premultiplyAlpha:!0,flipY:!1};C3.Gfx.WebGPURendererTexture=class{constructor(e,t){this._renderer=e,this._texture=null,this._format="",this._textureView=null,this._sampler=null,this._ownTextureBindGroup=null,this._backTextureBindGroup=null,this._width=0,this._height=0,this._isStatic=!0,this._wrapX="clamp-to-edge",this._wrapY="clamp-to-edge",this._sampling="trilinear",this._anisotropy=0,this._isMipMapped=!1,this._refCount=0,this._isRenderTarget=!1,this._isSampled=!1,this._canReadPixels=!1,this._canUpdate=!1,this._multisampling=0,this._usage=0,this._multiTextureEnabled=!0,this._multiTextureGroup=null,this._multiTextureIndex=0,this._isForBackbuffer=!!t,this._isForBackbuffer&&(this._format=this._renderer.GetSwapChainFormat(),this._isRenderTarget=!0,this._isSampled=!0,this._sampler=this._renderer._GetSampler({sampling:"nearest"}))}_InitFromOpts(e){if(this._wrapX=e.wrapX,this._wrapY=e.wrapY,this._sampling=e.sampling,this._anisotropy=e.anisotropy,this._isMipMapped=!!e.mipMap&&this._renderer.AreMipmapsEnabled()&&"nearest"!==e.sampling,this._isRenderTarget=!!e.isRenderTarget,this._isSampled=!!e.isSampled,this._canReadPixels=!!e.canReadPixels,this._canUpdate=!!e.canUpdate,this._multisampling=this._renderer._ClampToSupportedMultisampleValues(e.multisampling),!VALID_SAMPLINGS.has(this._sampling))throw new Error("invalid sampling");if(!VALID_WRAP_MODES.has(this._wrapX)||!VALID_WRAP_MODES.has(this._wrapY))throw new Error("invalid wrap mode");if(2<=this._multisampling&&this._isSampled)throw new Error("invalid use of multisampling");"nearest"===this._sampling&&(this._anisotropy=0),this._sampler=this._renderer._GetSampler({wrapX:this._wrapX,wrapY:this._wrapY,sampling:this._sampling,anisotropy:this._anisotropy}),this._CreateGPUResources(),this._refCount=1}_CreateGPUResources(){const e=this._renderer,t=e._GetDevice(),r=(this._usage=0,this._isRenderTarget?(this._usage=GPUTextureUsage["RENDER_ATTACHMENT"],this._isSampled&&(this._usage|=GPUTextureUsage["TEXTURE_BINDING"]),this._canUpdate&&(this._usage|=GPUTextureUsage["COPY_DST"]),this._format=this._renderer.GetSwapChainFormat()):(this._usage=GPUTextureUsage["COPY_DST"]|GPUTextureUsage["TEXTURE_BINDING"],this._format=this._renderer.GetTextureFormat()),this._canReadPixels&&(this._usage|=GPUTextureUsage["COPY_SRC"]),this._texture=t["createTexture"]({"size":[this._width,this._height,1],"mipLevelCount":this._GetMipLevelCount(),"format":this._format,"usage":this._usage,"sampleCount":2<=this._multisampling?this._multisampling:1}),this._textureView=this._texture["createView"](),[]),i=C3.Gfx.WebGPUMultiTextureGroup.GetMultiTextureLimit();for(let e=0;e<i;++e)r.push({"binding":2*e,"resource":this._sampler},{"binding":2*e+1,"resource":this._textureView});this._isRenderTarget&&!this._isSampled||(this._ownTextureBindGroup=t["createBindGroup"]({"layout":e._GetTextureBindGroupLayout(),"entries":r}),this._backTextureBindGroup=t["createBindGroup"]({"layout":e._GetBackTextureBindGroupLayout(),"entries":[{"binding":0,"resource":this._renderer._GetSampler({sampling:"nearest"})},{"binding":1,"resource":this._textureView}]})),this._CanMultiTexture()&&this._SetMultiTextureAvailable(!0),allTextures.add(this)}_DeleteGPUResources(){allTextures.delete(this),this._multiTextureGroup&&this._multiTextureGroup.Release(),this._SetMultiTextureAvailable(!1),this._texture["destroy"](),this._texture=null,this._textureView=null,this._ownTextureBindGroup=null,this._backTextureBindGroup=null}static IsGPUImageCopyExternalImageSource(e){return e instanceof ImageBitmap||"undefined"!=typeof HTMLVideoElement&&e instanceof HTMLVideoElement||"undefined"!=typeof HTMLCanvasElement&&e instanceof HTMLCanvasElement||"undefined"!=typeof OffscreenCanvas&&e instanceof OffscreenCanvas}static IsCreateImageBitmapDataSource(e){return"undefined"!=typeof HTMLImageElement&&e instanceof HTMLImageElement||e instanceof ImageData}_GetDataSize(e){return[e.width||e.videoWidth,e.height||e.videoHeight]}_Create(e,t){if(e&&!C3.Gfx.WebGPURendererTexture.IsGPUImageCopyExternalImageSource(e))throw new TypeError("invalid texture source");if(t=Object.assign({},DEFAULT_CREATE_OPTIONS,t),this._texture)throw new Error("already created texture");if(this._isStatic=!0,e){const[r,i]=this._GetDataSize(e);this._width=r,this._height=i}else if(this._width=t.width,this._height=t.height,this._width<=0||this._height<=0)throw new Error("invalid texture size");if(this._InitFromOpts(t),this._isRenderTarget||this._isSampled)throw new Error("static texture cannot be render target");e&&this._UploadImage(e)}_UploadImage(e,t=!0){if(this._isMipMapped)this._GenerateMipmaps(e,this._GetMipLevelCount(),t);else{const r=this._renderer._GetDevice(),i=r["createCommandEncoder"](),s=r["createTexture"]({"size":[this._width,this._height,1],"mipLevelCount":1,"format":this._format,"usage":GPUTextureUsage["COPY_SRC"]|GPUTextureUsage["COPY_DST"]|GPUTextureUsage["RENDER_ATTACHMENT"]});this._CopyImageToMipLevel(s,e,0,t),i["copyTextureToTexture"]({"texture":s,"mipLevel":0},{"texture":this._texture,"mipLevel":0},[this._width,this._height,1]),r["queue"]["submit"]([i["finish"]()]),s["destroy"]()}}_CopyImageToMipLevel(e,t,r,i=!0){const[s,a]=this._GetDataSize(t);this._renderer._GetDevice()["queue"]["copyExternalImageToTexture"]({"source":t},{"texture":e,"mipLevel":r,"premultipliedAlpha":!!i},[s,a,1])}_GetMipLevelCount(){return this._isMipMapped?Math.floor(Math.log2(Math.max(this._width,this._height))+1):1}_GenerateMipmaps(e,t,r=!0){const i=this._renderer._GetDevice(),s=i["createTexture"]({"size":[this._width,this._height,1],"mipLevelCount":this._GetMipLevelCount(),"format":this._format,"usage":GPUTextureUsage["COPY_DST"]|GPUTextureUsage["COPY_SRC"]|GPUTextureUsage["TEXTURE_BINDING"]|GPUTextureUsage["RENDER_ATTACHMENT"]}),a=this._renderer._GetMipmapGeneratorPipeline(),u=a["getBindGroupLayout"](0),n=this._renderer._GetSampler({sampling:"bilinear"}),h=i["createCommandEncoder"](),_=(this._CopyImageToMipLevel(s,e,0,r),h["copyTextureToTexture"]({"texture":s,"mipLevel":0},{"texture":this._texture,"mipLevel":0},[this._width,this._height,1]),[]);for(let e=0;e<t;++e)_.push(s["createView"]({"baseMipLevel":e,"mipLevelCount":1}));let l=this._width,o=this._height;for(let e=1;e<t;++e){l/=2,o/=2;const p=Math.max(Math.floor(l),1),d=Math.max(Math.floor(o),1),m=h["beginRenderPass"]({"colorAttachments":[{"view":_[e],"loadOp":"clear","clearValue":[0,0,0,0],"storeOp":"store"}]}),T=i["createBindGroup"]({"layout":u,"entries":[{"binding":0,"resource":n},{"binding":1,"resource":_[e-1]}]});m["setPipeline"](a),m["setBindGroup"](0,T),m["draw"](4),m["end"](),h["copyTextureToTexture"]({"texture":s,"mipLevel":e},{"texture":this._texture,"mipLevel":e},[p,d,1])}i["queue"]["submit"]([h["finish"]()]),s["destroy"]()}_CreateDynamic(e,t,r){if(r=Object.assign({},DEFAULT_CREATE_OPTIONS,r),this._texture)throw new Error("already created texture");this._isStatic=!1,this._width=e,this._height=t,this._InitFromOpts(r)}async _Update(e,t){if(!C3.Gfx.WebGPURendererTexture.IsGPUImageCopyExternalImageSource(e)&&!C3.Gfx.WebGPURendererTexture.IsCreateImageBitmapDataSource(e))throw new Error("invalid texture source");if(!this._texture||this._refCount<=0)throw new Error("texture not created");if(this._isStatic)throw new Error("cannot update static texture");if(t=Object.assign({},UPDATE_DEFAULT_OPTIONS,t),!C3.Gfx.WebGPURendererTexture.IsCreateImageBitmapDataSource(e)&&!t.flipY&&t.premultiplyAlpha||(e=await createImageBitmap(e,{"premultiplyAlpha":t.premultiplyAlpha?"premultiply":"none","imageOrientation":t.flipY?"flipY":"none"}),this._texture)){this._renderer.EndBatch();const[r,i]=this._GetDataSize(e);this._width===r&&this._height===i||(this._DeleteGPUResources(),this._width=r,this._height=i,this._CreateGPUResources(),this._renderer._OnTextureBindGroupChanged(this)),this._UploadImage(e,t.premultiplyAlpha)}}_Delete(){if(0<this._refCount)throw new Error("texture still has references");if(!this._texture)throw new Error("already deleted texture");this._DeleteGPUResources()}_DisableMultiTexture(){this._multiTextureEnabled=!1,this._SetMultiTextureAvailable(!1)}_CanMultiTexture(){return this._isStatic&&this._multiTextureEnabled&&!this._isRenderTarget}_SetMultiTextureAvailable(e){this._renderer._SetMultiTextureAvailable(this,e)}_SetMultiTextureGroup(e,t){if(this._multiTextureGroup)throw new Error("already in a group");this._multiTextureGroup=e,this._multiTextureIndex=t,this._SetMultiTextureAvailable(!1)}_ClearMultiTextureGroup(){this._multiTextureGroup=null,this._multiTextureIndex=0,this._CanMultiTexture()&&this._SetMultiTextureAvailable(!0)}_GetOwnTextureBindGroup(){return this._ownTextureBindGroup}_GetBackTextureBindGroup(){return this._backTextureBindGroup}_GetMultiTextureBindGroup(){return null!==this._multiTextureGroup||this._CanMultiTexture()&&(this._renderer._TryCreateMultiTextureGroup(this),null!==this._multiTextureGroup)?this._multiTextureGroup._GetBindGroup():this._ownTextureBindGroup}_GetMultiTextureIndex(){return this._multiTextureIndex}GetWidth(){return this._isForBackbuffer?this._renderer.GetWidth():this._width}GetHeight(){return this._isForBackbuffer?this._renderer.GetHeight():this._height}GetRenderer(){return this._renderer}_GetTexture(){return this._texture}_GetTextureView(){return this._textureView}_GetFormat(){return this._format}_GetSampler(){return this._sampler}GetSampling(){return this._sampling}IsLinearSampling(){return"nearest"!==this._sampling}IsRenderTarget(){return this._isRenderTarget}IsSampled(){return this._isSampled}CanReadPixels(){return this._canReadPixels}AddReference(){this._refCount++}SubtractReference(){if(this._refCount<=0)throw new Error("no more references");this._refCount--}GetReferenceCount(){return this._refCount}_GetUsage(){return this._usage}_BackbufferTextureSetProperties(e,t){this._usage=e,this._format=t}_BackbufferTextureStartFrame(){const e=this._renderer,t=e._GetDevice();this._texture=e._GetSwapChainTexture(),this._textureView=e._GetSwapChainTexView(),e._CanSampleBackbuffer()&&(this._backTextureBindGroup=t["createBindGroup"]({"layout":e._GetBackTextureBindGroupLayout(),"entries":[{"binding":0,"resource":this._sampler},{"binding":1,"resource":this._textureView}]}))}_BackbufferTextureEndFrame(){this._texture=null,this._textureView=null,this._backTextureBindGroup=null}GetEstimatedMemoryUsage(){let e=this.GetWidth()*this.GetHeight()*C3.Gfx.WebGPURendererTexture.GetFormatByteSize(this._GetFormat());return this._isMipMapped&&(e+=Math.floor(e/3)),e}static OnContextLost(){}static allTextures(){return allTextures.values()}static GetFormatByteSize(e){const t=TEXTURE_FORMAT_SIZE_MAP.get(e);return"number"==typeof t?t:NaN}};
+}
+
+// ../lib/gfx/webgpu/multiTextureGroup.js
+{
+const C3=self.C3;C3.Gfx.WebGPUMultiTextureGroup=class{constructor(e,r){if(r.length<2)throw new Error("invalid multi-texture group");this._renderer=e,this._textures=r,this._multiTextureBindGroup=null;for(let e=0,t=r.length;e<t;++e)r[e]._SetMultiTextureGroup(this,e);r.length<C3.Gfx.WebGPUMultiTextureGroup.GetMultiTextureLimit()&&this._renderer._SetMultiTextureGroupNonFull(this,!0),this._CreateBindGroup()}Release(){this._renderer._SetMultiTextureGroupNonFull(this,!1);for(const e of this._textures)e._ClearMultiTextureGroup();this._DeleteBindGroup(),C3.clearArray(this._textures),this._renderer=null}_CreateBindGroup(){this._DeleteBindGroup();const e=this._renderer._GetDevice(),t=[],r=C3.Gfx.WebGPUMultiTextureGroup.GetMultiTextureLimit();for(let e=0;e<r;++e){const u=this._textures[Math.min(e,this._textures.length-1)];t.push({"binding":2*e,"resource":u._GetSampler()},{"binding":2*e+1,"resource":u._GetTextureView()})}this._multiTextureBindGroup=e["createBindGroup"]({"layout":this._renderer._GetTextureBindGroupLayout(),"entries":t})}_DeleteBindGroup(){null!==this._multiTextureBindGroup&&this._renderer._OnMultiTextureBindGroupReleased(this._multiTextureBindGroup),this._multiTextureBindGroup=null}_GetBindGroup(){return this._multiTextureBindGroup}static GetMultiTextureLimit(){return 14}};
+}
+
+// ../lib/gfx/webgpu/renderTarget.js
+{
+const C3=self.C3,glMatrix=self.glMatrix,vec3=glMatrix.vec3,mat4=glMatrix.mat4,DEFAULT_RENDERTARGET_OPTIONS={sampling:"trilinear",alpha:!0,depth:!1,isSampled:!0,canReadPixels:!1,canUpdate:!1,isDefaultSize:!0,multisampling:0},allRenderTargets=new Set;C3.Gfx.WebGPURenderTarget=class{constructor(e,t){this._renderer=e,this._isBackBuffer=!!t,this._depth=!!t&&e.UsesDepthBuffer(),this._rendererTexture=null,this._isDefaultSize=!0,this._multisampling=0,this._isAwaitingClear=!1,this._clearColor=C3.New(C3.Color),this._projectionMatrix=mat4.create(),this._lastFov=0,this._lastNearZ=0,this._lastFarZ=0,this._isBackBuffer&&(this._rendererTexture=C3.New(C3.Gfx.WebGPURendererTexture,e,!0))}_Create(e,t,r){if(r=Object.assign({},DEFAULT_RENDERTARGET_OPTIONS,r),this._rendererTexture)throw new Error("already created render target");if(this._depth=!!r.depth,this._isDefaultSize=!!r.isDefaultSize,this._multisampling=this._renderer._ClampToSupportedMultisampleValues(r.multisampling),2<=this._multisampling&&r.isSampled)throw new Error("invalid use of multisampling");this._rendererTexture=this._renderer.CreateDynamicTexture(e,t,{sampling:r.sampling,mipMap:!1,isRenderTarget:!0,isSampled:r.isSampled,canReadPixels:r.canReadPixels,canUpdate:r.canUpdate,multisampling:this._multisampling}),this._CalculateProjection(),allRenderTargets.add(this)}_Delete(){allRenderTargets.delete(this),this._rendererTexture._DeleteGPUResources(),this._rendererTexture=null,this._renderer=null}_Resize(e,t){if(e!==this.GetWidth()||t!==this.GetHeight()){const r=this._rendererTexture.GetSampling(),i=this._rendererTexture.IsSampled(),s=this._rendererTexture.CanReadPixels();this._rendererTexture._DeleteGPUResources(),this._rendererTexture=null,this._rendererTexture=this._renderer.CreateDynamicTexture(e,t,{sampling:r,mipMap:!1,isRenderTarget:!0,isSampled:i,canReadPixels:s}),this._CalculateProjection()}}_GetTextureView(){return this._isBackBuffer?this._renderer._GetSwapChainTexView():this._rendererTexture._GetTextureView()}_CalculateProjection(){this._renderer.CalculatePerspectiveMatrix(this._projectionMatrix,this.GetWidth()/this.GetHeight()),this._lastFov=this._renderer.GetFovY(),this._lastNearZ=this._renderer.GetNearZ(),this._lastFarZ=this._renderer.GetFarZ()}IsDefaultSize(){return this._isDefaultSize}IsBackBuffer(){return this._isBackBuffer}HasDepthBuffer(){return this._depth}GetWidth(){return(this._isBackBuffer?this._renderer:this._rendererTexture).GetWidth()}GetHeight(){return(this._isBackBuffer?this._renderer:this._rendererTexture).GetHeight()}GetTexture(){if(this._rendererTexture)return this._rendererTexture;throw new Error("no texture")}GetRenderer(){return this._renderer}GetMultisampling(){return this._multisampling}GetProjectionMatrix(){return this._renderer.GetFovY()===this._lastFov&&this._renderer.GetNearZ()===this._lastNearZ&&this._renderer.GetFarZ()===this._lastFarZ||this._CalculateProjection(),this._projectionMatrix}IsLinearSampling(){return this._rendererTexture.IsLinearSampling()}IsSampled(){return this._rendererTexture.IsSampled()}CanReadPixels(){return this._rendererTexture.CanReadPixels()}IsCompatibleWithOptions(e){return"nearest"!==(e=Object.assign({},DEFAULT_RENDERTARGET_OPTIONS,e)).sampling===this.IsLinearSampling()&&!!e.isSampled===this.IsSampled()&&!!e.canReadPixels===this.CanReadPixels()&&!!e.depth===this.HasDepthBuffer()&&("number"==typeof e.width||"number"==typeof e.height?!this.IsDefaultSize()&&this.GetWidth()===Math.floor(e.width)&&this.GetHeight()===Math.floor(e.height):this.IsDefaultSize())}_SetIsAwaitingClear(e){this._isAwaitingClear=!!e}_IsAwaitingClear(){return this._isAwaitingClear}_GetClearColor(){return this._clearColor}static OnContextLost(){}static allRenderTargets(){return allRenderTargets.values()}};
+}
+
+// ../lib/gfx/webgpu/timeQuerySet.js
+{
+const C3=self.C3;C3.Gfx.WebGPUTimeQuerySet=class{constructor(e,r){this._renderer=e,this._frameNumber=this._renderer.GetFrameNumber(),this._queryCount=r;const t=this._renderer._GetDevice(),s=(this._querySet=t["createQuerySet"]({"count":this._queryCount,"type":"timestamp"}),self["GPUBufferUsage"]);this._resolveBuffer=t["createBuffer"]({"size":this._GetBufferSize(),"usage":s["QUERY_RESOLVE"]|s["COPY_SRC"]}),this._readbackBuffer=t["createBuffer"]({"size":this._GetBufferSize(),"usage":s["COPY_DST"]|s["MAP_READ"]}),this._result=null}_GetBufferSize(){return 8*this._queryCount}_GetQuerySet(){return this._querySet}Resolve(e){e["resolveQuerySet"](this._querySet,0,this._queryCount,this._resolveBuffer,0),e["copyBufferToBuffer"](this._resolveBuffer,0,this._readbackBuffer,0,this._GetBufferSize())}async ReadResult(){const e=this._GetBufferSize(),r=(await this._readbackBuffer["mapAsync"](self["GPUMapMode"]["READ"],0,e),this._readbackBuffer["getMappedRange"](0,e));this._result=new BigUint64Array(r.slice(0)),this._readbackBuffer["destroy"](),this._readbackBuffer=null,this._resolveBuffer["destroy"](),this._resolveBuffer=null,this._querySet["destroy"](),this._querySet=null}HasResult(){return null!==this._result}GetResult(){if(this._result)return this._result;throw new Error("not yet got result")}GetFrameNumber(){return this._frameNumber}};
+}
+
 // ../lib/gfx/effectCompositor/effectChainManager.js
 {
 const C3=self.C3,DEFAULT_CTOR_OPTS={getDrawSize:null,getRenderTarget:null,releaseRenderTarget:null,getTime:null,redraw:null};C3.Gfx.EffectChainManager=class{constructor(e){e=Object.assign({},DEFAULT_CTOR_OPTS,e),this._cbGetDrawSize=e.getDrawSize,this._cbGetRenderTarget=e.getRenderTarget,this._cbReleaseRenderTarget=e.releaseRenderTarget,this._cbGetTime=e.getTime,this._cbRedraw=e.redraw,this._webgpuBackTexture=null,this._allEffectChains=new Set}_AddEffectChain(e){this._allEffectChains.add(e)}_RemoveEffectChain(e){this._allEffectChains.delete(e)}OnContextLost(){this._webgpuBackTexture=null;for(const e of this._allEffectChains)e.OnContextLost()}GetDrawSize(e){return this._cbGetDrawSize?this._cbGetDrawSize(e):[e.GetWidth(),e.GetHeight()]}GetRenderTarget(e){return this._cbGetRenderTarget(e)}ReleaseRenderTarget(e,t){this._cbReleaseRenderTarget(e,t)}GetTime(){return this._cbGetTime()}Redraw(e){this._cbRedraw(e)}_GetWebGPUBackTexture(e,t,r){return t=Math.floor(t),r=Math.floor(r),!this._webgpuBackTexture||this._webgpuBackTexture.GetWidth()===t&&this._webgpuBackTexture.GetHeight()===r||(e.DeleteTexture(this._webgpuBackTexture),this._webgpuBackTexture=null),null===this._webgpuBackTexture&&(this._webgpuBackTexture=e.CreateStaticTexture(null,{width:t,height:r,sampling:"nearest",mipMap:!1})),this._webgpuBackTexture}};
@@ -3996,7 +4956,7 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => (("[\n[1],['" + v0.GetValue()) + "', 1]\n]");
 		},
-		() => "https://base-sepolia.gateway.tenderly.co",
+		() => "https://base-mainnet.public.blastapi.io",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
@@ -4113,7 +5073,11 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => and("car cost: ", v0.GetValue());
 		},
-		() => "TotalCoins",
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => (and("{'coins':", (-v0.GetValue())) + "}");
+		},
+		() => "'coins'",
 		() => "initial",
 		() => "userNfts",
 		p => {
@@ -4189,25 +5153,25 @@ self.C3_ExpressionFuncs = [
 		() => "UI",
 		() => "MenuDebug",
 		() => "Token Contract",
-		() => -10,
-		() => "0x593b6a6537b77600B5126ec2F96962736B153C6c",
-		() => "1000000000000000000",
-		() => "0x39793e4f068c798FdAbeFBACF694272ca8A986Af",
-		() => 84532,
+		() => 0.2,
+		() => 15,
+		() => "0x35Fec332B1c3f0aada0b5E058540D8e44eF631dd",
+		() => "13000000000000000000000",
+		() => "0xa2e52BA1Cad9e95dB18Af95f2C2D74a577988D3A",
+		() => 8453,
 		() => "GUI",
 		() => 1.4,
 		() => 0.4,
-		() => 0.2,
 		() => "Selected",
 		() => "Returned error: MetaMask Tx Signature: User denied transaction signature.",
 		() => "Transaction rejected",
 		() => "Initialization",
+		() => 99,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (and("{'coins':", v0.GetValue()) + "}");
 		},
 		() => "54a15c84-372e-4348-a3b5-4382cee2083b",
-		() => "'coins'",
 		() => "avatar-default.png",
 		() => 80,
 		() => "ChangeName",
@@ -4338,7 +5302,6 @@ self.C3_ExpressionFuncs = [
 		},
 		() => 360,
 		() => 13,
-		() => 15,
 		() => 17,
 		() => 18,
 		() => 19,

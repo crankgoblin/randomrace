@@ -91,7 +91,7 @@ const updateCarInfo = nft => {
 ].forEach(updateCarInfo)
 	},
 
-	async Emainmenu_Event25_Act1(runtime, localVars)
+	async Emainmenu_Event26_Act1(runtime, localVars)
 	{
 		const DEFAULT_CAR_NAME = 'Rusty'
 		const nftTokensMappings = [
